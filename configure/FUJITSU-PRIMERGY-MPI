@@ -1,0 +1,35 @@
+#INFO#
+#INFO# Configuration is for Fujitsu PRIMERGY BX900 
+#INFO# Xeon  2.93 GHz * 2/node, Memory: 24 GB/node
+#INFO# OS: RedHat Enterprise Linux 5, Fujitsu Fortan Compiler
+#INFO# Strasbourg/Tokyo, january 2018
+#INFO#
+     IRAT=2
+     FC='mpifrt'
+     CC='fcc'
+     LD='mpifrt'
+     CPP='/usr/bin/cpp -P -C -traditional'
+     CPPFLAGS='-D__PRIMERGY -D__ALPHALINUX -D__HAS_FFT_DEFAULT -D__PARALLEL \
+               -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV -D__HASNT_OMP_45' 
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+                -D__PRIMERGY -D__ALPHALINUX -D__HAS_FFT_DEFAULT -D__PARALLEL \
+                -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV -D__HASNT_OMP_45'
+     FFLAGS_GROMOS='-Fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -Aw -Kfast -X9 -Kocl -Qp -Esfu'
+       CFLAGS='-g $(CPPFLAGS)'
+     else
+       FFLAGS='-Aw -Kfast -X9 -Kocl -Qp -Esfu'
+       CFLAGS='-O $(CPPFLAGS)'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -KOMP'
+       OMP3_DISABLED='true'
+       LIBS=''
+     else
+       LIBS=''
+     fi
+     LFLAGS='-SSL2BLAMP '${LIBS}

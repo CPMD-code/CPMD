@@ -1,0 +1,36 @@
+#INFO#
+#INFO# Configuration is for T2K system: 10368 Cores, 95.39 TFlops
+#INFO# infiniband machine, 16 GB of I/O band, Lustrel file system
+#INFO# Center for Computational Sciences - Tsukuba University
+#INFO# PGI Version - Remember to load the corresponding module
+#INFO# Universities of Strasbourg/Tokyo/Tsukuba - 6 April 2017
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux -D__HAS_FFT_DEFAULT -D__HAS_SIZEOF -D__PARALLEL \
+               -D__HAS_EXTERNAL_C_ERF -D__HPC '
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID -D__HAS_FFT_DEFAULT \
+                      -D__Linux -D__HAS_FFT_DEFAULT -D__HAS_SIZEOF -D__PARALLEL \
+                      -D__HAS_EXTERNAL_C_ERF -D__HPC '
+     FFLAGS_GROMOS='-Mfixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-fastsse -tp k8-64 -r8 -pc=64 -Msignextend'
+       CFLAGS='-O2'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS='-lacml'
+     else
+       LIBS='-lacml'
+     fi
+     LFLAGS=' '${LIBS}

@@ -1,0 +1,44 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for a linux machine
+#INFO# with an AMD64 bit cpu (Opteron/AthlonFX/Athlon64) using 
+#INFO# the Portland Group Fortran compiler pgf90.
+#INFO#
+#INFO# Since the newer Portland use shared runtime libraries by default,
+#INFO# the creation of static binaries (-Bstatic) is highly recommended for optimal 
+#INFO# portability of the binary. With a dynamic binary you have to install
+#INFO# the same shared runtime libraries on _every_ machine, where you want to run cpmd.
+#INFO#
+#INFO# You need at least PGI version 5.01 to have a correctly working executable.
+#INFO# Older versions, including the beta versions, produce erroneous binaries.
+#INFO#
+#INFO# For optimal performance you should use a specifically tuned BLAS/LAPACK
+#INFO# library. ACML version 1.0 and older do _not_ work correctly. ACML 2.0 was
+#INFO# tested ok. ATLAS version 3.6 works as well.
+#INFO#
+#INFO# see http://www.theochem.ruhr-uni-bochum.de/~axel.kohlmeyer/cpmd-linux.html
+#INFO# for more information on compilind and running CPMD on linux machines.
+#INFO#
+#INFO#
+     IRAT=2
+     FC='pgf90'
+     CC='gcc'
+     LD='pgf90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__HAS_EXTERNAL_C_ERF -D__HASNT_F08_ISO_FORTRAN_ENV'
+     FFLAGS_GROMOS=' $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -r8 -pc=64 -Msignextend '
+       CFLAGS='-g -Wall'
+     else
+       FFLAGS='-fastsse -tp k8-64 -r8 -pc=64 -Msignextend '
+       CFLAGS='-O2 -Wall -m64'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS='-Bstatic -L. -latlas_x86_64'
+     else
+       LIBS='-Bstatic -L. -latlas_x86_64'
+     fi
+     LFLAGS=' '${LIBS}

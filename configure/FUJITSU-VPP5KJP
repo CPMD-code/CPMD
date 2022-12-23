@@ -1,0 +1,33 @@
+#INFO#
+#INFO# Fujitsu VPP5000 - Japanese Parallel Version - Tsukuba
+#INFO# Tokyo/Strasbourg January 2018
+#INFO#
+     IRAT=2
+     FC='mpifrt'
+     CC='mpicc'
+     LD='mpifrt'
+     FFLAGS_GROMOS='$(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     CPP='/lib/cpp -P'
+     CPPFLAGS='-D__HAS_FFT_DEFAULT -D_vpp_ -D__VECTOR -D__PARALLEL -D_HASNT_MPI_30 -D__HASNT_OMP_45 \
+               -D__HASNT_F03_EXECUTE_COMMAND_LINE -D__HASNT_F08_ISO_FORTRAN_ENV'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+                  -D_vpp_ -D__VECTOR -D__PARALLEL -D_HASNT_MPI_30 -D__HASNT_OMP_45 \
+               -D__HASNT_F03_EXECUTE_COMMAND_LINE -D__HASNT_F08_ISO_FORTRAN_ENV'
+     AR='ar'
+     RANLIB='ranlib'
+     AWK='/usr/bin/nawk'
+     if [ $debug ]; then
+       FFLAGS='-g -Da -Ds -On -Pilt -Wv,-md -Z$*.L -Ei'
+       CFLAGS='$(CPPFLAGS)'
+     else
+       FFLAGS='-Aw -Sw -O5 -Kfast -X9 -Fixed -No -Os,-X,-l -Pilt -Wv,-md -Z$*.L -Ei'
+       CFLAGS='$(CPPFLAGS)'
+     fi
+     if [ $omp ]; then
+       OMP3_DISABLED='true'
+       LIBS='-llapackvp -lblasvp'
+     else
+       LIBS='-llapackvp -lblasvp'
+     fi
+     LFLAGS=''${LIBS}

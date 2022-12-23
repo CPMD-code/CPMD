@@ -1,0 +1,48 @@
+#INFO#
+#INFO# Minimal configuration for Linux HPC 64-bit using
+#INFO# Portland/Nvidia PGI Fortran ver. 12.8 or later - OpenMPI + OMP 3.0 (or later)
+#INFO# and cuda-7.5 (or 7.0)
+#INFO# WARNING 1: For LFLAGS the options -mp=allcores -mp=bind make nasty things 
+#INFO#            to the socket !
+#INFO# WARNING 2: Until version 12.7 a bug (bug N. 18788) is present giving random
+#INFO#            compilation errors in util_p_utils.mod.F90 at eigr_dot and eigr_dot2
+#INFO#            of the type
+#INFO             PGF90-S-0087-Non-constant expression where constant expression required 
+#INFO#            PGF90-S-0081-Illegal selector - KIND parameter has unknown value for data type
+#INFO$            This was fixed only in version 12.8.For details see
+#INFO# http://www.pgroup.com/userforum/viewtopic.php?t=3278&sid=f4ad7c54b8257fd85041f9b1ebbb96d1
+#INFO# (University od Strasbourg-University of Tokyo, August 2017). 
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     NVCC='nvcc'
+     NVCCFLAGS='--default-stream per-thread -O3'
+     CPP='cpp -P -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__HAS_EXTERNAL_C_ERF \
+         -D__PARALLEL -D__HAS_SIZEOF -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV \
+         -D__HAS_CUDA'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+             -D__Linux  -D__HAS_FFT_DEFAULT -D__HAS_EXTERNAL_C_ERF \
+             -D__PARALLEL -D__HAS_SIZEOF -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV \
+             -D__HAS_CUDA'
+     FFLAGS_GROMOS=' $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -r8 -pc=64 -Msignextend'
+       CFLAGS='-g -O2 '
+     else
+       FFLAGS='-fastsse -tp k8-64 -r8 -pc=64 -Msignextend'
+       CFLAGS='-O2 '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -mp=align'
+       OMP3_DISABLED='false'
+       LIBS='-lacml -lcudart -lcufft -lcusolver -lcublas'
+     else
+       LIBS='-lacml -lcudart -lcufft -lcusolver -lcublas'
+     fi
+     LFLAGS=${LIBS}

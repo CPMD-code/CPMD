@@ -1,0 +1,30 @@
+#INFO#
+#INFO# Configure file for Fujitsu PRIMEHPC FX10 Machine
+#INFO# Information Technology Center, The University of Tokyo, JAPAN
+#INFO# Note that you need to load the fftw module to be able to compile.
+#INFO# WARNING on OCL directives: Fine tuning is achieved with !ocl
+#INFO#       directives BUT these directives must start in column 1
+#INFO#       otherwise they are ignored ! Please, do not move them.
+#INFO# Strasbourg/Okazaki/Tokyo, August 2018
+#INFO#
+     IRAT=2
+     FC='mpifrtpx'
+     CC='fccpx'
+     LD='mpifrtpx'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__PRIMEHPC -D__HAS_FFT_FFTW3 -D__Linux  -D__PARALLEL \
+        -D__HAS_SIZEOF -D__FFT_HAS_SPECIAL_COPY=1 -D__HASNT_F08_ISO_FORTRAN_ENV \
+        -D__SUMFNL_ISNT_TRHEADED -D__HASNT_OMP_COLLAPSE -D__HASNT_OMP_45'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID $(CPPFLAGS)'
+     FFLAGS_GROMOS='$(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-Kfast,openmp -X03 -fi -Qt -Kocl -Koptmsg=2'
+       CFLAGS='-O'
+     fi
+     LFLAGS='-Kopenmp -SSL2BLAMP -lfftw3_omp -lfftw3'

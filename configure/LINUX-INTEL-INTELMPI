@@ -1,0 +1,41 @@
+#INFO#
+#INFO# Configuration for Linux HPC Supercluster exploiting 
+#INFO# Intel Composer v.15 or later jointly with Intel MPI
+#INFO# WARNING: #An incompatibility between Intel ver. 15 and OpenMPI ver. 1.8 has
+#INFO# OpenMPI ver. 1.8 has been reported in
+#INFO# https://software.intel.com/en-us/forums/topic/540673?language=es
+#INFO# This seems to propagate to later versions of Intel
+#INFO# Composers (v. 16 etc.) and OpenMPI.
+#INFO# We cannot recommend their joint use so far, since a core dump is
+#INFO# immediately resulting at each run/submission tentative
+#INFO# (IPCMS-University of Tokyo, 2016) 
+#INFO#
+     IRAT=2
+     FC='mpiifort'
+     CC='mpiicc'
+     LD='mpiifort'
+     CPP='/lib/cpp -P -traditional'
+     CPPFLAGS='  -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC \
+         -D__PARALLEL -D__HAS_SIZEOF '
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+              -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC \
+             -D__PARALLEL -D__HAS_SIZEOF '
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g'
+       CFLAGS='-g -Wall -m64'
+     else
+       FFLAGS='-O2 -pc64 -funroll-loops '
+       CFLAGS='-O2 -Wall  '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       OMP3_DISABLED='false'
+       LIBS='-mkl=parallel'
+     else
+       LIBS='-static-intel -mkl=serial'
+     fi
+     LFLAGS=${LIBS}

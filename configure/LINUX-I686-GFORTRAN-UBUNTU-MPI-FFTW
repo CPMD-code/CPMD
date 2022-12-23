@@ -1,0 +1,33 @@
+#INFO#
+#INFO# Configuration to build a 32-bit parallel CPMD executable for
+#INFO# Ubuntu Linux (version 13.04). 
+#INFO#
+
+     IRAT=2
+     FC='mpif90'
+     CC='gcc'
+     LD='mpif90'
+     CPP=''
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_FFTW3 \
+          -D__PARALLEL   -D__HAS_SIZEOF'
+     FFLAGS_GROMOS=' -ffixed-form $(FFLAGS)' 
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)' 
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -Wall -Wextra -fcheck=all  -I/usr/lib/openmpi/include'
+       CFLAGS='-g -O0  -Wall '
+     else
+       FFLAGS='-O2  -I/usr/lib/openmpi/include'
+       CFLAGS='-O2   -Wall '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp'
+       LIBS='-L/home/irina/local/lib -llapack -lblas -lfftw3 -lfftw3_threads -L/usr/lib/openmpi/lib -lmpi_f90 -lmpi_f77 -lmpi -ldl -lhwloc -pthread'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${GREP} version | ${AWK} '{ print ( $3 < "4.7.0" ) ? "true" : "false" }'`
+     else
+       LIBS='-L/home/irina/local/lib -llapack -lblas -lfftw3 -L/usr/lib/openmpi/lib -lmpi_f90 -lmpi_f77 -lmpi -ldl -lhwloc -pthread'
+     fi
+     LFLAGS=' '${LIBS}
+     if [ $coverage ]; then
+       FFLAGS=${FFLAGS}' --coverage'
+       LFLAGS='--coverage '${LFLAGS}
+     fi

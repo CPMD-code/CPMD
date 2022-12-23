@@ -1,0 +1,18 @@
+subroutine mp_all2all_${NAME}(data_in, data_out, ${ARG_LEN_NAME} comm )
+#ifdef __PARALLEL
+  use mpi
+#endif
+  ! Arguments
+  integer, intent(in) :: ${ARG_LEN_NAME} comm
+  ${TYPE}${KIND}, intent(inout) ${DIMENSION} :: data_out, data_in
+  ! Variables
+  integer :: ierr
+  character(*),parameter :: procedureN='mp_all2all_${NAME}'
+#ifdef __PARALLEL
+
+  CALL mpi_alltoall(data_in,${MPI_LEN},${MPI_TYPE},data_out,${MPI_LEN},${MPI_TYPE},comm,ierr)
+  call mp_mpi_error_assert(ierr,procedureN,__LINE__,__FILE__)
+#else
+  data_out${COPY_ARG}=data_in${COPY_ARG}
+#endif
+end subroutine mp_all2all_${NAME}

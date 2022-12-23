@@ -1,0 +1,34 @@
+#INFO#  
+#INFO#  IBM-PWR8-GFORTRAN-MPI
+#INFO#  
+#INFO#  V. Weber
+#INFO#
+#INFO#  a) added -Uvector -Ubool to bypass a bug in cpp for power8
+#INFO#
+     CC='gcc'
+     FC='/fl/sp/vwe/prog/OPENMPI-2.1.1-gcc-7.1.0-pwr8/bin/mpifort'
+     LD='/fl/sp/vwe/prog/OPENMPI-2.1.1-gcc-7.1.0-pwr8/bin/mpifort'
+     NVCCFLAGS='-O3 -gencode arch=compute_60,code=sm_60'
+     CPP='/usr/bin/cpp -P -traditional -Uvector -Ubool'
+     CPPFLAGS='-D__Linux -D__PARALLEL  -D__HAS_FFT_DEFAULT -D__HAS_LIBXC '
+     FFLAGS_GROMOS='-ffixed-form  $(FFLAGS) -std=gnu'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar ruv'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -fcheck=all -Wuninitialized -Wall -std=f2008ts -fall-intrinsics'
+       CFLAGS='-g -O0 -Wall'
+     else
+       FFLAGS='-O2 -Wall -std=f2008ts -fall-intrinsics'
+       CFLAGS='-O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp'	
+       LIBS='/fl/sp/vwe/lib/liblapack342_pwr8_gcc_4.9.2.a /fl/sp/vwe/lib/libblas342_pwr8_gcc_4.9.2.a '
+       OMP3_DISABLED='false'
+     else
+       LIBS='/fl/sp/vwe/lib/liblapack342_pwr8_gcc_4.9.2.a /fl/sp/vwe/lib/libblas342_pwr8_gcc_4.9.2.a '
+     fi
+     LIBS=${LIBS}' /fl/sp/vwe/prog/LIBXC-3.0.0-gcc-6.3.0-pwr8/lib/libxcf03.a /fl/sp/vwe/prog/LIBXC-3.0.0-gcc-6.3.0-pwr8/lib/libxc.a'
+     FFLAGS=${FFLAGS}' -I/fl/sp/vwe/prog/LIBXC-3.0.0-gcc-6.3.0-pwr8/include'
+     LFLAGS=' '${LIBS}

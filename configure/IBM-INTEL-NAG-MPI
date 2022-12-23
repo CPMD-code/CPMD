@@ -1,0 +1,36 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for intel machine using 
+#INFO# the NAG Fortran compiler.
+#INFO#
+#INFO# V. Weber
+#INFO#
+     FC='/sp/vwe/prog/OPENMPI-1.10.6-nag-intel/bin/mpif90'
+     CC='gcc'
+     LD='/sp/vwe/prog/OPENMPI-1.10.6-nag-intel/bin/mpif90'
+     CPP='/usr/bin/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux -D__HAS_FFT_DEFAULT \
+             -D__PARALLEL -D__HAS_EXTERNAL_C_ERF -D__MINPACK -D__HAS_LIBXC -D__HASNT_OMP_45'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID '
+     FFLAGS_GROMOS='$(FFLAGS) -dusty' 
+     FFLAGS_GROMOS_MODULES='$(FFLAGS) -dusty' 
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -nan -C=all -gline -dcfuns -mismatch_all -f2008'
+       CFLAGS='-g -O0'
+       NOOPT_FLAG=' -O0 -g -nan -gline -mismatch_all -f2008'
+       NOOPT_OBJS='prng_utils.mod.o compress.o'
+     else
+       FFLAGS='-g -O2 -dcfuns -mismatch_all -f2008'
+       CFLAGS='-O2'
+     fi
+     if [ $omp ]; then
+       NOOPT_FLAG=' -O0 -g -mismatch_all -f2008'
+       FFLAGS='-g -O0 -C=all -dcfuns -mismatch_all -f2008'
+       FFLAGS=${FFLAGS}' -openmp'
+       LIBS='/sp/LIB/LINUX64/BLADE84/MINPACK/NAG/libminpack.a /sp/vwe/lib/liblapack342_intel_nag.a /sp/vwe/lib/libblas342_intel_nag.a'
+       OMP3_DISABLED='true'
+     else
+       LIBS='/sp/LIB/LINUX64/BLADE84/MINPACK/NAG/libminpack.a /sp/vwe/lib/liblapack342_intel_nag.a /sp/vwe/lib/libblas342_intel_nag.a'
+     fi
+     LIBS=${LIBS}' /sp/vwe/prog/LIBXC-3.0.0-nag-1079/lib/libxcf03.a /sp/vwe/prog/LIBXC-3.0.0-nag-1079/lib/libxc.a'
+     FFLAGS=${FFLAGS}' -I/sp/vwe/prog/LIBXC-3.0.0-nag-1079/include'
+     LFLAGS=' '${LIBS}

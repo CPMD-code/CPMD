@@ -1,0 +1,35 @@
+#INFO#  
+#INFO#  IBM-PWR8-PGI
+#INFO#  
+#INFO#  V. Weber
+#INFO#
+#INFO#  pgfortran 17.4-0 -> ICE
+#INFO#  pgfortran 17.10-0 -> needs some code modifications (BLOCK constructs and some machine.mod.F90 procedures)
+#INFO#
+     CC='pgcc'
+     FC='pgfortran'
+     LD='pgfortran'
+     CPP='/usr/bin/cpp -P -traditional -Uvector -Ubool'
+     CPPFLAGS='-D__Linux -D__HAS_BF_STREAM_IO -D__HAS_DFREPOSITORY -D__HAS_FFT_DEFAULT -D__HASNT_F03_ISO_FORTRAN_ENV -D__HASNT_F03_EXECUTE_COMMAND_LINE '
+     FFLAGS_GROMOS='-ffixed-form  $(FFLAGS) -std=gnu'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar ruv'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -Mbounds -Mchkstk -Mchkptr -Mchkfpstk -Minform=inform -C'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-O2 -V -fast -Mipa=fast,inline -Msmartalloc -Mfprelaxed -Mstack_arrays'
+       CFLAGS='-O2'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -mp'
+       LIBS='-llapack -lblas'
+       OMP3_DISABLED='false'
+     else
+       LIBS='-llapack -lblas'
+     fi
+     CFLAGS=${CFLAGS}
+     LIBS=${LIBS}' '
+     FFLAGS=${FFLAGS}
+     LFLAGS=' '${LIBS}

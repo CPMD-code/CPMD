@@ -1,0 +1,33 @@
+#INFO#
+#INFO# Configuration to build an cpmd/qmmm executable for
+#INFO# NEC SX7 - Tohoku Version - Tsukuba
+#INFO#
+     IRAT=1
+     CC='sxcc'
+     FC='sxmpif90'
+     LD='sxmpif90'
+     FFLAGS_GROMOS='$(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     #NEC SX5 - Earth Simulator: WARNING - your LAPACK/BLAS may be elsewhere 
+     CPP='/usr/bin/cpp -P -T'
+     CPPFLAGS='-D__NEC -USX -D__HAS_FFT_DEFAULT  -D__VECTOR -D__PARALLEL -D__ES'
+     AR='sxar'
+     RANLIB='touch'
+     AWK='/bin/awk'
+     if [ $debug ]; then
+       echo "No debug version for ${Configuration}" >&2
+       exit 1
+     else
+       FFLAGS=' -clear -ew -float0 -f0 -Popenmp -Nftrace \
+                -V -R5 -Cvopt -pi expin=util.f \
+                -Wf"-pvctl noassume loopcnt=99999999 fullmsg vr256 \
+                vwork=static vworksz=4M novlchk noverrchk"'
+       CFLAGS='-clear'
+     fi
+     if [ $omp ]; then
+       LIBS='-L/SX/usr/lib -llapack -lblas -lscalapack -lblacsF90init -lblacs -lblacsF90init -lmpi '
+     else
+       echo "Non-OMP settings not available!"
+       exit 1
+     fi
+     LFLAGS='-Wl"-h lib_cyclic -h muldefs" '${LIBS} 

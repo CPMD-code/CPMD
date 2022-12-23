@@ -1,0 +1,27 @@
+#INFO#
+#INFO# Sorry. No additional information available. 
+#INFO# If you know more about this platform and configuration, please submit a patch.
+#INFO#
+     IRAT=2
+     FC='f90'
+     CC='cc'
+     LD='f90'
+     CPP='/lib/cpp -P -C'
+     CPPFLAGS='-D__NOINT8 -D__Linux  -D__HAS_FFT_DEFAULT '
+     FFLAGS_GROMOS=' $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-B108 -YEXT_NAMES=LCS -g'
+       CFLAGS='-g -sb -C -errtags'
+     else
+       FFLAGS='-B108 -B100 -YEXT_NAMES=LCS -O'
+       CFLAGS='-O'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS='-L/usr/absoft/lib -llapack -lblas -lU77'
+     else
+       LIBS='-L/usr/absoft/lib -llapack -lblas -lU77'
+     fi
+     LFLAGS='-X-Bstatic '${LIBS}

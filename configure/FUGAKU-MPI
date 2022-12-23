@@ -1,0 +1,32 @@
+#INFO#
+#INFO# Configuration for Supercomputer Fugaku (Fujitsu)
+#INFO# Note that the activation of some Fugaku-oriented 
+#INFO# OMP directives requires 
+#INFO# !ocl novrec
+#INFO#
+     FC='mpifrtpx'
+     CC='fccpx'
+     LD='mpifrtpx'
+     CPP='/bin/cpp -P -E -traditional'
+     CPPFLAGS='-D__PRIMEHPC -D__HAS_FFT_DEFAULT -D__HPC -D__Linux -D__PARALLEL \
+               -D__HASNT_OMP_COLLAPSE -D__HASNT_OMP_45 -D__HASNT_OMP_SET_NESTED \
+               -D__HAS_LIBXC'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+               -D__PRIMEHPC -D__HAS_FFT_DEFAULT -D__HPC -D__Linux -D__PARALLEL \
+               -D__HASNT_OMP_COLLAPSE -D__HASNT_OMP_45 -D__HASNT_OMP_SET_NESTED \
+               -D__HAS_LIBXC'
+     FFLAGS_GROMOS='$(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -Kopenmp,SVE -X03 -fi -Nlst=t -Kocl -Koptmsg=2 \
+               -I${LIBDIR}/libxc/include'
+       CFLAGS='-Nclang -g -O0'
+     else
+       FFLAGS='-Kfast,openmp,SVE -X03 -fi -Nlst=t -Kocl -Koptmsg=2 \
+               -I${LIBDIR}/libxc/include'
+       CFLAGS='-Nclang -O'
+     fi
+     LFLAGS='-Kopenmp,SVE -Nlibomp -SSL2BLAMP -L${LIBDIR}/libxc/lib -lxcf03 -lxc'
+

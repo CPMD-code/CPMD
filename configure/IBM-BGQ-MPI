@@ -1,0 +1,34 @@
+#INFO#
+#INFO#   IBM BG/Q - SMP version
+
+     IRAT=2
+     CC='/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlc_r'
+     FC='/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf95_r'
+     LD='/bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf95_r'
+     FFLAGS_GROMOS='$(FFLAGS) -qfixed'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     CPP='/opt/ibmcmp/xlf/bg/14.1/exe/cpp -P'
+     CPPFLAGS=' -D__IBM -D__HAS_FFT_DEFAULT -D__BG   \
+                 -D__PARALLEL -D__PWRLinux   -D__HAS_SIZEOF -D__HAS_EXTERNAL_IDAMIN -D__HASNT_MPI_30'
+     NOOPT_FLAG=' -O0  '
+     NOOPT_OBJS='control_utils.mod.o meta_colvar_inp_utils.mod.o respin_p_utils.mod.o '
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID -D__BG'
+     if [ $debug ]; then
+       CFLAGS='-g -C -qflttrap -O0'
+       FFLAGS='-g -C -qflttrap -O -qhot -w -qnosave  '
+     else
+       CFLAGS='-O '
+       FFLAGS='-O -qhot -w -qnosave  '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qsmp=omp,noauto'
+       NOOPT_FLAG=${NOOPT_FLAG}' -qsmp=omp'
+       LIBS='/gpfs/DDNgpfs1/cur/LIBS/liblapack.a /opt/ibmmath/lib64/libesslsmpbg.a \
+            /opt/ibmcmp/xlmass/bg/7.3/bglib64/libmass.a /opt/ibmcmp/xlmass/bg/7.3/bglib64/libmassv.a \
+            -Wl,--allow-multiple-definition'
+     else
+       LIBS='/gpfs/DDNgpfs1/cur/LIBS/liblapack.a /opt/ibmmath/lib64/libesslbg.a \
+            /opt/ibmcmp/xlmass/bg/7.3/bglib64/libmass.a /opt/ibmcmp/xlmass/bg/7.3/bglib64/libmassv.a \
+            -Wl,--allow-multiple-definition'
+     fi
+     LFLAGS=' '${LIBS}

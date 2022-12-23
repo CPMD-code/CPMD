@@ -1,0 +1,42 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for a linux pc using 
+#INFO# the GNU Fortran compiler.
+#INFO#
+#INFO# ! openmpi 1.10 is crashing with multi-threads !
+#INFO#
+#INFO# V. Weber
+#INFO#
+     CUDA_PATH='/usr/local/cuda'
+     FC='mpif90'
+     CC='gcc'
+     LD='mpif90'
+     NVCC=${CUDA_PATH}'/bin/nvcc'
+     NVCCFLAGS='--default-stream per-thread -O3 -m64 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_61,code=sm_61 -gencode arch=compute_62,code=sm_62'
+     CPP=''
+     CPPFLAGS='-D__Linux -D__GNU -D__HAS_FFT_DEFAULT -D__PARALLEL   -D__HAS_CUDA -D__HAS_NVTX_TIMER'
+     FFLAGS_GROMOS='-ffixed-form $(FFLAGS)' 
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)' 
+     AR='/usr/bin/ar ruv'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -fcheck=all -Wuninitialized -Wall'
+       CFLAGS='-g -O0 -Wall'
+     else
+       FFLAGS='-O2 -Wall'
+       CFLAGS='-O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${GREP} version | ${AWK} '{ print ( $3 < "4.7.0" ) ? "true" : "false" }'`
+       LIBS='/home/manish/lapack-3.5.0/liblapack.a /home/manish/OPENBLAS/0.2.18/lib/libopenblas.a'
+     else
+       LIBS='/home/manish/lapack-3.5.0/liblapack.a /home/manish/OPENBLAS/0.2.18/lib/libopenblas.a'
+     fi
+     CFLAGS=${CFLAGS}' -I'${CUDA_PATH}'/include'
+     LIBS=${LIBS}' -L'${CUDA_PATH}'/lib64 -lcudart -lcufft -lcusolver -lcublas -lnvToolsExt'
+     LFLAGS=' '${LIBS}
+     if [ $coverage ]; then
+       FFLAGS=${FFLAGS}' --coverage'
+       LFLAGS='--coverage '${LFLAGS}
+     fi
+

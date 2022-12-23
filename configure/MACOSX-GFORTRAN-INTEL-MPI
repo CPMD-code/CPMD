@@ -1,0 +1,34 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for a linux pc using 
+#INFO# the GNU Fortran compiler.
+#INFO# contributed by R Vuilleumier <vuilleum@lptl.jussieu.fr>
+#INFO# debug version by T Laino <teo@zurich.ibm.com>
+
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP=''
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT  \
+           -D__PARALLEL '
+     FFLAGS_GROMOS='-ffixed-form  $(FFLAGS)' 
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)' 
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -fbounds-check -Wuninitialized'
+       CFLAGS='-g -O0  -m32 -Wall'
+     else
+       FFLAGS='-O2'
+       CFLAGS='-O2  -m32 -Wall'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS='-Wl,-framework -Wl,Accelerate -Wl,-Y -Wl,10'
+     else
+       LIBS='-Wl,-framework -Wl,Accelerate -Wl,-Y -Wl,10'
+     fi
+     LFLAGS=' '${LIBS}
+     if [ $coverage ]; then
+       FFLAGS=${FFLAGS}' --coverage'
+       LFLAGS='--coverage '${LFLAGS}
+     fi

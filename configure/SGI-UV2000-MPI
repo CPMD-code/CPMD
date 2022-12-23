@@ -1,0 +1,27 @@
+#INFO#
+#INFO# Configure file for SiliconGraphics SGI- UV 2000
+#INFO# Institute for Molecular Science (IMS) - Okazaki, JAPAN
+#INFO# Strasbourg/Okazaki, 4 April 2014
+#INFO#
+     IRAT=2
+     FC='mpiifort'
+     CC='icc'
+     LD='mpiifort'
+     CPP='/usr/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__PARALLEL \
+         '
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+        -D__Linux  -D__HAS_FFT_DEFAULT -D__PARALLEL \
+         '
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar ruv'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-O2 -openmp -parallel'
+       CFLAGS='-O2'
+     fi
+     LFLAGS='-mkl=sequential'

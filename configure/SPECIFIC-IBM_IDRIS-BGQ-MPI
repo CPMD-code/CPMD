@@ -1,0 +1,33 @@
+#INFO#
+#INFO#   IBM BG/Q - OMP/SMP version @ IDRIS
+#INFO#   Note: A xlf compiler bug is still present on collapse
+#INFO#   clause of OpenMP 3.0 affecting gcxctbl.F on January 2013
+#INFO#
+
+     IRAT=2
+     CC='mpixlc_r'
+     FC='mpixlf77_r'
+     LD='mpixlf77_r'
+     CPP='/opt/ibmcmp/xlf/bg/14.1/exe/cpp -P'
+     CPPFLAGS='-D__IBM -D__HAS_FFT_DEFAULT -D__BG -D__PWRLinux -D__PARALLEL  ' 
+     NOOPT_FLAG='-O0'
+     NOOPT_OBJS='control_utils.mod.o  meta_colvar_inp.o respin_p.o fileopen.o dftin_utils.mod.o vdwin.o coninp.o lr_in.o \
+                 mm_readgromos.o mm_read_qmmm_input.o'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+                      -D__IBM -D__HAS_FFT_DEFAULT -D__BG -D__PWRLinux -D__PARALLEL  -D__HAS_SIZEOF -D__HAS_EXTERNAL_IDAMIN'
+     FFLAGS_GROMOS='-qfixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-O -qhot -w -qnosave -g -C -qflttrap'
+       CFLAGS='-O -g -C -qflttrap'
+     else
+       FFLAGS='-O -qhot -w -qnosave '
+       CFLAGS='-O -g -C -qflttrap'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qsmp=omp,noauto'
+       LIBS='-llapack -lesslsmpbg -lmass -lmassv --allow-multiple-definition'
+     else
+       LIBS='-llapack -lesslbg -lmass -lmassv --allow-multiple-definition'
+     fi
+     LFLAGS=' '${LIBS}

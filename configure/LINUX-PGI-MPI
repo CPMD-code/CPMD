@@ -1,0 +1,75 @@
+#INFO#
+#INFO# Configuration to build a parallel cpmd executable for a linux pc using 
+#INFO# the Portland Group Fortran compiler pgf90.
+#INFO#
+#INFO# use '-tp p7' in FFLAGS to optimize for intel pentium iv cpus
+#INFO# use '-tp p6' in FFLAGS to optimize for intel pentium iii or amd athlon cpus
+#INFO# use '-tp px' in FFLAGS to optimize for a generic x86 cpu
+#INFO#
+#INFO# Since the newer Portland use shared runtime libraries by default,
+#INFO# the creation of static binaries (-Bstatic) is highly recommended for optimal 
+#INFO# portability of the binary. With a dynamic binary you have to install
+#INFO# the same shared runtime libraries on _every_ machine, where you want to run cpmd.
+#INFO#
+#INFO# For optimal performance use either a combined LAPACK/ATLAS library (see the 
+#INFO# atlas manual for instructions) or the intel math kernel library (MKL); 
+#INFO# you can use the pentium iii version of the mkl on amd athlon cpus.
+#INFO# e.g. LFLAGS=-L/opt/intel/mkl/lib/32 -lmkl_lapack -lmkl_p3  -Bstatic
+#INFO#
+#INFO# This configuration assumes, that the MPI library was configured to
+#INFO# use the portland compiler. If this is not the case, you either have to
+#INFO# find out, how to tell mpif90 to use a different compiler or recompile
+#INFO# your MPI library.
+#INFO#
+#INFO# see <http://www.theochem.ruhr-uni-bochum.de/~axel.kohlmeyer/cpmd-linux.html>
+#INFO# for more information on compiling and running CPMD on x86 linux machines.
+#INFO#
+#INFO# NOTE: CPMD cannot be compiled with the GNU Fortran compiler.
+#INFO# 
+#INFO# install 1
+#INFO#    FFLAGS='-I/usr/local/mpich/include/'
+#INFO#    LFLAGS='-llapack -lblas -lpgc -lpgftnrtl'
+#INFO# install 2
+#INFO#    FFLAGS='-I/usr/local/mpich/include/'
+#INFO#    LFLAGS='-L/usr/pgi/linux86/lib \
+#INFO#            -L/usr/local/mpich/build/LINUX/ch_p4/lib/ -lmpich \
+#INFO#            -llapack  -lintelblas -lpgc -lpgftnrtl'
+#INFO# install 3
+#INFO#    FFLAGS='-Mr8 -pc64 -Msignextend -byteswapio -Msecond_underscore'
+#INFO#    LFLAGS='-llapack -lblas -byteswapio'
+#INFO#
+#INFO# alternative compiler/linker settings
+#INFO#      FC='pgf90 -O4 -w -fast '
+#INFO#      CC='cc -O'
+#INFO#      LD='pgf90 -O4'
+#INFO# alternative compiler/linker settings for debug
+#INFO#      FC='pgf90 -g -w '       
+#INFO#      CC='cc -g -sb -C -errtags' 
+#INFO#      LD='pgf90 -g'              
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux   -D__HAS_FFT_DEFAULT -D__PARALLEL -D__HAS_EXTERNAL_C_ERF '
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID -D__HAS_FFT_DEFAULT \
+                      -D__Linux   DFFT_DEFAULT -D__PARALLEL -D__HAS_EXTERNAL_C_ERF '
+     FFLAGS_GROMOS='-Mfixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -r8 -pc=64 -Msignextend -mp=align -Minfo=all'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-O2 -fast -r8 -pc=64 -Msignextend -mp=align -Minfo=all'
+       CFLAGS='-O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -mp=align'
+       LIBS='-lacml'
+     else 
+       LIBS='-lacml'
+     fi
+     LFLAGS=' '${LIBS}

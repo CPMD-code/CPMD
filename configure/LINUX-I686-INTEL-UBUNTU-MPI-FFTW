@@ -1,0 +1,31 @@
+#INFO#
+#INFO# Configuration to build a 32-bit parallel CPMD executable for
+#INFO# Ubuntu Linux.
+#INFO# 
+#INFO# I. Fedulova
+
+     IRAT=2
+     CC='gcc'
+     FC='ifort'
+     LD='ifort'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_FFTW3 -D__PARALLEL  '
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar ruv'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       CFLAGS='-g -O0 -Wall'
+       FFLAGS='-g -O0 -debug all -check all -finstrument-functions -traceback   -I/usr/include/mpi'
+     else
+       CFLAGS='-O2 -Wall'
+       FFLAGS='-O2 -I/usr/include/mpi'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS='-L/usr/lib/atlas-base/atlas -llapack -lblas -lfftw3_threads -L/home/irina/opt/openmpi/lib -lmpi_f77 -lmpi'
+     else
+       LIBS='-L/usr/lib/atlas-base/atlas -llapack -lblas -lfftw3 -L/home/irina/opt/openmpi/lib -lmpi_f77 -lmpi'
+     fi
+     LFLAGS=' '${LIBS}

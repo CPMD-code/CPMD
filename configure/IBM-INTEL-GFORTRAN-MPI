@@ -1,0 +1,44 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for intel machine using 
+#INFO# the GNU Fortran compiler.
+#INFO#
+#INFO# V. Weber
+#INFO#
+     FC='/sp/vwe/prog/OPENMPI-2.1.1-gcc-7.2.0-intel/bin/mpifort'
+     CC='/sp/vwe/prog/OPENMPI-2.1.1-gcc-7.2.0-intel/bin/mpicc'
+     LD='/sp/vwe/prog/OPENMPI-2.1.1-gcc-7.2.0-intel/bin/mpifort'
+#     FC='/sp/vwe/prog/OPENMPI-3.0.0rc1-gcc-6.4.0-intel/bin/mpifort'
+#     CC='/sp/vwe/prog/OPENMPI-3.0.0rc1-gcc-6.4.0-intel/bin/mpicc'
+#     LD='/sp/vwe/prog/OPENMPI-3.0.0rc1-gcc-6.4.0-intel/bin/mpifort'
+#     FC='/sp/vwe/prog/OPENMPI-2.0.0-gcc-6.1.0-intel/bin/mpifort'
+#     CC='/sp/vwe/prog/OPENMPI-2.0.0-gcc-6.1.0-intel/bin/mpicc'
+#     LD='/sp/vwe/prog/OPENMPI-2.0.0-gcc-6.1.0-intel/bin/mpifort'
+#     FC='/sp/vwe/prog/MPICH2-1.5-gcc-6.1.0-intel/bin/mpif90'
+#     CC='/sp/vwe/prog/MPICH2-1.5-gcc-6.1.0-intel/bin/mpicc'
+#     LD='/sp/vwe/prog/MPICH2-1.5-gcc-6.1.0-intel/bin/mpif90'
+     CPP=''
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__HAS_LIBXC  \
+           -D__PARALLEL   -D__MINPACK'
+     FFLAGS_GROMOS='-ffixed-form  $(FFLAGS) -std=gnu' 
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)' 
+     if [ $debug ]; then
+       FFLAGS=' -fmax-errors=0 -g -O0 -fcheck=all -Wuninitialized -std=f2008ts -fall-intrinsics -ffree-line-length-none'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-Wall -O2 -std=f2008ts -fall-intrinsics -ffree-line-length-none'
+       CFLAGS='-O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp'
+       LIBS='/sp/LIB/LINUX64/BLADE84/MINPACK/GFORTRAN/libminpack.a /sp/vwe/lib/liblapack342_intel_gcc_4.4.6.a /sp/vwe/lib/libblas342_intel_gcc_4.4.6.a'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${GREP} version | ${AWK} '{ print ( $3 < "4.7.0" ) ? "true" : "false" }'`
+     else
+       LIBS='/sp/LIB/LINUX64/BLADE84/MINPACK/GFORTRAN/libminpack.a /sp/vwe/lib/liblapack342_intel_gcc_4.4.6.a /sp/vwe/lib/libblas342_intel_gcc_4.4.6.a'
+     fi
+     if [ $coverage ]; then
+       FFLAGS=${FFLAGS}' --coverage'
+       LFLAGS='--coverage '${LFLAGS}
+     fi
+     LIBS=${LIBS}' /sp/vwe/prog/LIBXC-3.0.0-gcc-6.1.0/lib/libxcf03.a /sp/vwe/prog/LIBXC-3.0.0-gcc-6.1.0/lib/libxc.a'
+     FFLAGS=${FFLAGS}' -I/sp/vwe/prog/LIBXC-3.0.0-gcc-6.1.0/include'
+     LFLAGS=' '${LIBS}

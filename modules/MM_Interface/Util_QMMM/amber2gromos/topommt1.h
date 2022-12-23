@@ -1,0 +1,61 @@
+C $Id: topommt1.h,v 1.1 2006-12-27 11:34:07 itavern Exp $
+C
+
+C     COMMON BLOCK DEFINITIONS FOR THE 1. GROMOS TOPOLOGY IN PROMMT.F
+C
+C----------------------------------------------------------
+C     NOTE: INCLUDE THE FILE TOPOSZ.H BEFORE INCLUDING
+C     THIS ONE.
+C----------------------------------------------------------
+
+
+      CHARACTER*(MAXNLE) PANM1
+      CHARACTER*(MAXRLE) AANM1
+
+      INTEGER IAC1,NRP1,
+     $        NRAA21,
+     $        IB1,JB1,ICB1,NBON1,
+     $        IBH1,JBH1,ICBH1,NBONH1,
+     $        ITH1,JTH1,KTH1,ICTH1,NTHEH1,
+     $        IT1,JT1,KT1,ICT1,NTHE1,
+     $        IQ1,JQ1,KQ1,LQ1,ICQ1,NQHI1,
+     $        IQH1,JQH1,KQH1,LQH1,ICQH1,NQHIH1,
+     $        IP1,JP1,KP1,LP1,ICP1,NPHI1,
+     $        IPH1,JPH1,KPH1,LPH1,ICPH1,NPHIH1,
+     $        MRES1,INC1,NCAG1,INE1,KNE1,INE141,KNE141,
+     $        JSNE1,NAEX1,JSN141,NAEX41
+
+      REAL    CG1,WINV1,WMAS1
+
+      COMMON /CTOP1/
+     $        PANM1(MAXNRP),
+     $        AANM1(MAXAA2)
+
+      COMMON /ITOP1/
+     $       IAC1(MAXNRP),NRP1,
+     $       NRAA21,
+     $       IB1(MAXBON),JB1(MAXBON),ICB1(MAXBON),NBON1,
+     $       IBH1(MAXBNH),JBH1(MAXBNH),ICBH1(MAXBNH),NBONH1,
+     $       ITH1(MXQHEH),JTH1(MXQHEH),KTH1(MXQHEH),
+     $       ICTH1(MXQHEH),NTHEH1,
+     $       IT1(MAXTHE),JT1(MAXTHE),KT1(MAXTHE),
+     $       ICT1(MAXTHE),NTHE1,
+     $       IQ1(MAXQHI),JQ1(MAXQHI),KQ1(MAXQHI),LQ1(MAXQHI),
+     $       ICQ1(MAXQHI),NQHI1,
+     $       IQH1(MAXHIH),JQH1(MAXHIH)
+
+      COMMON /IITOP1/      
+     $       KQH1(MAXHIH),LQH1(MAXHIH),ICQH1(MAXHIH),NQHIH1,
+     $       IP1(MAXPHI),JP1(MAXPHI),KP1(MAXPHI),LP1(MAXPHI),
+     $       ICP1(MAXPHI),NPHI1,
+     $       IPH1(MXPHIH),JPH1(MXPHIH),KPH1(MXPHIH),LPH1(MXPHIH),
+     $       ICPH1(MXPHIH),NPHIH1,
+     $       MRES1(MAXNRP),
+     $       INC1(MAXCAG),NCAG1,
+     $       INE1(MAXNRP),KNE1(MAXNRP),INE141(MAXNRP),KNE141(MAXNRP),
+     $       JSNE1(MAXAEX),NAEX1,
+     $       JSN141(MXEX14),NAEX41
+
+
+      COMMON /RTOP1/
+     $        CG1(MAXNRP),WINV1(MAXNRP),WMAS1(MAXNRP)

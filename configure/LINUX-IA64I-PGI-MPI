@@ -1,0 +1,45 @@
+#INFO#
+#INFO# Configuration for Linux HPC 64-bit 
+#INFO# Portland/Nvidia PGI Fortran ver. 12.8 or later - OpenMPI + OMP 3.0 (or later)
+#INFO# For optimal performance you should use a specifically tuned BLAS/LAPACK
+#INFO# library as in this specific configuration file 
+#INFO# WARNING 1: For LFLAGS the options -mp=allcores -mp=bind make nasty things 
+#INFO#            to the socket !
+#INFO# WARNING 2: Until version 12.7 a bug (bug N. 18788) is present giving random
+#INFO#            compilation errors in util_p_utils.mod.F90 at eigr_dot and eigr_dot2
+#INFO#            of the type
+#INFO             PGF90-S-0087-Non-constant expression where constant expression required 
+#INFO#            PGF90-S-0081-Illegal selector - KIND parameter has unknown value for data type
+#INFO$            This was fixed only in version 12.8.For details see
+#INFO# http://www.pgroup.com/userforum/viewtopic.php?t=3278&sid=f4ad7c54b8257fd85041f9b1ebbb96d1
+#INFO# (University od Strasbourg-University of Tokyo, 2015). 
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='cpp -P -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__HAS_EXTERNAL_C_ERF \
+         -D__PARALLEL -D__HAS_SIZEOF '
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+             -D__Linux  -D__HAS_FFT_DEFAULT -D__HAS_EXTERNAL_C_ERF \
+             -D__PARALLEL -D__HAS_SIZEOF '
+     FFLAGS_GROMOS=' $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -r8 -pc=64 -Msignextend'
+       CFLAGS='-g -O2 '
+     else
+       FFLAGS='-fastsse -tp k8-64 -r8 -pc=64 -Msignextend'
+       CFLAGS='-O2 '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -mp=align'
+       OMP3_DISABLED='false'
+       LIBS='-lacml'
+     else
+       LIBS='-lacml'
+     fi
+     LFLAGS=${LIBS}

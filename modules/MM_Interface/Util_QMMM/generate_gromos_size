@@ -1,0 +1,258 @@
+#
+# get the number of charge groups, exclusions and 1-4 excl
+#
+
+cat << *** > awkpr
+     BEGIN{I=1000000}
+     {if(\$1=="SOLUTEATOM") I=0;
+      if(index(\$1,"#")==0 && I<1000000 && \$1!="SOLUTEATOM")I++;
+      if( I<1000000 && \$1=="END") I=1000000;
+      if(I>1 && I<1000000 )
+             {NAA++;
+              if(NAA==1)
+                 { NAT_F++;
+                  if(NAT_F != \$1) print "error in awk",skip,NAA
+                  nex=\$8;
+                  EXTOT=EXTOT+nex;
+                  if(NF<(nex+8))skip=1;
+                  if(\$7==1)NCG++ }
+               if(NAA==2 && skip==1)
+                 { skip=0;
+                  NAA=1 }
+               if(NAA==2)
+                 {EX14TOT=EX14TOT+\$1;
+                 if(NF<(\$1+1))NAA=-1;
+                 if(NF==(\$1+1))NAA=0
+                 }  
+              }
+     }
+     END {print NCG+10,EX14TOT+10,EXTOT+20000}
+***
+      
+#if NOT VPP-Fujitsu use the following
+/usr/bin/awk -f awkpr $1 > o1
+
+cat << ENDF > get_str
+/usr/bin/awk -v STRFIND=\$2 -v FIELD=\$3     \
+     'BEGIN{I=100000} {I++;if(\$1==STRFIND) I=0;if(index(\$1,"#")==0 && I<100000 && I!=0 ){I=100000;print \$FIELD+10}}' \$1  
+ENDF
+
+#if VPP-Fujitsu use the following
+#/usr/bin/nawk -f awkpr $1 > o1
+#
+#cat << ENDF > get_str
+#/usr/bin/nawk -v STRFIND=\$2 -v FIELD=\$3     \
+#     'BEGIN{I=100000} {I++;if(\$1==STRFIND) I=0;if(index(\$1,"#")==0 && I<100000 && I!=0 ){I=100000;print \$FIELD+10}}' \$1  
+#ENDF
+
+chmod a+x get_str
+
+MAXATT=`./get_str $1 ATOMTYPENAME 1`   
+MAXAA2=`./get_str $1 RESNAME 1`   
+MAXNRP=`./get_str $1 SOLUTEATOM 1`   
+MAXNBT=`./get_str $1 BONDTYPE 1`   
+MAXBNH=`./get_str $1 BONDH 1`   
+MAXBON=`./get_str $1 BOND 1`   
+MAXTTY=`./get_str $1 BONDANGLETYPE  1`   
+MXQHEH=`./get_str $1 BONDANGLEH 1`   
+MAXTHE=`./get_str $1 BONDANGLE 1`   
+MAXQTY=`./get_str $1 IMPDIHEDRALTYPE 1`   
+MAXHIH=`./get_str $1 IMPDIHEDRALH 1`   
+MAXQHI=`./get_str $1 IMPDIHEDRAL 1`   
+MAXPTY=`./get_str $1 DIHEDRALTYPE 1`   
+MXPHIH=`./get_str $1 DIHEDRALH 1`   
+MAXPHI=`./get_str $1 DIHEDRAL 1`   
+#if NOT VPP-Fujitsu use the following
+MAXCAG=`/usr/bin/awk '{print $1}' o1`
+MXEX14=`/usr/bin/awk '{print $2}' o1`
+MAXAEX=`/usr/bin/awk '{print $3}' o1`
+#if VPP-Fujitsu use the following
+#MAXCAG=`/usr/bin/nawk '{print $1}' o1`
+#MXEX14=`/usr/bin/nawk '{print $2}' o1`
+#MAXAEX=`/usr/bin/nawk '{print $3}' o1`
+
+#
+# TEMPLATE FOR toposz
+# 
+cat << END_TOPO > toposz.h
+C $Id: generate_gromos_size,v 1.1 2006-12-27 11:11:14 itavern Exp $ -*-fortran-*-
+C include file for GROMOS size limits on topology
+C
+
+COMMVAR MAXATT,MXATT2
+C maximum number of atom types
+      INTEGER MAXATT,MXATT2
+      PARAMETER (MAXATT = ${MAXATT})
+      PARAMETER (MXATT2 = MAXATT*(MAXATT+1)/2 )
+COMMEND
+
+COMMVAR MAXAA2
+C maximum number of residues
+      INTEGER MAXAA2
+      PARAMETER (MAXAA2 = ${MAXAA2})
+COMMEND
+
+COMMVAR MAXNRP,MAXNP2
+C maximum number of atoms per solute
+      INTEGER MAXNRP,MAXNP2
+
+      PARAMETER (MAXNRP = ${MAXNRP})
+      PARAMETER (MAXNP2 = 2*MAXNRP)
+COMMEND
+
+COMMVAR MAXNBT,MAXBNH,MAXBON
+C--------BONDS
+C maximum number of covalent bond types
+      INTEGER MAXNBT
+      PARAMETER (MAXNBT = ${MAXNBT})
+
+C maximum number of bonds involving H-atoms in the solute
+      INTEGER MAXBNH
+      PARAMETER (MAXBNH = ${MAXBNH})
+
+C maximum number of bonds NOT involving H-atoms in the solute
+      INTEGER MAXBON
+      PARAMETER (MAXBON = ${MAXBON})
+COMMEND
+
+
+COMMVAR MAXTTY,MXQHEH,MAXTHE
+C---------BOND ANGLES
+C maximum number of bond angle types
+      INTEGER MAXTTY
+      PARAMETER (MAXTTY = ${MAXTTY})
+
+C maximum number of bond angles involving
+C H-atoms in the solute
+      INTEGER MXQHEH
+      PARAMETER (MXQHEH = ${MXQHEH})
+
+C maximum number of bond angles NOT involving
+C H-atoms in the solute
+      INTEGER MAXTHE
+      PARAMETER (MAXTHE = ${MAXTHE})
+COMMEND
+
+COMMVAR MAXQTY,MAXHIH,MAXQHI
+C---------IMPROPER DIHEDRALS
+C maximum number of improper dihedral types
+      INTEGER MAXQTY
+      PARAMETER (MAXQTY = ${MAXQTY})
+
+C maximum number of improper dihedrals involving
+C H-atoms in the solute
+      INTEGER MAXHIH
+      PARAMETER (MAXHIH = ${MAXHIH})
+
+C maximum number of improper dihedrals NOT involving 
+C H-atoms in the solute
+      INTEGER MAXQHI
+      PARAMETER (MAXQHI = ${MAXQHI})
+COMMEND
+
+
+COMMVAR MAXPTY,MXPHIH,MAXPHI
+C-----------DIHEDRALS
+C maximum number of dihedral types
+      INTEGER MAXPTY
+      PARAMETER (MAXPTY = ${MAXPTY})
+
+C maximum number of dihedrals involving
+C H-atoms in the solute
+      INTEGER MXPHIH
+      PARAMETER (MXPHIH = ${MXPHIH})
+
+C maximum number of dihedrals NOT
+C involving H-atoms in the solute
+      INTEGER MAXPHI
+      PARAMETER (MAXPHI = ${MAXPHI})
+COMMEND
+
+
+COMMVAR MAXCAG,MAXAEX,MXEX14
+C maximum number of charge groups in a solute molecule
+      INTEGER MAXCAG
+      PARAMETER (MAXCAG = ${MAXCAG})
+
+C maximum total number of exclusions in a solute molecule
+      INTEGER MAXAEX
+      PARAMETER (MAXAEX = ${MAXAEX})
+
+C maximum number of third number atoms in a solute molecule
+      INTEGER MXEX14
+      PARAMETER (MXEX14 = ${MXEX14})
+COMMEND
+
+
+COMMVAR MAXNRS,MXCONS
+C maximum number of atoms per solvent molecule
+      INTEGER MAXNRS
+      PARAMETER (MAXNRS = 3)
+
+C maximum number of solvent constraints
+      INTEGER MXCONS
+      PARAMETER (MXCONS = 3)
+COMMEND
+
+COMMVAR MAXTIT,MAXLNS
+C params defining the size of character arrays
+C length of title string, and max number of lines allowed
+      INTEGER MAXTIT, MAXLNS
+      PARAMETER (MAXTIT = 80, MAXLNS = 10)
+COMMEND
+
+
+COMMVAR MAXTLE,MAXRLE,MAXNLE,MXNLE2,MXNLE3,MXNLE4
+C----IT IS NOT ADVISED TO CHANGE THE VALUES OF THESE CONSTANTS
+C length of atom type names
+      INTEGER MAXTLE
+      PARAMETER (MAXTLE = 5)
+
+C length of residue type names
+      INTEGER MAXRLE
+      PARAMETER (MAXRLE = 5)
+
+C length of atom name of solvent and solute atoms
+      INTEGER MAXNLE
+      PARAMETER (MAXNLE = 5)
+
+C these used for pretty printing...
+      INTEGER MXNLE2
+      PARAMETER (MXNLE2 = 2*MAXNLE + 1)
+
+      INTEGER MXNLE3
+      PARAMETER (MXNLE3 = 3*MAXNLE + 2)
+
+      INTEGER MXNLE4
+      PARAMETER (MXNLE4 = 4*MAXNLE + 3)
+COMMEND
+
+
+COMMVAR MAXPIA,MAXPID,MAXPIT,MAXPIB,MAXPIW,MAXWR2
+C-----PATH INTEGRAL
+C maximum number of discretized atoms
+      INTEGER MAXPIA
+      PARAMETER (MAXPIA = 100)
+ 
+C maximum number of discretizations
+      INTEGER MAXPID
+      PARAMETER (MAXPID = 10)
+ 
+C maximum number of path integral 'bond' types, should be MAXPIA
+      INTEGER MAXPIT
+      PARAMETER (MAXPIT = MAXPIA)
+ 
+C maximum number of path integral 'bonds': MAXPIA*MAXPID
+      INTEGER MAXPIB
+      PARAMETER (MAXPIB = 1000)
+ 
+C maximum dimension of work arrays
+      INTEGER MAXPIW
+      PARAMETER (MAXPIW = 1000)
+ 
+C maximum number of atoms forming a bond
+      INTEGER MAXWR2
+      PARAMETER (MAXWR2 = 4)
+COMMEND
+END_TOPO
+rm -f o1 awkpr get_str

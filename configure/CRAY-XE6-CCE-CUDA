@@ -1,0 +1,40 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for a CRAY-XE6 and CRAY-XC30 using 
+#INFO# the CRAY Fortran compiler.
+#INFO#
+#INFO# cpmd compiles with cce:
+#INFO#    8.1.7
+#INFO#    8.1.9
+#INFO#    8.2.0
+#INFO#
+#INFO# V. Weber (vwe@zurich.ibm.com)
+#INFO#
+
+     CUDA_PATH='$(CUDATOOLKIT_HOME)'
+     FC='ftn'
+     CC='cc'
+     LD='ftn'
+     NVCC=${CUDA_PATH}'/bin/nvcc'
+     NVCCFLAGS='--default-stream per-thread -O3 -m64 -gencode arch=compute_35,code=sm_35 -gencode arch=compute_37,code=sm_37'
+     CPP='/usr/bin/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__PARALLEL  -D__HAS_CUDA -D__HASNT_F08_ISO_FORTRAN_ENV'
+     FFLAGS_GROMOS='  $(FFLAGS)' 
+     FFLAGS_GROMOS_MODULES='  $(FFLAGS)' 
+     if [ $debug ]; then
+       FFLAGS='-e m'
+       CFLAGS=''
+     else
+       FFLAGS='-e m -O2 -Oipa1'
+       CFLAGS=''
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' '
+       LIBS=''
+     else
+       echo "Non-OMP settings not available!"
+       exit 1
+       LIBS=''
+     fi
+     CFLAGS=${CFLAGS}' -I'${CUDA_PATH}'/include'
+     LIBS=${LIBS}' -L'${CUDA_PATH}'/lib64 -lcudart -lcufft -lcusolver -lcublas'
+     LFLAGS=''${LIBS}

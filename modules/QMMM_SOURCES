@@ -1,0 +1,61 @@
+GROMOS_SRC = Gromos/blockio.F  \
+                 Gromos/c06xxx.F \
+                 Gromos/cobond.F  \
+                 Gromos/conat.F  \
+                 Gromos/fileio.F  \
+                 Gromos/gauss.F  \
+                 Gromos/latsum.F  \
+                 Gromos/mdutils.F  \
+                 Gromos/mm_concg.F  \
+                 Gromos/mm_for.F  \
+                 Gromos/mm_force.F  \
+                 Gromos/mm_setup.F  \
+                 Gromos/mm_setup_dr.F  \
+                 Gromos/mm_shake.F \
+                 Gromos/nbpml.F  \
+                 Gromos/nonbml.F  \
+                 Gromos/posio.F  \
+                 Gromos/random.F  \
+                 Gromos/rdmd.F  \
+                 Gromos/mm_restx.F  \
+                 Gromos/rdtopo.F  \
+                 Gromos/schifezza.F  \
+                 Gromos/string.F  \
+                 Gromos/traco.F  \
+                 Gromos/wrtopo.F  \
+                 Gromos/allocate_gromos.F  
+
+GROMOS_MODULES = Gromos/coordsz.mod.F90 Gromos/coordar.mod.F90
+
+INTERFACE_SRC = MM_Interface/mm_add_hydrogen.F  \
+                    MM_Interface/mm_center.F  \
+                    MM_Interface/mm_reflex.F  \
+                    MM_Interface/mm_charges.F  \
+                    MM_Interface/mm_detit.F  \
+                    MM_Interface/mm_elstat.F  \
+                    MM_Interface/mm_elstat_atdens.F  \
+                    MM_Interface/mm_elstat_sr.F  \
+                    MM_Interface/mm_excl.F  \
+                    MM_Interface/mm_excl_mech.F  \
+                    MM_Interface/mm_flex_solv.F  \
+                    MM_Interface/mm_gcp.F  \
+                    MM_Interface/mm_get_NSX.F  \
+                    MM_Interface/mm_invert.F  \
+                    MM_Interface/mm_long_range_classic.F  \
+                    MM_Interface/mm_long_range_potential.F  \
+                    MM_Interface/mm_min_im.F  \
+                    MM_Interface/mm_multipole.F  \
+                    MM_Interface/mm_nlist.F  \
+                    MM_Interface/mm_pardef.F  \
+                    MM_Interface/mm_quantum_topo.F  \
+                    MM_Interface/mm_readgromos.F  \
+                    MM_Interface/mm_short_range_classic.F  \
+                    MM_Interface/mm_solv_constr.F  \
+                    MM_Interface/mm_transl_c0.F  \
+                    MM_Interface/mm_write_gromos_coord.F  \
+                    MM_Interface/mm_read_qmmm_input.F  \
+                    MM_Interface/mm_write_potential.F   \
+                    MM_Interface/mm_restart_traj.F   \
+                    MM_Interface/mm_add_dummy.F \
+                    MM_Interface/mm_cap_H.F \
+                    MM_Interface/mm_charge_rest.F

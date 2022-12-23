@@ -1,0 +1,41 @@
+#INFO#
+#INFO# Configuration for CRAY XC30 type machine (ARCHER) using
+#INFO# Intel Composer v.17 or later (or later) 
+#INFO# For optimal performance you should use the Intel xiar driver
+#INFO# instead of the standard GNU ar
+#INFO# All applications that will run in parallel on the Cray XC 
+#INFO# should be compiled with the standard language wrappers
+#INFO# cc = wrapper around the C compiler
+#INFO# CC = wrapper around the C++ compiler
+#INFO# ftn = wrapper around the Fortran compiler
+#INFO# (M. Boero & B. Cornell, IPCMS & King's College, 2019). 
+#INFO#
+     IRAT=2
+     FC='ftn -c'
+     CC='cc'
+     LD='ftn -static-intel'
+     CPP='/usr/bin/cpp -P -traditional'
+     CPPFLAGS='-D__Linux -D__HAS_FFT_DEFAULT -D__PARALLEL -D__HAS_SIZEOF \
+         -D__HASNT_F08_ISO_FORTRAN_ENV -D__HAS_BF_STREAM_IO -D__HASNT_OMP_45'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+               -D__Linux -D__HAS_FFT_DEFAULT -D__PARALLEL -D__HAS_SIZEOF \
+         -D__HASNT_F08_ISO_FORTRAN_ENV -D__HAS_BF_STREAM_IO -D__HASNT_OMP_45'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='xiar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g'
+       CFLAGS='-g -Wall -m64'
+     else
+       FFLAGS='-O2 -pc64 -funroll-loops -heap-arrays 64 -assume byterecl -fpp -xHost'
+       CFLAGS='-O2 -Wall  '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qopenmp'
+       OMP3_DISABLED='false'
+       LIBS='-static-intel -mkl=parallel -lm'
+     else
+       LIBS='-static-intel -mkl=cluster -lm -lpthread -liomp5'
+     fi
+     LFLAGS=${LIBS}

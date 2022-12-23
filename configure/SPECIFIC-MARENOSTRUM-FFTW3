@@ -1,0 +1,42 @@
+#INFO#
+#INFO# Configuration for Mare Nostrum machine using OpenMPI
+#INFO# OMP 3.0 and Intel Fortran Composer + MKL + FFTW3
+#INFO# Intel SandyBridge-EP E5-2670 cores at 2.6 GHz (3028 compute nodes)  
+#INFO# 94.625 TB of main memory (32 GB/node)  
+#INFO# 1.9 PB of disk storage 
+#INFO# Interconnection networks: Infiniband + Gigabit Ethernet  
+#INFO# Operating System: Linux - SuSe Distribution 
+#INFO# Strasbourg/Barcelona - August 2017
+#INFO#   
+
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux -D__HAS_EXTERNAL_IZAMAX -D__HAS_FFT_FFTW3 -D__PARALLEL  \
+               -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+             -D__Linux -D__HAS_EXTERNAL_IZAMAX -D__HAS_FFT_FFTW3 -D__PARALLEL  \
+             -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='ar -r'
+     if [ $debug ]; then
+       FFLAGS='-g -pc64 '
+       CFLAGS='-g -O2'
+     else
+       FFLAGS='-O2 -pc64 -funroll-loops'
+       CFLAGS='-O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp -fpp'
+       OMP3_DISABLED='false'
+       LIBS='-mkl=parallel -lm \
+             -L/apps/FFTW/3.3.3/lib -lfftw3 -R/apps/FFTW/3.3.3/lib/'
+     else
+       LIBS='-mkl=serial -lm \
+             -L/apps/FFTW/3.3.3/lib -lfftw3 -R/apps/FFTW/3.3.3/lib/'
+     fi
+     LFLAGS='-static-intel '${LIBS}
+

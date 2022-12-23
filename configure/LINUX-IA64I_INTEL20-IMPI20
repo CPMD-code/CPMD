@@ -1,0 +1,39 @@
+#INFO#
+#INFO# Configuration for Linux HPC (NEC/DELL) supercluster Equip@Meso / CPER AlsaCalcul
+#INFO# Intel Composer v.19 or later - OpenMPI/IntelMPI-2019 + OMP 4.0/5.0 (or later)
+#INFO# Note that since version 19, Intel compilers give you the following warning:
+#INFO# OMP_NESTED: deprecated; max-active-levels-var=1
+#INFO# For these newer compilers the additional option -D__HASNT_OMP_SET_NESTED
+#INFO# has been implemented.
+#INFO# (IPCMS/Nagoya University, January 2021)
+#INFO#
+     IRAT=2
+     FC='mpiifort'
+     CC='mpiicc'
+     LD='mpiifort'
+     CPP='/lib/cpp -P -traditional'
+     CPPFLAGS='-D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC -D__HASNT_OMP_SET_NESTED \
+         -D__PARALLEL -D__HAS_SIZEOF -D__HAS_BF_STREAM_IO'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+             -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC -D__HASNT_OMP_SET_NESTED \
+             -D__PARALLEL -D__HAS_SIZEOF -D__HAS_BF_STREAM_IO'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='xiar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g'
+       CFLAGS='-g -Wall -m64'
+     else
+       FFLAGS='-O2 -pc64 -funroll-loops -fpp -heap-arrays 64 -xHost'
+       CFLAGS='-O2 -Wall  '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qopenmp'
+       OMP3_DISABLED='false'
+       LIBS='-mkl=parallel -lm'
+     else
+       LIBS='-static-intel -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core \
+             -lm -lpthread -liomp5 '
+     fi
+     LFLAGS=${LIBS}

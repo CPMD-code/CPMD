@@ -1,0 +1,35 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for pwr7 using 
+#INFO# the GNU Fortran compiler.
+#INFO#
+#INFO# V. Weber
+#INFO#
+
+     IRAT=2
+     FC='/sp/vwe/prog/MPICH2-1.4.1p1-gcc-4.7.2/bin/mpif90'
+     CC='/sp/vwe/prog/GCC-4.7.2-ppc7/bin/gcc-ppc7-4.7.2'
+     LD='/sp/vwe/prog/MPICH2-1.4.1p1-gcc-4.7.2/bin/mpif90'
+     CPP=''
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_FFTW3  \
+           -D__PARALLEL   -D__HAS_SIZEOF'
+     FFLAGS_GROMOS='-ffixed-form  $(FFLAGS)' 
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)' 
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -fcheck=bounds,pointer,mem -Wuninitialized -Wall'
+       CFLAGS='-g -O0 -Wall'
+     else
+       FFLAGS='-O2 -Wall'
+       CFLAGS='-O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${GREP} version | ${AWK} '{ print ( $3 < "4.7.0" ) ? "true" : "false" }'`
+       LIBS='-L/sp/vwe/prog/FFTW-3.3.2-gcc-ppc7/lib -lfftw3_omp /sp/vwe/lib/liblapack331_ppc7_gfortran_4.6.2_64.a /sp/vwe/lib/libblas331_ppc7_gfortran_4.6.2_64.a'
+     else
+       LIBS='-L/sp/vwe/prog/FFTW-3.3.2-gcc-ppc7/lib -lfftw3 /sp/vwe/lib/liblapack331_ppc7_gfortran_4.6.2_64.a /sp/vwe/lib/libblas331_ppc7_gfortran_4.6.2_64.a'
+     fi
+     LFLAGS=' '${LIBS}
+     if [ $coverage ]; then
+       FFLAGS=${FFLAGS}' --coverage'
+       LFLAGS='--coverage '${LFLAGS}
+     fi

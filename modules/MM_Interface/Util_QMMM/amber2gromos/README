@@ -1,0 +1,83 @@
+*******************************************************************
+UPDATED VERSION: 5 June 2014 (M. Boero)
+COMPATIBILITY:   According to the selected keyword, compatibility
+                 is ensured for Amber/AmberTools from version 6
+                 to version 12 (released in 2013)
+                 OpenMP directives have been included for faster
+                 handling/conversion of big topologies/coordinates.
+WHAT'S NEW: All routines are rewritten/reshaped as .F (capital
+            case) as all the rest of the CPMD body. The Makefile
+            has been extended to include most of the recent platforms
+            and compilers. This same makefile can handle the .F
+            pre-processing, producing .f and .o upon the
+            command 'make'.
+            As in the main code, the command 'make clean' 
+            removes ALL the *.0 and *.f files.
+*******************************************************************
+
+Converts AMBER style coordinates and topology to 
+GROMOS style coordinates, topology and input files.
+
+WARNING: the AMBER-7, AMBER-8, and AMBER-9 versions have 
+         a different topology format with respect to 
+         AMBER-6 (now programmed).
+         The latest version AMBER-12 (2013) has additional
+         sections in the topology file (ATOMIC_NUMBER,
+         SCEE_SCALE_FACTOR and SCNB_SCALE_FACTOR) that
+         are properly handled only if you use the -D_AMBER12
+         keyword in the compiling phase (see Makefile for
+         details)
+
+IMPORTANT CHANGES: as of version 0.7 a small bug in the 
+          conversion of the angle potentials was fixed 
+          resulting in slightly different forces and 
+          energies (now consistent with AMBER).
+
+          Versions before 0.9 did not handle water potentials
+          with two bonds and an angle correctly (TIP3P in AMBER
+          usually uses three bonds, but to run AMBER inputs in
+          NAMD this has to be changed) in the (now default)
+          rigid water potential case.
+
+Usage:
+ambertogromos.x [-flexible|-rigid] [-pdb] AMBERTOPOLOGY AMBERCOORDINATES
+
+As of version 0.6 you can optionally select whether
+you want to keep water molecules as rigid solvent
+molecules or convert them to flexible and merge
+them with the solute. 
+
+use the -fl[exible] or -ri[gid] flags to select
+any of those options. -rigid is currently default.
+
+As of version 0.91 you can use the -pdb flag to read
+the coordinates from a (standard conforming) .pdb file.
+
+NOTE: if you want to keep the water molecules flexible,
+it is strongly recommended, that you already use a flexible
+water potential for the classical pre-equilibration. 
+flexible water potentials have an intrinsic polarizability
+and thus the charge distribution has to be different from
+rigid potentials. the default water potential in amber
+is the rigid TIP3P potential, hence the converter assumes
+by default a rigid potential.
+
+Some or all water molecules can always be converted 
+to flexible water from within CPMD (e.g. to make them 
+quantum atoms) using the FLEXIBLE WATER keyword. see
+the CPMD manual for details.
+
+The main is in conv.F.
+
+In order to get the executables, brutally type
+
+make
+
+after changing/setting the proper compiler and options
+in the Makefile !
+
+___________________________________________________________
+
+...and good luck. As usual, no guarantee on anything.
+
+   Mauro

@@ -1,0 +1,35 @@
+#INFO#
+#INFO# Tentative minimal configuration to build a serial cpmd 
+#INFO# executable for a SGI Altix3900 machine (provided that
+#INFO# a serial version makes sense). 
+#INFO# Note that this machine uses:
+#INFO#      Intel fortran compiler 8.0
+#INFO#      Intel C compiler 8.0
+#INFO#      SGI ProPack 2 SP2
+#INFO#      SGI Altix3700 OS
+#INFO#      CPU Intanum 2, 1.5 GHz, 64 Bit
+#INFO#
+     IRAT=2
+     FC='ifort'
+     CC='icc'
+     LD='ifort'
+     CPP='/usr/bin/cpp -E -P -traditional'
+     CPPFLAGS='-D__Linux  -D__ALTIX -D__HAS_FFT_DEFAULT  '
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='ar'
+     if [ $debug ]; then
+       FFLAGS='-g -O0'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS=' -O3 -r8 -align dcommons -unroll -cm'
+       CFLAGS=' -O3 -Wall'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS='-L/opt/intel/mkl72/lib/64 -lmkl_lapack -lmkl -lguide'
+     else
+       LIBS='-L/opt/intel/mkl72/lib/64 -lmkl_lapack -lmkl -lguide'
+     fi
+     LFLAGS=' '${LIBS}

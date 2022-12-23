@@ -1,0 +1,30 @@
+#INFO#
+#INFO# Configure file for Fujitsu FX10 Machine
+#INFO# Tested under Fujitsu Fortran Driver Ver. 1.2.1
+#INFO# P-id T01641-04 (2014) and later versions.
+#INFO# Institute for Molecular Science (IMS) - Okazaki, JAPAN
+#INFO# Tokyo University - Tokyo, JAPAN
+#INFO# Strasbourg/Okazaki/Tokyo, January 2018
+#INFO#
+     IRAT=2
+     FC='mpifrtpx'
+     CC='fccpx'
+     LD='mpifrtpx'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__HAS_FFT_DEFAULT -D__ALPHALINUX  -D__HASNT_OMP_45 \
+        -D__PARALLEL -D__HAS_SIZEOF -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+        -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HASNT_OMP_45 -D__PARALLEL -D__HAS_SIZEOF \
+        -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-O3 -Aw -Kfast,openmp -Kopenmp -Kparallel -X9 -Free -Cpp'
+       CFLAGS='-O '
+     fi
+     LFLAGS='-SSL2BLAMP'

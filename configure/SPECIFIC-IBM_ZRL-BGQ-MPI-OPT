@@ -1,0 +1,45 @@
+#INFO#
+#INFO#   IBM BG/Q - SMP and optimized version
+#INFO#   Specific for ZRL 
+#INFO#
+
+     IRAT=2
+     CC=' /bgsys/drivers/ppcfloor/comm/xl/bin/mpixlc_r'
+     FC=' /bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf95_r '
+     LD=' /bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf95_r '
+     FFLAGS_GROMOS='$(FFLAGS) -qfixed'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     CPP='/opt/ibmcmp/xlf/bg/14.1/exe/cpp -P'
+     CPPFLAGS=' -D__IBM -D__HAS_FFT_DEFAULT -D__BG \
+                -D__PARALLEL -D__PWRLinux  \
+                -D__SUMFNL_ISNT_TRHEADED -D__HAS_IBM_QPX_INTRINSIC \
+                -D__FFT_HAS_SPECIAL_COPY=1 -D__FFT_HAS_OMP_COLLAPSE \
+                 -D__USE_IBM_HPM -D__HAS_SIZEOF \
+                -D__HAS_EXTERNAL_IDAMIN'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID -D__BG'
+     NOOPT_FLAG=' -O0  '
+     NOOPT_OBJS='control_utils.mod.o meta_colvar_inp_utils.mod.o respin_p_utils.mod.o '
+     if [ $debug ]; then
+       CFLAGS='-g -C -qflttrap -O0'
+       FFLAGS='-g -C -qflttrap -O0 -qhot -qstrict -w -qnosave -qarch=qp -qtune=qp  '
+     else
+       CFLAGS='-O '
+       FFLAGS='-O3 -qhot -qstrict -w -qnosave -qarch=qp -qtune=qp  '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qsmp=omp,noauto'
+       LIBS='/fl/cur/tmp/lapack/3.4.2_simd/lib/liblapack.a  /opt/ibmmath/lib64/libesslsmpbg.a \
+             /opt/ibmcmp/xlmass/bg/7.3/bglib64/libmass.a /opt/ibmcmp/xlmass/bg/7.3/bglib64/libmassv.a \
+             /fl/cur/lib_walkup/libmpihpm_smp.a \
+             /bgsys/drivers/ppcfloor/bgpm/lib/libbgpm.a \
+             -L/bgsys/drivers/ppcfloor/spi/lib -lSPI_upci_cnk \
+             -Wl,--allow-multiple-definition' 
+     else
+       LIBS='/fl/cur/tmp/lapack/3.4.2_simd/lib/liblapack.a  /opt/ibmmath/lib64/libesslbg.a \
+             /opt/ibmcmp/xlmass/bg/7.3/bglib64/libmass.a /opt/ibmcmp/xlmass/bg/7.3/bglib64/libmassv.a \
+             /fl/cur/lib_walkup/libmpihpm.a \
+             /bgsys/drivers/ppcfloor/bgpm/lib/libbgpm.a \
+             -L/bgsys/drivers/ppcfloor/spi/lib -lSPI_upci_cnk \
+             -Wl,--allow-multiple-definition' 
+     fi
+     LFLAGS=' '${LIBS}

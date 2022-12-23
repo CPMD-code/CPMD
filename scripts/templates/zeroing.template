@@ -1,0 +1,9 @@
+subroutine zeroing_${NAME}(data)
+  ! Arguments
+  ${TYPE}${KIND}, intent(inout) ${DIMENSION} :: data
+  ! Variables
+  character(*),parameter :: procedureN='zeroing_${NAME}'
+  if(size(data)>0) then
+     call ${ZERO_SUB}(data,size(data))
+  endif
+end subroutine zeroing_${NAME}

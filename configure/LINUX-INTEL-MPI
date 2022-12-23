@@ -1,0 +1,52 @@
+#INFO#
+#INFO# Configuration to build a parallel cpmd executable for a linux pc using 
+#INFO# the intel fortran compiler 'ifc'.
+#INFO#
+#INFO# use '-tpp7' in FFLAGS to optimize for intel pentium iv cpus
+#INFO# use '-tpp6' in FFLAGS to optimize for intel pentium iii or amd athlon cpus
+#INFO# use '-fpp -openmp' in FFLAGS to compile with OpenMP support
+#INFO#
+#INFO# Since the intel compilers use shared runtime libraries by default,
+#INFO# the creation of static binaries (-static) is highly recommended for optimal 
+#INFO# portability of the binary. With a dynamic binary you have to install
+#INFO# the same shared runtime libraries on _every_ machine, where you want to run cpmd.
+#INFO#
+#INFO# For optimal performance use either a combined LAPACK/ATLAS library (see the 
+#INFO# atlas manual for instructions) or the intel math kernel library (MKL); 
+#INFO# you can use the pentium iii version of the mkl on amd athlon cpus.
+#INFO# e.g. LFLAGS=-L/opt/intel/mkl/lib/32 -lmkl_lapack -lmkl_p3 -Vaxlib -static
+#INFO#
+#INFO# This configuration assumes, that the MPI library was configured to
+#INFO# use the intel compiler. If this is not the case, you either have to
+#INFO# find out, how to tell mpif90 to use a different compiler or recompile
+#INFO# your MPI library.
+#INFO#
+#INFO# see <http://www.theochem.ruhr-uni-bochum.de/~axel.kohlmeyer/cpmd-linux.html>
+#INFO# for more information on compiling and running CPMD on x86 linux machines.
+#INFO#
+#INFO# NOTE: CPMD cannot be compiled with the GNU Fortran compiler.
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT \
+               -D__PARALLEL -DLINUX_IFC '
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-g  -r8 -w90 -w95 -O3 -pc64 -axM -tpp6'
+       CFLAGS='-g  -O2 -Wall'
+     else
+       FFLAGS='-r8 -w90 -w95 -O3 -pc64 -axM -tpp6'
+       CFLAGS='-O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${AWK} '{ print ( $2 < "12.0.4" ) ? "true" : "false" }'`
+       LIBS='-mkl=parallel'
+     else
+       LIBS='-mkl=sequential'
+     fi
+     LFLAGS='-static-intel '${LIBS}

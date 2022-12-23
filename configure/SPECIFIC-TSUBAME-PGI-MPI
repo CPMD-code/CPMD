@@ -1,0 +1,35 @@
+#INFO#
+#INFO# Configuration is for TOKYO TECH TSUBAME 2.0
+#INFO# Note that this machine uses:
+#INFO#   Xeon Sextet-Core X5670 2.93 GHz * 2/node, Memory: 54 GB/node
+#INFO#   NVIDIA Tesla M2050 * 3/node
+#INFO#   SUSE Linux Enterprise Server 11 SP1
+#INFO#   PGI fortran compiler 11.0-0
+#INFO#   PGI C compiler 11.0-0
+#INFO#   AMD Core Math Library 4.4.0
+#INFO#   OpenMPI 1.4.2 (mvapich2 available optionally)
+#INFO#
+
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__PARALLEL  \
+                -D__HAS_EXTERNAL_C_ERF   '
+     FFLAGS_GROMOS='-r8 -pc=64 -Minfo=all'
+     FFLAGS_GROMOS_MODULES='-r8 -pc=64 -Minfo=all'
+     if [ $debug ]; then
+       FFLAGS='-g -O0'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-fastsse -tp nehalem-64 -r8 -pc=64 -Minfo=all'
+       CFLAGS='-fastsse -tp nehalem-64 -O2'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -mp'
+       LIBS='-lacml'
+     else
+       LIBS='-lacml'
+     fi
+     LFLAGS=' '${LIBS}

@@ -1,0 +1,73 @@
+SUBROUTINE cuda_alloc_managed_${NAME} ( mem, mem_alias_d, sizes, device, lbs )
+  ${TYPE}${KIND} ${DIMENSION} , POINTER __CONTIGUOUS    :: mem
+  TYPE(cuda_memory_t) :: mem_alias_d
+  INTEGER, INTENT(IN) ${SIZE_DIMS}         :: sizes
+  INTEGER, INTENT(IN)                      :: device
+  INTEGER, INTENT(IN), OPTIONAL ${SIZE_DIMS} :: lbs
+
+  CHARACTER(*), PARAMETER :: procedureN = 'cuda_alloc_managed_${NAME}'
+  ${TYPE}${KIND} ${DIMENSION} , POINTER __CONTIGUOUS    :: mem_tmp
+  INTEGER(KIND(cudaSuccess))           :: c_status
+  INTEGER(C_SIZE_T)                    :: c_n_bytes
+  TYPE( C_PTR )                        :: cptr
+
+#if defined(_HAS_CUDA)
+
+  IF( mem_alias_d%init ) CALL stopgm(procedureN,'memory already allocated',&
+       __LINE__,__FILE__)
+
+  c_n_bytes = INT( ${PRODUCT}, C_SIZE_T ) * INT( ${SIZEOF_KIND}, C_SIZE_T )
+
+  CALL cuda_set_device ( device )
+  c_status = cudaMallocManaged( mem_alias_d%ptr, c_n_bytes, cudaMemAttachGlobal )
+  IF( c_status /= cudaSuccess ) CALL stopgm(procedureN,"cuda error: "//TRIM(int2str( INT( c_status ) ))//&
+         ' trying to allocate '//TRIM(int2str( INT(c_n_bytes,int_8) ))//' bytes'&
+         //". "//trim(cuda_get_error_string(c_status)),&
+       __LINE__,__FILE__)
+
+  write(*,*) procedureN//': we should set mem_alias_d%managed here in order to catch potential error (dealloc, ...)'
+  !mem_alias_d%managed = .TRUE. !vw may need that
+  mem_alias_d%device = device
+  mem_alias_d%n_bytes = INT( c_n_bytes, int_8 )
+  mem_alias_d%init = .TRUE.
+
+  CALL C_F_POINTER( mem_alias_d%ptr, mem_tmp, [ sizes ] )
+  IF(PRESENT( lbs ) ) THEN
+     mem ${LBOUNDS} => mem_tmp
+  ELSE
+     mem => mem_tmp
+  ENDIF
+
+#else
+
+  CALL stopgm(procedureN,"no cuda available",&
+       __LINE__,__FILE__)
+
+#endif
+
+END SUBROUTINE cuda_alloc_managed_${NAME}
+
+
+SUBROUTINE cuda_dealloc_managed_${NAME} ( mem )
+  ${TYPE}${KIND} ${DIMENSION}, POINTER __CONTIGUOUS  :: mem
+
+  CHARACTER(*), PARAMETER               :: procedureN = 'cuda_dealloc_managed_${NAME}'
+  INTEGER(KIND(cudaSuccess))            :: c_status
+
+#if defined(_HAS_CUDA)
+
+  c_status = cudaFree( C_LOC( mem ) )
+  IF( c_status /= cudaSuccess ) CALL stopgm(procedureN,"cuda error: "//TRIM(int2str( INT( c_status ) ))&
+         //". "//trim(cuda_get_error_string(c_status)),&
+       __LINE__,__FILE__)
+
+  NULLIFY( mem )
+
+#else
+
+  CALL stopgm(procedureN,"no cuda available",&
+       __LINE__,__FILE__)
+
+#endif
+
+END SUBROUTINE cuda_dealloc_managed_${NAME}

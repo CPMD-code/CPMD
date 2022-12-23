@@ -1,0 +1,34 @@
+#INFO#
+#INFO# Configuration to build a MPI parallel executable
+#INFO# with Intel Fortran Compiler under MacOSX-Intel(MacPro).
+#INFO# WARNING: your MKL and MPI libraries might be elsewhere !
+#INFO# M. Boero and K. Kamiya - Japan
+#INFO#
+
+     IRAT=2
+     FC='ifort'
+     CC='gcc'
+     LD='ifort'
+     CPP='/usr/bin/cpp'
+     CPPFLAGS=' -D__HAS_FFT_DEFAULT -D__HAS_EXTERNAL_IZAMAX -D__HAS_EXTERNAL_IDAMIN '
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-g -I/usr/local/include'
+       CFLAGS='-g -m64 -O2'
+     else
+       FFLAGS='-I/usr/local/include -O2 -unroll'
+       CFLAGS='-m64 -O2'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS='/Library/Frameworks/Intel_MKL.framework/Versions/10.0.1.014/lib/em64t/libmkl_intel_lp64.a \
+             /Library/Frameworks/Intel_MKL.framework/Versions/10.0.1.014/lib/em64t/libmkl_sequential.a \
+             /Library/Frameworks/Intel_MKL.framework/Versions/10.0.1.014/lib/em64t/libmkl_core.a '
+     else
+       LIBS='/Library/Frameworks/Intel_MKL.framework/Versions/10.0.1.014/lib/em64t/libmkl_intel_lp64.a \
+             /Library/Frameworks/Intel_MKL.framework/Versions/10.0.1.014/lib/em64t/libmkl_sequential.a \
+             /Library/Frameworks/Intel_MKL.framework/Versions/10.0.1.014/lib/em64t/libmkl_core.a '
+     fi
+     LFLAGS=' '${LIBS}

@@ -1,0 +1,41 @@
+#INFO#
+#INFO# Configuration for Oakforest-PACS (Fujitsu) to build a parallel 
+#INFO# cpmd executable using Intel Fortran compiler version 18 or later, 
+#INFO# Intel MPI, MKL, and FFTW supplied by Fujitsu as a module.
+#INFO# See https://insidehpc.com/2016/12/oakforest-pacs/
+#INFO#     https://www.top500.org/system/178932
+#INFO# WARNING: PIMD jobs are observed to crush sometimes (not always, just randomly) 
+#INFO#          if the code is compiled without including -D__HASNT_OMP_COLLAPSE 
+#INFO#          in CPPFLAGS. Most likely this is a compiler bug / side-effects of 
+#INFO#          loop collapsing. Hopefully this will be solved in forthcoming
+#INFO#          compiler updates.
+
+     IRAT=2
+     FC='mpiifort'
+     CC='mpiicc'
+     LD='mpiifort'
+     FFLAGS_GROMOS='$(FFLAGS) -fixed'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     CPP='/usr/bin/cpp -E -P -traditional'
+     CPPFLAGS='-D__Linux -D__INTEL -D__HAS_FFT_FFTW3 -D__PARALLEL -DLINUX_IFC \
+               -D__HPC -D__HASNT_OMP_45 -D__HASNT_OMP_COLLAPSE -D__HAS_LIBXC'
+     AR='/usr/bin/ar ruv'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -axMIC-AVX512 -pc64 -align array64byte \
+               -I${HOME}/lib/libxc/include \
+               -gen_interfaces -traceback -check all,noarg_temp_created'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-O2 -axMIC-AVX512 -pc64 -align array64byte \
+               -I${HOME}/lib/libxc/include'
+       CFLAGS='-O2'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qopenmp'
+       LIBS='-mkl=parallel -L${HOME}/lib/libxc/lib -lxcf03 -lxc -lfftw3_omp -lfftw3'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${AWK} '{ print ( $2 < "12.0.4" ) ? "true" : "false" }'`
+     else
+       LIBS='-mkl=sequential -L${HOME}/lib/libxc/lib -lxcf03 -lxc -lfftw3'
+     fi
+     LFLAGS='-static-intel '${LIBS}

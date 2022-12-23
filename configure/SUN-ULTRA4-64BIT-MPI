@@ -1,0 +1,38 @@
+#INFO#
+#INFO# Configuration to build a 64-bit parallel cpmd executable on a Sun Fire Machine (Sun Ultra Sparc IV)
+#INFO#
+#INFO# Unless you need more than about 2GB memory per processor, building a 32-bit
+#INFO# executable is highly recommended. The 32-bit version is significantly faster
+#INFO#
+     IRAT=2
+     CC='mpcc'
+     FC='mpf95'
+     LD='mpf95'
+     CPP='/usr/ccs/lib/cpp -P'
+     CPPFLAGS="-D__HASNT_BF_STREAM_IO -D__SUN -D__HAS_FFT_DEFAULT  \\
+	-D__DATE__=\"'\`date '+%b %e %Y'\`'\"            \\
+	-D__TIME__=\"'\`date '+%T'\`'\"                   \\
+	-D__PARALLEL"
+     FFLAGS_GROMOS=' $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     NOOPT_FLAG=' -dalign -xdepend=no -xO0 '
+     NOOPT_OBJS=' control_utils.mod.o   fftprp.o phfac.o setsys.o '
+     AR='/usr/ccs/bin/ar'
+     RANLIB='/usr/ccs/bin/ranlib'
+     if [ $debug ]; then
+       CFLAGS='-D__SUN -g  -C -errtags  -xarch=generic64'
+       FFLAGS='-dalign -g  -xarch=generic64 -dalign'
+       LFLAGS='-xlic_lib=sunperf -L/opt/SUNWhpc/lib -lmpi'
+     else
+       CFLAGS='-D__SUN -fast -fns=no -xarch=generic64'
+       FFLAGS='-fast -fns=no  -xarch=generic64 -dalign'
+       LFLAGS='-xlibmopt -xlic_lib=sunperf -L/opt/SUNWhpc/lib -lmpi'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS=''
+     else
+       LIBS=''
+     fi
+     LFLAGS=${LFLAGS}' '${LIBS}

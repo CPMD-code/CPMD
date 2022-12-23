@@ -1,0 +1,30 @@
+#INFO#
+#INFO#  Configuration to build a 64-bit parallel cpmd executable 
+#INFO#  on a FUJITSU PRIMEPOWER machine (Japan version).
+#INFO#  Strasbourg/Nagoya January 2018
+#INFO#
+     IRAT=2
+     FC='mpifrt'
+     LD='mpifrt'
+     CC='fcc'
+     FFLAGS_GROMOS=' $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     CPP='/lib/cpp -P'
+     CPPFLAGS='-D__HAS_FFT_DEFAULT -D_vpp_ -D__PARALLEL -D__HASNT_F08_ISO_FORTRAN_ENV -D__HASNT_OMP_45'
+     AR='ar'
+     RANLIB='ranlib'
+     AWK='/usr/bin/nawk'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -Kfast -KV9 -Fixed -X9 -Nmallocfree -Aw -fw'
+       CFLAGS='-KV9 $(CPPFLAGS)'
+     else
+       FFLAGS='-Kfast -KV9 -Fixed -X9 -Nmallocfree -Aw -fw'
+       CFLAGS='-KV9 $(CPPFLAGS)'
+     fi
+     if [ $omp ]; then
+       OMP3_DISABLED='true'
+       LIBS=''
+     else
+       LIBS=''
+     fi
+     LFLAGS='-SSL2 '${LIBS}

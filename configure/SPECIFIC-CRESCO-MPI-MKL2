@@ -1,0 +1,44 @@
+#INFO#
+#INFO# Minimal configuration to build a parallel QM/MM cpmd
+#INFO# executable for the CRESCO-MPI-mkl2 supercluster (ENEA)
+
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT  -D__HAS_EXTERNAL_IZAMAX \
+               -DLINUX_IFC -D__PARALLEL'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+               -D__Linux  -D__HAS_FFT_DEFAULT  -D__HAS_EXTERNAL_IZAMAX \
+               -DLINUX_IFC -D__PARALLEL'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='ar'
+     if [ $debug ]; then
+       FFLAGS='-g'
+       CFLAGS='-g -Wall -m64'
+     else
+       FFLAGS='-pc64  -O2 -unroll'
+       CFLAGS='-O2 -Wall -m64'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       LIBS='-L/afs/enea.it/software/inteldev/x86_64_rhel5/mkl/10.0.1.014/lib/em64t \
+             -I/afs/enea.it/software/inteldev/x86_64_rhel5/mkl/10.0.1.014/include \
+             -Wl,--start-group \
+             /afs/enea.it/software/inteldev/x86_64_rhel5/mkl/10.0.1.014/lib/em64t/libmkl_intel_lp64.a \
+             /afs/enea.it/software/inteldev/x86_64_rhel5/mkl/10.0.1.014/lib/em64t/libmkl_parallel.a \
+             /afs/enea.it/software/inteldev/x86_64_rhel5/mkl/10.0.1.014/lib/em64t/libmkl_core.a \
+             -Wl,--end-group'
+     else
+       LIBS='-L/afs/enea.it/software/inteldev/x86_64_rhel5/mkl/10.0.1.014/lib/em64t \
+             -I/afs/enea.it/software/inteldev/x86_64_rhel5/mkl/10.0.1.014/include \
+             -Wl,--start-group \
+             /afs/enea.it/software/inteldev/x86_64_rhel5/mkl/10.0.1.014/lib/em64t/libmkl_intel_lp64.a \
+             /afs/enea.it/software/inteldev/x86_64_rhel5/mkl/10.0.1.014/lib/em64t/libmkl_sequential.a \
+             /afs/enea.it/software/inteldev/x86_64_rhel5/mkl/10.0.1.014/lib/em64t/libmkl_core.a \
+             -Wl,--end-group'
+     fi
+     LFLAGS='-static-intel '${LIBS}

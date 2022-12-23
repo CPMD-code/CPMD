@@ -1,0 +1,92 @@
+C       $Id: gmt.h,v 1.1 2006-12-27 11:26:19 itavern Exp $
+C
+
+C----------------------------------------------------------
+C     NOTE: INCLUDE THE FILES TOPOSZ.H TOPBLKSZ.H BEFORE INCLUDING
+C     THIS ONE.
+C----------------------------------------------------------
+
+      INTEGER MAXNSS, MAXCHA
+      PARAMETER (MAXNSS = 7, MAXCHA = 5)
+      INTEGER MAXET1, MAXET2, MAXET3
+      PARAMETER (MAXET1 = 25, MAXET2 = 27, MAXET3 = 10)
+      INTEGER NDIM
+      PARAMETER (NDIM = 3)
+
+C CHARACTER BLOCK
+C BLOCK TITLE
+      CHARACTER*(MAXTIT) MDTITL(MAXLNS)
+      COMMON /MTITLE/MDTITL
+      CHARACTER*(MAXRLE) ANMC, ANMT
+
+      CHARACTER*(MAXNLE) SOLV
+
+      COMMON /GMTCAR/
+     $     ANMC(MAXCHA,2), ANMT(MAXET1,2),
+     $     SOLV
+
+
+C INTEGER BLOCK
+      INTEGER
+     $     NLRED, 
+     $     NRAA, NHEME, NMOL, NRAA0, 
+     $     NRSS, NMSS,
+     $     NZAT, NACH,
+     $     MASSC, IACC, ICGC,
+     $     NEAT,
+     $     MASST, IACT, ICGT, MAET, MSAET,
+     $     NBT, MBT, MCBLT,
+     $     NBAT, MBAT, MCBAT,
+     $     NIDAT, MIDAT, MCIAT,
+     $     NDAT, MDAT, MCDAT,
+     $     NTPR, NTX, NTB
+
+
+      COMMON  /GMTIN/
+     $     NLRED,
+     $     NRAA, NHEME, NMOL, NRAA0, 
+     $     NRSS, NMSS(MAXNSS, 2),
+     $     NZAT, NACH(2),
+     $     MASSC(MAXCHA,2), IACC(MAXCHA,2), ICGC(MAXCHA,2),
+     $     NEAT(2),
+     $     MASST(MAXET1, 2), IACT(MAXET1,2), ICGT(MAXET1,2),
+     $     MAET(MAXET2, 2), MSAET(MAXNAE,MAXET2,2), 
+     $     NBT(2), MBT(2,MAXET1,2), MCBLT(MAXET1,2),
+     $     NBAT(2), MBAT(3,MAXET3,2), MCBAT(MAXET3,2),
+     $     NIDAT(2), MIDAT(4,MAXET1,2), MCIAT(MAXET1,2), 
+     $     NDAT(2), MDAT(4,MAXET1,2), MCDAT(MAXET1,2),
+     $     NTPR, NTX, NTB
+
+C REAL BLOCK
+      REAL CGC, CGT, BOX, BETAA
+
+      COMMON /GMTRE/ 
+     $     CGC(MAXCHA,2), CGT(MAXET1,2), BOX(NDIM), BETAA
+
+C-----------END OF COMMON BLOCKS --------------------
+C     HERE SOME USEFUL CONSTANTS
+C ONE
+      INTEGER IONE
+      PARAMETER (IONE = 1)
+
+C MASS CODE OF A HYDROGEN (ALSO IN pmd.h)
+      INTEGER ISHYD
+      PARAMETER (ISHYD = 1)
+
+C A VERY SMALL NUMBER
+      REAL EPS
+      PARAMETER (EPS = 1.E-6)
+
+C A VERY LARGE NUMBER
+      REAL RELBIG
+      PARAMETER (RELBIG = 10E24)
+
+
+C BOLTZMAN CONSTANT FOR KJ/MOL
+      REAL BOLKJM
+      PARAMETER (BOLKJM = 8.31441E-3)
+
+C BOLTZMAN CONSTANT FOR KCAL/MOL
+      REAL BOLKCM
+      PARAMETER (BOLKCM = BOLKJM/4.184E0)
+

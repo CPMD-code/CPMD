@@ -1,0 +1,34 @@
+#INFO#
+#INFO# Configuration to build a parallel cpmd executable on
+#INFO# SGI Origin 3800 machine. Tsukuba, 18 April 2005.
+#INFO# Note: the option -Ofast=ip35 is specific to Origin
+#INFO# 3800 only, not to any SGI-Origin machine.
+#INFO#
+#INFO#
+     IRAT=2
+     CC='cc'
+     FC='f90'
+     LD='f90'
+     FFLAGS_GROMOS=' $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     CPP='/usr/lib/acpp -E -P'
+     CPPFLAGS='-D__SGI -D__HAS_FFT_DEFAULT  -D__PARALLEL '
+     AR='ar'
+     RANLIB='echo'
+     if [ $debug ]; then
+       CFLAGS='-mips4 -64 -O0'
+       FFLAGS='-mips4 -64 -g -O0'
+       LFLAGS=''
+     else
+       CFLAGS='-mips4 -64 -nocpp -r8 -Ofast=ip35'
+       FFLAGS='-mips4 -64 '
+       LFLAGS='-IPA'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS='-lscs -lfastm -lmpi'
+     else
+       LIBS='-lscs -lfastm -lmpi'
+     fi
+     LFLAGS=${LFLAGS}' '${LIBS} 

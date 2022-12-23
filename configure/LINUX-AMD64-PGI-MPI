@@ -1,0 +1,50 @@
+#INFO#
+#INFO# Configuration to build a parallel cpmd executable for a linux machine
+#INFO# with an AMD64 bit cpu (Opteron/AthlonFX/Athlon64) using 
+#INFO# the Portland/Nvidia  Fortran compiler mpif90.
+#INFO#
+#INFO# This configuration assumes, that the MPI library was configured to
+#INFO# use the portland fortran 90 compiler. If this is not the case, you either have to
+#INFO# find out, how to tell mpif90 to use a different compiler or recompile
+#INFO# your MPI library.
+#INFO# Since the newer Portland use shared runtime libraries by default,
+#INFO# the creation of static binaries (-Bstatic) is highly recommended for optimal 
+#INFO# portability of the binary. With a dynamic binary you have to install
+#INFO# the same shared runtime libraries on _every_ machine, where you want to run cpmd.
+#INFO#
+#INFO# You need at least PGI version 12.7 or later to have a correctly working executable.
+#INFO# WARNING 1: For LFLAGS the options -mp=allcores -mp=bind make nasty things
+#INFO#            to the socket !
+#INFO# For optimal performance you should use a specifically tuned BLAS/LAPACK
+#INFO# library. ACML version 1.0 and older do _not_ work correctly. ACML 2.0 was
+#INFO# tested ok. ATLAS version 3.6 works as well.
+#INFO# (University of Strasbourg-University of Tokyo, August 2017).
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='cpp -P -traditional'
+     CPPFLAGS='-D__Linux -D__HAS_FFT_DEFAULT -D__HAS_SIZEOF \
+               -D__PARALLEL -D__HAS_EXTERNAL_C_ERF -D__HPC \
+               -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID'
+     FFLAGS_GROMOS='-Mfixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -r8 -pc=64 -Msignextend '
+       CFLAGS='-g -Wall'
+     else
+       FFLAGS='-fastsse -tp k8-64 -r8 -pc=64 -Msignextend '
+       CFLAGS='-O2 -Wall -m64'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS='-Bstatic -L. -latlas_x86_64'
+     else
+       LIBS='-Bstatic -L. -latlas_x86_64'
+     fi
+     LFLAGS=' '${LIBS}

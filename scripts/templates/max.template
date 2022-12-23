@@ -1,0 +1,46 @@
+subroutine mp_max_${NAME}(data,n,comm)
+#ifdef __PARALLEL
+  use mpi
+#endif
+  use para_global, only : para_use_mpi_in_place
+  use para_global, only : para_buff_size
+  use para_global, only : para_stack_buff_size
+  implicit none
+  ! Arguments
+  integer, intent(in) :: n,comm
+  ${TYPE}${KIND}, intent(inout) ${DIMENSION} :: data
+  ! Variables
+  character(*),parameter :: procedureN='mp_max_${NAME}'
+#ifdef __PARALLEL
+  integer :: ierr,m,i,stat,buff_size
+  ${TYPE}${KIND},dimension(:),allocatable :: buff
+  ${TYPE}${KIND},dimension(para_stack_buff_size) :: stack_buff
+  if (n<=para_stack_buff_size) then
+    call mpi_allreduce(data,stack_buff,n,${MPI_TYPE},&
+         MPI_MAX,comm,ierr)
+    call mp_mpi_error_assert(ierr,procedureN,__LINE__,__FILE__)
+    data(${COPY}1:n)=stack_buff(1:n)
+  else
+    if (para_use_mpi_in_place) then
+      call mpi_allreduce(MPI_IN_PLACE,data,n,${MPI_TYPE},&
+           MPI_MAX,comm,ierr)
+      call mp_mpi_error_assert(ierr,procedureN,__LINE__,__FILE__)
+    else
+      buff_size=min(n,para_buff_size)
+      allocate(buff(buff_size),stat=stat)
+      if (stat.ne.0) call stopgm(procedureN,'allocation problem',& 
+           __LINE__,__FILE__)
+      do i=1,n,buff_size
+        m=min(buff_size,n-i+1)
+        call mpi_allreduce(data(${COPY}i),buff,m,${MPI_TYPE},&
+             MPI_MAX,comm,ierr)
+        call mp_mpi_error_assert(ierr,procedureN,__LINE__,__FILE__)
+        data(${COPY}i:i+m-1)=buff(1:m)
+      enddo
+      deallocate(buff,stat=stat)
+      if (stat.ne.0) call stopgm(procedureN,'deallocation problem',&
+           __LINE__,__FILE__)
+    endif
+  endif
+#endif
+end subroutine mp_max_${NAME}

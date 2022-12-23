@@ -1,0 +1,34 @@
+#INFO#
+#INFO# Configuration is for Fujitsu PrimeQuest 580 (QM/MM version)
+#INFO# Itanium2 1.6 GHz * 64 / node, Memory: 256 GB/node)
+#INFO# OS: Linux (version 2.6.9-22.EL), Fujitsu Fortran Compiler
+#INFO# Strasbourg/Tokyo, January 2018
+#INFO#
+     IRAT=2
+     FC='mpifrt'
+     CC='icc'
+     LD='mpifrt'
+     CPP='/usr/bin/cpp -P -C -traditional'
+     CPPFLAGS='-D__PRIMEQUEST -D__ALPHALINUX -D__HAS_FFT_DEFAULT -D__PARALLEL \
+               -D__HAS_EXTERNAL_IZAMAX -D__HASNT_F08_ISO_FORTRAN_ENV -D__HASNT_OMP_45'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+                      -D__PRIMEQUEST -D__ALPHALINUX  -D__HAS_FFT_DEFAULT -D__PARALLEL \
+                      -D__HAS_EXTERNAL_IZAMAX -D__HASNT_F08_ISO_FORTRAN_ENV -D__HASNT_OMP_45'
+     FFLAGS_GROMOS='-Fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -Aw -O3 -Kfast -X9'
+       CFLAGS='-g -O $(CPPFLAGS)'
+     else
+       FFLAGS='-Aw -O3 -Kfast -X9'
+       CFLAGS='-O $(CPPFLAGS)'
+     fi
+     if [ $omp ]; then
+       OMP3_DISABLED='true'
+       LIBS=''
+     else
+       LIBS=''
+     fi
+     LFLAGS='-SSL2 '${LIBS}

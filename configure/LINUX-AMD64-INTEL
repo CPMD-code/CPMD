@@ -1,0 +1,50 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd-QM/MM executable for a linux machine
+#INFO# with an AMD64/EM64T cpu (Opteron/AthlonFX/Athlon64/Xeon-EM64T) using 
+#INFO# the Intel Fortran Compiler with EM64T extensions.
+#INFO# For optimal performance you should use a specifically tuned BLAS/LAPACK
+#INFO# library as in this specific configuration file. 
+#INFO# Note that the standard cpp pre-compiler may fail, It is safer to use
+#INFO# the fpp included in the Intel Composer package at least for Intel
+#INFO# versions > ver.14.0.4.
+#INFO# This seems to be due to the fact that the free non-commercial compilers
+#INFO# are no longer available ay Intel.
+#INFO# Alternatively, if you do not have fpp, you can try with cpp -P -traditional
+#INFO# omitting the deprecated option -C
+#INFO# WARNING: The clause "collapse(n)" may not work in old compilers and
+#INFO#          is known to have troubles on the Fujitsu compiler (K-computer
+#INFO#          and Fujitsu FX10 machine) and Intel Fortran Compiler version
+#INFO#          11 and former ones. Since ifort v.12.0.3 bugs have been fixed.
+#INFO#          Please, refer to the discussion you see in
+#INFO#          http://openmp.org/forum/viewtopic.php?f=3&t=1023&start=10
+#INFO#          and check carefully your compiler and OS.
+#INFO#          This should no longer be an issue since 1/1/2014
+#INFO#          The options -heap-arrays # (e.g. #=64) and/or -fast can cause 
+#INFO#          conflict with MKL resulting in "segmentation fault"
+#INFO#  Strasbourg/Tokyo - 6 April 2017
+#INFO#
+     IRAT=2
+     FC='ifort'
+     CC='icc'
+     LD='ifort'
+     CPP='cpp -P -traditional'
+     CPPFLAGS='-D__Linux  -DLINUX_IFC -D__HAS_FFT_DEFAULT -D__HPC'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+             -D__Linux  -DLINUX_IFC -D__HAS_FFT_DEFAULT'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-g -pc64 -O0 '
+       CFLAGS='-g -Wall -O0 -m64'
+     else
+       FFLAGS=' -O2 -pc64 -funroll-loops '
+       CFLAGS='-O2 -Wall -m64'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       LIBS='-mkl=parallel'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${AWK} '{ print ( $2 < "12.0.4" ) ? "true" : "false" }'`
+     else
+       LIBS='-mkl=sequential'
+     fi
+     LFLAGS='-static-intel '${LIBS}

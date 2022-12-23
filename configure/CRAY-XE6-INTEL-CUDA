@@ -1,0 +1,35 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for a CRAY-XE6
+#using 
+#INFO# the INTEL Fortran compiler.
+#INFO#
+#INFO# V. Weber
+#INFO#
+
+     CUDA_PATH='$(CUDATOOLKIT_HOME)'
+     FC='ftn'
+     CC='cc'
+     LD='ftn'
+     NVCC=${CUDA_PATH}'/bin/nvcc'
+     NVCCFLAGS='--default-stream per-thread -O3 -m64 -gencode arch=compute_35,code=sm_35 -gencode arch=compute_37,code=sm_37'
+     CPP='/usr/bin/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__PARALLEL -D__HAS_SIZEOF -D__HAS_CUDA -D__HASNT_F08_ISO_FORTRAN_ENV'
+     FFLAGS_GROMOS='$(FFLAGS) -fixed' 
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-g -O0'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-O2 -g'
+       CFLAGS='-O2'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qopenmp'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${AWK} '{ print ( $2 < "12.0.4" ) ? "true" : "false" }'`
+       LIBS=''
+     else
+       LIBS=''
+     fi
+     CFLAGS=${CFLAGS}' -I'${CUDA_PATH}'/include'
+     LIBS=${LIBS}' -L'${CUDA_PATH}'/lib64 -lcudart -lcufft -lcusolver -lcublas'
+     LFLAGS=''${LIBS}

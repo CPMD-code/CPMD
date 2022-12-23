@@ -1,0 +1,37 @@
+#INFO#
+#INFO# Configuration is for the AIST-Tsukuba Linux Superclusters
+#INFO# P32 (Opteron , Memory: 6 GB/node)
+#INFO# and
+#INFO# M64 (Itanium, Memory: 16 GB/node)
+#INFO# OS: SuSE Linux Ent. 
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='icc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS=' -D__HAS_FFT_DEFAULT -D__ALPHALINUX \
+        -D__PARALLEL  -D__HAS_EXTERNAL_IZAMAX'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+                      -D__Linux  -DLINUX_IFC'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g '
+       CFLAGS='-g'
+     else
+       FFLAGS='-O2 -r8 -unroll -heap-arrays 64'
+       CFLAGS='-O'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       OMP3_DISABLED='true'
+       LIBS='-L/opt/intel/mkl721cluster/lib/64 -lmkl_lapack -lmkl_ipf \
+             -lm -lpthread -liomp5 '
+     else
+       LIBS='-L/opt/intel/mkl721cluster/lib/64 -lmkl_lapack -lmkl_ipf \
+             -lm -lpthread -liomp5 '
+     fi
+     LFLAGS='-static-intel -Wl,--allow-multiple-definition '${LIBS}

@@ -1,0 +1,28 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for a linux pc using 
+#INFO# the GNU Fortran compiler.
+#INFO# contributed by R Vuilleumier <vuilleum@lptl.jussieu.fr>
+#INFO# debug version by T Laino <teo@zurich.ibm.com>
+
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP=''
+     CPPFLAGS='-D__Linux -D__GNU -D__HAS_FFT_DEFAULT -D__PARALLEL -D__HAS_SIZEOF'
+     FFLAGS_GROMOS='  $(FFLAGS) -ffixed-form' 
+     if [ $debug ]; then
+       FFLAGS='-m64  -g -O0 -fbounds-check -Wuninitialized -Wunused'
+       CFLAGS='-g -O0 -m64 -Wall'
+     else
+       FFLAGS='-m64  -O2'
+       CFLAGS='-O2 -m64 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${GREP} version | ${AWK} '{ print ( $3 < "4.7.0" ) ? "true" : "false" }'`
+       LIBS='-L/opt/mylocal/lib/netlib/ -lrefblas -llapack'
+     else
+       LIBS='-L/opt/mylocal/lib/netlib/ -lrefblas -llapack'
+     fi
+     LFLAGS=' '${LIBS}

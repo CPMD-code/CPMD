@@ -1,0 +1,45 @@
+#INFO#
+#INFO# Configuration for Haswell/Broadwell Linux Supercluster
+#INFO# Haswell is the codename for the Intel processor 
+#INFO# successor to the Ivy Bridge microarchitecture. 
+#INFO# Broadwell is the 14 nanometer die shrink of Haswell.
+#INFO# See http://ark.intel.com/products/codename/42174/Haswell
+#INFO# Intel Composer v.18 or later - OpenMPI + OMP 3.0/4.5/5,0 (or later)
+#INFO# Processor Intel Haswell 12-Core E5-2690 (e.g. Occigen@CINES)
+#INFO# Cluster IB 4x FDR Fat Tree / 9 blades socket
+#INFO# WARNING: A bug in the IntelMPI from version 2017.0.098 until 2018.1.163
+#INFO# WARNING: is responsible for a memory overflow during parallel execution
+#INFO# WARNING: under MPI / OMP or hybrid MPI-OMP. The recommended combination
+#INFO# WARNING: tested and verified by CINES is to switch to OpenMPI
+#INFO# WARNING: i.e. modules intel/18.1 openmpi/intel/2.0.1
+#INFO# (University of Strasbourg-University of Nagoya, January 2019). 
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC -D__HASNT_OMP_45 \
+         -D__PARALLEL -D__HAS_SIZEOF -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+             -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC -D__HASNT_OMP_45 \
+             -D__PARALLEL -D__HAS_SIZEOF -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -traceback -O0 -no-prec-div -pc64 -fpp -heap-arrays 64 -xHost'
+       CFLAGS='-g -Wall -m64'
+     else
+       FFLAGS='-O2 -pc64 -funroll-loops -fpp -heap-arrays 64 -xHost'
+       CFLAGS='-O2 -Wall -xhost'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qopenmp'
+       OMP3_DISABLED='false'
+       LIBS='-mkl=parallel -lm'
+     else
+       LIBS='-static-intel -mkl=cluster -lm -lpthread -liomp5'
+     fi
+     LFLAGS=${LIBS}

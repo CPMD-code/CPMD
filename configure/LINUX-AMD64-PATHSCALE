@@ -1,0 +1,47 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for a linux machine
+#INFO# with an AMD64 bit cpu (Opteron/AthlonFX/Athlon64) using 
+#INFO# the Pathscale EKO Fortran compiler pathf90.
+#INFO#
+#INFO# Since the Pathscale compilers use shared runtime libraries by default,
+#INFO# the creation of static binaries (-Wl,-static) is highly recommended for optimal 
+#INFO# portability of the binary. With a dynamic binary you have to install
+#INFO# the same shared runtime libraries on _every_ machine, where you want to run cpmd.
+#INFO#
+#INFO# Pathscale version 1.0-30.2140 was tested ok on SuSE 9.0.
+#INFO# Full optimization (-Ofast) does not work, though.
+#INFO# To successfully link static binaries, you have to remove the incompatible
+#INFO# exponential runtime function by executing: 
+#INFO#  ar dv /opt/pathscale/lib/1.0/libmpath.a w_exp.o
+#INFO#
+#INFO# For optimal performance you should use a specifically tuned BLAS/LAPACK
+#INFO# library. ACML is officially unsupported, ATLAS version 3.6 was tested ok.
+#INFO#
+#INFO# see http://www.theochem.ruhr-uni-bochum.de/~axel.kohlmeyer/cpmd-linux.html
+#INFO# for more information on compilind and running CPMD on linux machines.
+#INFO#
+#INFO# NOTE: CPMD cannot be compiled with the GNU Fortran compiler.
+#INFO#
+     IRAT=2
+     FC='pathf90'
+     CC='gcc'
+     LD='pathf90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT  '
+     FFLAGS_GROMOS=' $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-g -r8 -d8 '
+       CFLAGS='-m64 -g'
+     else
+       FFLAGS='-O -64 -r8 -d8 '
+       CFLAGS='-O2 -Wall -m64'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS='-L. -latlas_x86_64 -Wl,-Bstatic'
+     else
+       LIBS='-L. -latlas_x86_64 -Wl,-Bstatic'
+     fi
+     LFLAGS=' '${LIBS} 

@@ -1,0 +1,34 @@
+#INFO#
+#INFO# Configuration to build a parallel cpmd executable for x86_64
+#INFO# using PGI Community Edition, INTEL Math Kernel Library, and FFTW
+#INFO# Note that openmpi bundled in PGI package does not include the support 
+#INFO# for SGE, PBS Pro, Open PBS, and Torque as a job scheduler. 
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/usr/bin/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux -D__HAS_FFT_FFTW3 -D__PARALLEL -D__HAS_EXTERNAL_C_ERF \
+               -D__HASNT_F03_EXECUTE_COMMAND_LINE -D__HASNT_OMP_45'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID -D__HAS_FFT_FFTW3 \
+                      -D__Linux   DFFT_DEFAULT -D__PARALLEL -D__HAS_EXTERNAL_C_ERF'
+     FFLAGS_GROMOS='-Mfixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -tp=px -r8 -pc=64 -Msignextend -Minfo=all -I$(MKLROOT)/include/fftw'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-O4 -fastsse -tp=px -r8 -pc=64 -Msignextend -Minfo=all -I$(MKLROOT)/include/fftw'
+       CFLAGS='-O2'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -mp=align'
+       LIBS='-L${MKLROOT}/lib/intel64 -L${MKLROOT}/../compiler/lib/intel64 \
+             -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -ldl'
+     else 
+       LIBS='-L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core'
+     fi
+     LFLAGS=' '${LIBS}

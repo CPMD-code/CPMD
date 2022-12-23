@@ -1,0 +1,42 @@
+#INFO#
+#INFO# Configuration for CAPS CCL Nova cluster GPU
+#INFO# Note that this machine uses:
+#INFO#   Nehalem Two-QuadCore X5560, Memory: 24 GB/node
+#INFO#   NVIDIA Tesla S1070 (Two C1060 GPUs, each 30 Nvidia 1.3 GHz
+#INFO#   multiprocessor, 240 CUDA cores)
+#INFO#   Red Hat Enterprise 5.3 + BULL enhancement
+#INFO#   Intel C/Fortran compiler + Intel Math Kernel Library
+#INFO#   MPI BULL mpibull2/1.3.9-18.s
+#INFO#
+
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS=' -D__HAS_FFT_FFTW3 -D__ALPHALINUX \
+                -D__PARALLEL  \
+                -D__HAS_EXTERNAL_IZAMAX  '
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+                -D__ALPHALINUX -D__PARALLEL   '
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-g -O0'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-O3  -pc64 -xHost -I/opt/intel/Compiler/12.0/069/mkl/include/fftw'
+       CFLAGS='-O3'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       OMP3_DISABLED='true'
+       LIBS='-L/opt/intel/Compiler/12.0/069/mkl/lib/em64t  -Wl,--start-group \
+             -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -Wl,--end-group \
+             -lm -lpthread -liomp5'
+     else
+       LIBS='-L/opt/intel/Compiler/12.0/069/mkl/lib/em64t  -Wl,--start-group \
+             -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -Wl,--end-group \
+             -lm -lpthread -liomp5'
+     fi
+     LFLAGS='-static-intel '${LIBS}

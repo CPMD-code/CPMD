@@ -1,0 +1,272 @@
+# -*- Makefile -*-
+#
+#  LIST OF FILES
+#
+SRC_ALL = $(SRC_MODULES) $(SRC_F90) $(SRC_CC)
+
+SRC_F90+= $(SRC_AL) $(SRC_WF) $(SRC_GM) $(SRC_MD) $(SRC_MT) \
+          $(SRC_KS) $(SRC_VA) $(SRC_PP) $(SRC_VD) $(SRC_NC) \
+          $(SRC_PA) $(SRC_IS) $(SRC_ST) $(SRC_SY) $(SRC_AT) \
+          $(SRC_LA) $(SRC_KP) $(SRC_PI) $(SRC_PM) $(SRC_CL) \
+          $(SRC_PE) $(SRC_KD) $(SRC_MM) $(SRC_VW) $(SRC_BS) \
+          $(SRC_SH) $(SRC_FM) $(SRC_MA) $(SRC_XC) $(INTERFACE_OBJECTS)
+
+SRC_AL  = my_para.F90 compress.F90
+
+#WaveFunctions optimization
+SRC_WF  =
+#GeoMetry optimisation
+SRC_GM  =
+#MeTadynamics
+SRC_MT  =
+#Molecular Dynamics
+SRC_MD  =
+#Kohn-Sham energies
+SRC_KS  =
+#Vibrational Analysis
+SRC_VA  =
+#ProPerties calculations
+SRC_PP  =
+#PErturbation theory
+SRC_PE  =
+#VanDerbilt pseudopotentials
+SRC_VD  =
+#Non-linear Core correction
+SRC_NC  =
+#PArallel work
+SRC_PA  =
+#ISolated system
+SRC_IS  =
+#STress tensor calculation
+SRC_ST  =
+#SYmmetry
+SRC_SY  =
+#ATomic
+SRC_AT  =
+#LAnczos diagonalisation
+SRC_LA  =
+#KPoints
+SRC_KP  =
+#Path Integral
+SRC_PI  =
+#Path Minimisation
+SRC_PM  =
+#KdP Theory
+SRC_KD  =
+#QMMM Code
+SRC_MM  =
+
+#FORCEMATCH
+SRC_FM  =
+#CLassical dynamics
+SRC_CL  =
+#Van der Waals correction
+SRC_VW  =
+#Broken Symmetry
+SRC_BS =
+#Surface Hopping
+SRC_SH  =
+#machine
+#SRC_MA  = machine_zeroing.F90 zeroing_bg.F90 zeroing_default.F90
+SRC_MA  =
+#CUDA Code
+SRC_CU  = cuuser_utils.cu cuuser_utils_kernels.cu
+#C Code
+SRC_CC  = sysdepend.c c_mem_utils.c
+#functionals
+SRC_XC  = # moved to modules section
+
+#----------------------------------------------------------------------------
+# LIST OF INCLUDE FILES
+#----------------------------------------------------------------------------
+
+
+SRC_MODULES = kinds.mod.F90 machine.mod.F90 timer.mod.F90 error_handling.mod.F90 para_global.mod.F90 \
+           mp_interface.mod.F90 mp_multiple_comm_init.mod.F90 system.mod.F90 system_utils.mod.F90 reshaper.mod.F90 \
+           mm_parallel.mod.F90 if_parallel.mod.F90 md_driver.mod.F90 \
+           control_utils.mod.F90 dftin_utils.mod.F90 sysin_utils.mod.F90 setsc_utils.mod.F90 detsp_utils.mod.F90 \
+           adat.mod.F90 atom.mod.F90 atwf.mod.F90 bc.mod.F90 benc.mod.F90 aavan.mod.F90 \
+           cell.mod.F90 cnst.mod.F90 coor.mod.F90 cotr.mod.F90 \
+           cppt.mod.F90 cvan.mod.F90 dipo.mod.F90 dpot.mod.F90 elct.mod.F90 empf.mod.F90 \
+           ener.mod.F90 envj.mod.F90 fileopen.mod.F90 fft.mod.F90 fft_utils.mod.F90 fft_maxfft.mod.F90 func.mod.F90 geq0.mod.F90 \
+           gvec.mod.F90 harm.mod.F90 head.mod.F90 ions.mod.F90 \
+           isos.mod.F90 kpnt.mod.F90 kpts.mod.F90 lodp.mod.F90 metr.mod.F90 movi.mod.F90 nlcc.mod.F90 \
+           nlps.mod.F90 norm.mod.F90 nort.mod.F90 nose.mod.F90 prden.mod.F90 \
+           prop.mod.F90 pslo.mod.F90 qspl.mod.F90 ragg.mod.F90 pstat.mod.F90 \
+           rmas.mod.F90 ropt.mod.F90 rswf.mod.F90 sfac.mod.F90 simul.mod.F90 soft.mod.F90 \
+           spin.mod.F90 str2.mod.F90 strs.mod.F90 tbxc.mod.F90 time.mod.F90 struc.mod.F90 \
+           tpar.mod.F90 vdbp.mod.F90 vdbt.mod.F90 symm.mod.F90 prcp.mod.F90 poin.mod.F90 \
+           sgpp.mod.F90 filn.mod.F90 andr.mod.F90 broy.mod.F90 fint.mod.F90 \
+           ddip.mod.F90 epot_types.mod.F90 efld.mod.F90 \
+           dftd3_common.mod.F90 dftd3_sizes.mod.F90 dftd3_pars.mod.F90 dftd3_core.mod.F90 dftd3_api.utils.mod.F90 \
+           gle_utils.mod.F90 interpt_utils.mod.F90 secdpt_utils.mod.F90 proppt_utils.mod.F90 \
+           specpt_utils.mod.F90 read_prop_utils.mod.F90 ratom_utils.mod.F90 vdwin_utils.mod.F90 \
+           propin_utils.mod.F90 respin_p_utils.mod.F90 setsys_utils.mod.F90 genxc_utils.mod.F90 \
+           numpw_utils.mod.F90 pi_cntl_utils.mod.F90 pi_init_utils.mod.F90 \
+           meta_exlagr_utils.mod.F90 meta_multiple_walkers_utils.mod.F90 \
+           nmr_para_p_utils.mod.F90 rinit_utils.mod.F90 \
+           rinforce_utils.mod.F90 fftprp_utils.mod.F90 initclust_utils.mod.F90 \
+           mm_init_utils.mod.F90 setbasis_utils.mod.F90 exterp_utils.mod.F90 \
+           dqgalloc_utils.mod.F90 dginit_utils.mod.F90 nosalloc_utils.mod.F90 \
+           pm_mdpt_utils.mod.F90 prpt_utils.mod.F90 prbomd_utils.mod.F90 prmdfile_utils.mod.F90 \
+           pm_gmopts_utils.mod.F90 pm_wf_utils.mod.F90 \
+           pi_mdpt_utils.mod.F90 pi_wf_utils.mod.F90 \
+           prng_utils.mod.F90 gmopts_utils.mod.F90 wfopts_utils.mod.F90 orbhard_utils.mod.F90 response_p_utils.mod.F90 \
+           prep_forcematch_utils.mod.F90 prmem_utils.mod.F90 \
+           extpot.mod.F90 pimd.mod.F90 pimd_utils.mod.F90 scrp.mod.F90 clas.mod.F90 store_types.mod.F90 atimes.mod.F90 \
+           pola.mod.F90 condu.mod.F90 swap.mod.F90 ldos.mod.F90 sphe.mod.F90 fcas.mod.F90 \
+           temps.mod.F90 elct2.mod.F90 symm4.mod.F90 wann.mod.F90 andp.mod.F90 response_p.mod.F90 \
+           linres.mod.F90 shop.mod.F90 kdp.mod.F90 kdpc.mod.F90 conv.mod.F90 xinr.mod.F90 implhv.mod.F90 \
+           mm_dim.mod.F90 mm_input.mod.F90 mm_ion_dens.mod.F90 comvel.mod.F90 vdwcmod.mod.F90 vdwcmod_utils.mod.F90 eam.mod.F90 \
+           tpot.mod.F90 g_loc.mod.F90 cnst_dyn.mod.F90 hfx.mod.F90 dg.mod.F90 \
+           bsym.mod.F90 bsympnt.mod.F90 tauf.mod.F90 cores.mod.F90 \
+           printp.mod.F90 mfep.mod.F90 merge.mod.F90 cdft.mod.F90 transme.mod.F90 prng.mod.F90 gle.mod.F90 \
+           td_input.mod.F90 min_heap.mod.F90 pw_hfx_input_cnst.mod.F90 pw_hfx.mod.F90 pw_hfx_resp.mod.F90 \
+           cp_grp_utils.mod.F90 part_1d.mod.F90 x_hjs.mod.F90 \
+           lscal.mod.F90 ksmat.mod.F90 mw.mod.F90 cplngs.mod.F90 nvar.mod.F90 shop_rest_2.mod.F90 \
+           mm_extrap.mod.F90 mols.mod.F90 locpot.mod.F90 shop_rest.mod.F90 readmod.mod.F90 shop_ekinqm.mod.F90 \
+           parac.mod.F90 forcematch.mod.F90 shock.mod.F90 special_functions.mod.F90 fm_cnst.mod.F90 \
+           set_cp_grp_utils.mod.F90 pm_init_utils.mod.F90 startpa_utils.mod.F90 loadpa_utils.mod.F90 glopar_utils.mod.F90 \
+           rggen_utils.mod.F90 sumfnl_utils.mod.F90 envir_utils.mod.F90 pbc_utils.mod.F90 rinitwf_utils.mod.F90 \
+           mdpt_utils.mod.F90 soc_types.mod.F90 soc.mod.F90 pi_md_utils.mod.F90 pi_diag_utils.mod.F90 \
+           pm_cntl_utils.mod.F90 npt_md_utils.mod.F90 control_def_utils.mod.F90 control_bcast_utils.mod.F90 \
+           control_pri_utils.mod.F90 control_test_utils.mod.F90 string_utils.mod.F90 setcnst_utils.mod.F90 \
+           header_utils.mod.F90 inscan_utils.mod.F90 readsr_utils.mod.F90 recpnew_utils.mod.F90 recpupf_utils.mod.F90 \
+           ghermit_utils.mod.F90 coninp_utils.mod.F90 latgen_utils.mod.F90 cl_init_utils.mod.F90 rreadf_utils.mod.F90 \
+           repgen_utils.mod.F90 formf_utils.mod.F90 meta_hpot_utils.mod.F90 meta_dyn_def_utils.mod.F90 meta_colvar_utils.mod.F90 \
+           meta_colvar_inp_utils.mod.F90 meta_exlagr_methods.mod.F90 meta_cv_utils.mod.F90 \
+           meta_cv_qmmm_utils.mod.F90 tst2min_utils.mod.F90 tst2min_inp_utils.mod.F90 chain_dr_utils.mod.F90 meta_cell_utils.mod.F90 \
+           meta_exl_mult_utils.mod.F90 meta_ex_mul_util_utils.mod.F90 meta_localizespin_utils.mod.F90 meta_colvar_util_utils.mod.F90 \
+           setbsstate_utils.mod.F90 io_utils.mod.F90 atoms_utils.mod.F90 dynit_utils.mod.F90 shake_utils.mod.F90 \
+           rattle_utils.mod.F90 resetac_utils.mod.F90 dispp_utils.mod.F90 \
+           noseinit_utils.mod.F90 nospinit_utils.mod.F90 noseng_utils.mod.F90 nosepa_utils.mod.F90 noseup_utils.mod.F90 \
+           enosmove_utils.mod.F90 pnosmove_utils.mod.F90 \
+           vdw_utils.mod.F90 chksym_utils.mod.F90 symtrz_utils.mod.F90 multtb_utils.mod.F90 molsym_utils.mod.F90 \
+           nl_res_utils.mod.F90 sd_loc_utils.mod.F90 sd_nl_utils.mod.F90 fharm_utils.mod.F90 global_utils.mod.F90 \
+           stagetrans_utils.mod.F90 pinmtrans_utils.mod.F90 getfu_utils.mod.F90 getfnm_utils.mod.F90 \
+           readvan_utils.mod.F90 aainit_utils.mod.F90 vdbinit_utils.mod.F90 mm_dim_utils.mod.F90 \
+           mm_qmmm_forcedr_utils.mod.F90 mm_mdmain_utils.mod.F90 mdclas_utils.mod.F90 readff_utils.mod.F90 \
+           clas_force_utils.mod.F90 bs_forces_diag_utils.mod.F90 bswfo_utils.mod.F90 lsforce_utils.mod.F90 wrccfl_utils.mod.F90 \
+           mm_cpmd_add_MM_forces_f77_utils.mod.F90 mm_cpmd_esp_charges_f77_utils.mod.F90 \
+           mm_cpmd_ext_pot_f77_utils.mod.F90 mm_mddiag_utils.mod.F90 mm_forces_diag_utils.mod.F90 \
+           mm_rho_forcedr_utils.mod.F90 td_mm_qmmm_forcedr_utils.mod.F90 mm_qmmm_forcedr_bs_utils.mod.F90 \
+           mm_forces_prop_utils.mod.F90 \
+           forcematch_kfit_utils.mod.F90 forcematch_qfit_utils.mod.F90 forcematch_utils.mod.F90 \
+           mm_forcematch_utils.mod.F90 \
+           getgyr_utils.mod.F90 getcor_utils.mod.F90 prtgyr_utils.mod.F90 evirial_utils.mod.F90 wr_temps_utils.mod.F90 \
+           mdshop_cp_utils.mod.F90 mdshop_bo_utils.mod.F90 mm_mdshop_cp_utils.mod.F90 mm_mdshop_bo_utils.mod.F90 \
+           fusion_utils.mod.F90 rk4ov_utils.mod.F90 shop_adds_utils.mod.F90 sh_tddft_utils.mod.F90 sh_utils.mod.F90 \
+           kdp_diag_utils.mod.F90 kdp_prep_utils.mod.F90 kdp_rho_utils.mod.F90 kdp_stress_kin_utils.mod.F90 \
+           kdpoints_utils.mod.F90 rhoofr_kdp_utils.mod.F90 \
+           enbandpri_utils.mod.F90   rkpnt_utils.mod.F90    k290_utils.mod.F90   k290_2_utils.mod.F90  kpclean_utils.mod.F90 \
+           lsfbtr_utils.mod.F90 \
+           stress_utils.mod.F90 vlocst_utils.mod.F90 htrstr_utils.mod.F90 nlsl_utils.mod.F90 \
+           nlsm1_s_utils.mod.F90 dylmr_utils.mod.F90 ffsum_utils.mod.F90 qrada_s_utils.mod.F90 totstr_utils.mod.F90 \
+           putbet_utils.mod.F90 ranc_utils.mod.F90 newcell_utils.mod.F90 sdcell_utils.mod.F90 prcpmd_utils.mod.F90 \
+           fstart_utils.mod.F90 struc_utils.mod.F90 empfor_utils.mod.F90 puttau_utils.mod.F90 \
+           constr_utils.mod.F90 rrfo_utils.mod.F90 rbfgs_utils.mod.F90 rgdiis_utils.mod.F90 sdion_utils.mod.F90 \
+           hessin_utils.mod.F90 hessout_utils.mod.F90 hessup_utils.mod.F90 dum2_utils.mod.F90 detdof_utils.mod.F90 \
+           cnstfc_utils.mod.F90 fixcom_utils.mod.F90 cnstpr_utils.mod.F90 moverho_utils.mod.F90 elf_utils.mod.F90 \
+           lsd_elf_utils.mod.F90 rlbfgs_utils.mod.F90 adapttol_utils.mod.F90 fillc_utils.mod.F90 \
+           nabdy_ampli.mod.F90 nabdy_initialize.mod.F90 nabdy_types.mod.F90 nabdy_forces.mod.F90 nabdy_md.mod.F90 \
+           symmetry_utils.mod.F90 hipin_utils.mod.F90 hip_utils.mod.F90 mtin_utils.mod.F90 nlccset_utils.mod.F90 \
+           copot_utils.mod.F90 corec_utils.mod.F90 cofor_utils.mod.F90 nlccstr_utils.mod.F90 \
+           mdmain_utils.mod.F90 ekinpp_utils.mod.F90 freqs_utils.mod.F90 printave_utils.mod.F90 printp_utils.mod.F90 \
+           rekine_utils.mod.F90 rinvel_utils.mod.F90 rscvp_utils.mod.F90 rscve_utils.mod.F90 deort_utils.mod.F90 \
+           quenbo_utils.mod.F90 velupa_utils.mod.F90 velupi_utils.mod.F90 vepsup_utils.mod.F90 posupa_utils.mod.F90 \
+           posupi_utils.mod.F90 rortog_utils.mod.F90 rortv_utils.mod.F90 crotwf_utils.mod.F90 noscinit_utils.mod.F90 \
+           prpcnosmove_utils.mod.F90 prpcmove_utils.mod.F90 prpnosmove_utils.mod.F90 prcnosmove_utils.mod.F90 \
+           ddipo_utils.mod.F90 kddipo_utils.mod.F90 opeigr_utils.mod.F90 opeigr_c_utils.mod.F90 sample_utils.mod.F90 \
+           sd_wannier_utils.mod.F90 wannier_center_utils.mod.F90 wannier_print_utils.mod.F90 purge_utils.mod.F90 \
+           wc_dos_utils.mod.F90 comvel_utils.mod.F90 rotvel_utils.mod.F90 printfor_utils.mod.F90 cplngs_utils.mod.F90 \
+           td_cayley_utils.mod.F90 td_utils.mod.F90 ehrenfest_utils.mod.F90 forces_prop_utils.mod.F90 box_boundary_utils.mod.F90 \
+           friesner_utils.mod.F90 friesner_c_utils.mod.F90 ehpsi_utils.mod.F90 rrandd_utils.mod.F90 updrho_utils.mod.F90 \
+           anderson_utils.mod.F90 adjmu_utils.mod.F90 forces_diag_utils.mod.F90 extrap_utils.mod.F90 bogol_utils.mod.F90 \
+           calc_alm_utils.mod.F90 vbeta_utils.mod.F90 rhodiis_utils.mod.F90 frsblk_utils.mod.F90 frsblk_c_utils.mod.F90 \
+           mixing_r_utils.mod.F90 mixing_g_utils.mod.F90 broyden_utils.mod.F90 dist_friesner_utils.mod.F90 \
+           dist_prowfn_utils.mod.F90 prowfn_utils.mod.F90 ksmat_dist_utils.mod.F90 gs_disortho_utils.mod.F90 k_forces_utils.mod.F90 \
+           h0psi1_p_utils.mod.F90 v1ofrho_p_utils.mod.F90 fnonloc_p_utils.mod.F90 mddiag_interaction_p_utils.mod.F90 \
+           gndstate_p_utils.mod.F90 legendre_p_utils.mod.F90 interaction_p_utils.mod.F90 interaction_manno_p_utils.mod.F90 \
+           rotate_my_wannier_manno_p_utils.mod.F90 rotate_my_wannier_para_p_utils.mod.F90 simple_model_p_utils.mod.F90 \
+           hess_eta_p_utils.mod.F90 inr_dr_utils.mod.F90 lanc_phon_p_utils.mod.F90 v1xc_p_utils.mod.F90 hesele_p_utils.mod.F90 \
+           do_perturbation_p_utils.mod.F90 zdiis_utils.mod.F90 pcgrad_p_utils.mod.F90 odiis_p_utils.mod.F90 \
+           rnlsm_p_utils.mod.F90 vpsi_p_utils.mod.F90 perturbation_p_utils.mod.F90 eigensystem_p_utils.mod.F90 \
+           phonons_p_utils.mod.F90 rwfopt_p_utils.mod.F90 d_mat_p_utils.mod.F90 updwf_p_utils.mod.F90 \
+           forces_p_utils.mod.F90 rhoofr_p_utils.mod.F90 raman_p_utils.mod.F90 opeigr_p_utils.mod.F90 \
+           nmr_p_utils.mod.F90 nmr_util_p_utils.mod.F90 nmr_chi_p_utils.mod.F90 nmr_shift_p_utils.mod.F90 \
+           nmr_current_p_utils.mod.F90 nmr_full_p_utils.mod.F90 nmr_position_p_utils.mod.F90 util_p_utils.mod.F90 \
+           hardness_p_utils.mod.F90 restart_p_utils.mod.F90 pert_kpoint_p_utils.mod.F90 dnlpdk_p_utils.mod.F90 \
+           rnl_dk_p_utils.mod.F90 kpert_potential_p_utils.mod.F90 up3_p_utils.mod.F90 friesner_c_p_utils.mod.F90 \
+           matrix_p_utils.mod.F90 ks_ener_p_utils.mod.F90 kpert_util_p_utils.mod.F90 fukui_p_utils.mod.F90 \
+           mdfile_utils.mod.F90 epr_p_utils.mod.F90 epr_current_p_utils.mod.F90 epr_util_p_utils.mod.F90 \
+           epr_hyp_utils.mod.F90 epr_dv0_utils.mod.F90 rhov_utils.mod.F90 qvan1_utils.mod.F90 qvan2_utils.mod.F90 \
+           newd_utils.mod.F90 rnlfl_utils.mod.F90 augchg_utils.mod.F90 \
+           dipo_utils.mod.F90  lodipo_utils.mod.F90  exdipo_utils.mod.F90  cmaos_utils.mod.F90  difrho_utils.mod.F90 \
+           conduct_utils.mod.F90  polarise_utils.mod.F90  calc_pij_utils.mod.F90  localize_utils.mod.F90 \
+           jrotation_utils.mod.F90  ohfd_utils.mod.F90  ohlr_utils.mod.F90  td_dav_utils.mod.F90 \
+           td_nhdav_utils.mod.F90  lr_diag_utils.mod.F90  vhk_utils.mod.F90  gettrans_utils.mod.F90  rho1pri_utils.mod.F90 \
+           rw_linres_utils.mod.F90  td_force_utils.mod.F90  tdnlfor_utils.mod.F90  td_pcg_utils.mod.F90  orbrot_utils.mod.F90 \
+           vtd2_utils.mod.F90  stcop_utils.mod.F90  afbdr_utils.mod.F90  td_os_utils.mod.F90  td_os_berry_utils.mod.F90 \
+           td_prop_utils.mod.F90  g_loc_util_utils.mod.F90  wfn_print_utils.mod.F90  znum_mat_utils.mod.F90 \
+           g_loc_spread_ide_utils.mod.F90 g_loc_optim_utils.mod.F90 \
+           u_upd_exp_utils.mod.F90  g_loc_dr_utils.mod.F90  g_loc_exp_sum_utils.mod.F90  u_upd_exp_sum_utils.mod.F90 \
+           g_loc_spread_sum_utils.mod.F90  u_upd_spread_sum_utils.mod.F90  g_loc_realspace_utils.mod.F90 \
+           g_loc_opeigr_utils.mod.F90  efield_utils.mod.F90  molorb_utils.mod.F90 \
+           molstates_utils.mod.F90  epr_efg_utils.mod.F90  core_spect_utils.mod.F90  potmed_utils.mod.F90  nuclear_p_utils.mod.F90 \
+           rwfopt_nuc_utils.mod.F90  rinforce_nuc_utils.mod.F90  write_pp_utils.mod.F90  td_nacvs_utils.mod.F90  proylm_utils.mod.F90 \
+           secder_utils.mod.F90 sdlinres_utils.mod.F90 sd_ii_utils.mod.F90 sd_loc2_utils.mod.F90 sd_nl2_utils.mod.F90 \
+           rnlsm_2d_utils.mod.F90 rho1ofr_utils.mod.F90 v1ofrho1_utils.mod.F90 lr_force_utils.mod.F90 opt_lr_utils.mod.F90 \
+           lr_upd_utils.mod.F90 dd_xc_utils.mod.F90 eind_ii_utils.mod.F90 eind_loc_utils.mod.F90 eind_nl_utils.mod.F90 \
+           lr_in_utils.mod.F90 lr_xcpot_utils.mod.F90 lr_ortho_utils.mod.F90 lr_pcg_utils.mod.F90 canon_utils.mod.F90 \
+           lr_tddft_utils.mod.F90 lr_tddft_drhoe.mod.F90 vibana_utils.mod.F90 dd_xc_ana_utils.mod.F90 dd_functionals_utils.mod.F90 \
+           rwfopt_utils.mod.F90 updwf_utils.mod.F90 odiis_utils.mod.F90 pcgrad_utils.mod.F90 k_updwf_utils.mod.F90 \
+           k_odiis_utils.mod.F90 k_hesele_utils.mod.F90 k_pcgrad_utils.mod.F90 k_diis_rhofix_utils.mod.F90 cdft_utils.mod.F90 \
+           transme_utils.mod.F90 syscomb_utils.mod.F90 davidson_utils.mod.F90 ksdiag_utils.mod.F90 vgsortho_utils.mod.F90 \
+           hpsi_utils.mod.F90 spsi_utils.mod.F90 gsortho_utils.mod.F90 rhov1_utils.mod.F90 hubbardu.mod.F90 hubbardu_utils.mod.F90 \
+           functionals_utils.mod.F90 lsd_func_utils.mod.F90 saop_utils.mod.F90 softex_utils.mod.F90 rnlset_utils.mod.F90 \
+           ylmr_utils.mod.F90 rnlin_utils.mod.F90 radin_utils.mod.F90 bessm_utils.mod.F90 ylmr2_utils.mod.F90 ortho_utils.mod.F90 \
+           finalp_utils.mod.F90 forcep_utils.mod.F90 rhopri_utils.mod.F90 phfac_utils.mod.F90 wrener_utils.mod.F90 \
+           rrane_utils.mod.F90 ranp_utils.mod.F90 wrgeo_utils.mod.F90 rnlsm1_utils.mod.F90 rnlsm2_utils.mod.F90 \
+           forces_utils.mod.F90 lowdin_utils.mod.F90 domdr_utils.mod.F90 \
+           rgs_utils.mod.F90 rgsvan_utils.mod.F90 atomwf_utils.mod.F90 atrho_utils.mod.F90 xcener_utils.mod.F90 \
+           graden_utils.mod.F90 gcener_utils.mod.F90 hesele_utils.mod.F90 noforce_utils.mod.F90 rhoofr_utils.mod.F90 \
+           vpsi_utils.mod.F90 nlforce_utils.mod.F90 rotate_utils.mod.F90 hnlmat_utils.mod.F90 ovlap_utils.mod.F90 \
+           dotp_utils.mod.F90 fnonloc_utils.mod.F90 gsize_utils.mod.F90 csize_utils.mod.F90 rscpot_utils.mod.F90 \
+           csmat_utils.mod.F90 ksmat_utils.mod.F90 vofrho_utils.mod.F90 vofrhoa_utils.mod.F90 vofrhob_utils.mod.F90 \
+           vofrhoh_utils.mod.F90 vofrhot_utils.mod.F90 vofrhoc_utils.mod.F90 jacobi_utils.mod.F90 rnlrh_utils.mod.F90 \
+           rnlfor_utils.mod.F90 randtowf_utils.mod.F90 \
+           densrd_utils.mod.F90 eam_pot_utils.mod.F90 tauofr_utils.mod.F90 vtaupsi_utils.mod.F90 metafun_utils.mod.F90 \
+           vofrhos_utils.mod.F90 teststore_utils.mod.F90 loadse_utils.mod.F90 rnlsmd_utils.mod.F90 potfor_utils.mod.F90 \
+           ppener_utils.mod.F90 reigs_utils.mod.F90 geofile_utils.mod.F90 rpiiint_utils.mod.F90 eicalc_utils.mod.F90 \
+           densto_utils.mod.F90 proja_utils.mod.F90 wrintf_utils.mod.F90 ainitwf_utils.mod.F90 \
+           nfunc_utils.mod.F90 gcxctbl_utils.mod.F90 hfx_utils.mod.F90 rhoofr_c_utils.mod.F90 jacobi_c_utils.mod.F90 \
+           velocitinp_utils.mod.F90 setirec_utils.mod.F90 interp3d_utils.mod.F90 hfx_drivers.mod.F90 \
+           wv30_utils.mod.F90 rv30_utils.mod.F90 wr30wfn_utils.mod.F90 debfor_utils.mod.F90 merge_utils.mod.F90 \
+           ptheory_utils.mod.F90 clinbcg_utils.mod.F90 elstpo_utils.mod.F90 mulliken_utils.mod.F90 espchg_utils.mod.F90 \
+           secder_driver.mod.F90 atimes_utils.mod.F90 projv_utils.mod.F90 vdw_wf_alloc_utils.mod.F90 \
+           kin_energy_utils.mod.F90 vpsi_lse_utils.mod.F90 disortho_utils.mod.F90 norhoe_utils.mod.F90 ssic_utils.mod.F90 \
+           testex_utils.mod.F90 atomc_utils.mod.F90 eextern_utils.mod.F90 egointer_utils.mod.F90 fileopen_utils.mod.F90 \
+           forcedr_utils.mod.F90 initrun_utils.mod.F90 ldos_utils.mod.F90 fnlalloc_utils.mod.F90 anneal_utils.mod.F90 \
+           rnlsm_utils.mod.F90 wfnio_utils.mod.F90 density_functionals_utils.mod.F90 linalg_utils.mod.F90 forcedr_driver.mod.F90 \
+           forces_driver.mod.F90 rinitwf_driver.mod.F90 initrun_driver.mod.F90 pcgrad_driver.mod.F90 k_forces_driver.mod.F90 \
+           rlbfgs_io.mod.F90 fitpack_utils.mod.F90 sort_utils.mod.F90 cp_ieee_interface.mod.F90 \
+           fftutil_utils.mod.F90 mltfft_utils.mod.F90 gfft_utils.mod.F90 fftchk_utils.mod.F90 fftmain_utils.mod.F90 fftnew_utils.mod.F90 \
+           state_utils.mod.F90 density_utils.mod.F90 sizeof_kinds.mod.F90 cufft_utils.mod.F90 cuuser_utils.mod.F90 cublas_interfaces.mod.F90 \
+           rgmopt_utils.mod.F90 xcstr_utils.mod.F90 drhov_utils.mod.F90 dqvan2_utils.mod.F90 rwswap_utils.mod.F90 \
+           azzero_utils.mod.F90 zeroing_utils.mod.F90 cuda_interfaces.mod.F90 cufft_interfaces.mod.F90 cuuser_interfaces.mod.F90 cuda_utils.mod.F90 \
+           summat_utils.mod.F90 utils.mod.F90 array_utils.mod.F90 fftcu_methods.mod.F90 cuda_types.mod.F90 cufft_types.mod.F90 \
+           cublas_types.mod.F90 cublas_utils.mod.F90 cp_cuda_utils.mod.F90 cp_cuda_types.mod.F90 \
+           cusolver_types.mod.F90 cusolver_utils.mod.F90 cusolver_interfaces.mod.F90 thread_view_types.mod.F90 thread_view_utils.mod.F90 \
+           cp_cufft_types.mod.F90 cp_cufft_utils.mod.F90 cp_cuortho_types.mod.F90 cp_cuortho_utils.mod.F90 nvtx_utils.mod.F90 \
+           nvtx_interfaces.mod.F90 cp_cudensity_utils.mod.F90 cp_curho_types.mod.F90 cp_curho_utils.mod.F90 cp_cuvpsi_utils.mod.F90 \
+           cp_cuvpsi_types.mod.F90 cp_xc_driver.mod.F90 cp_xc_utils.mod.F90 lxc_utils.mod.F90 cp_cuwfn_types.mod.F90 cp_cuwfn_utils.mod.F90 \
+           voa_p_utils.mod.F90 pw_hfx_resp_types.mod.F90 pw_hfx_resp_utils.mod.F90 \
+           cpfunc_types.mod.F90 cp_lda_exchange_utils.mod.F90 cp_lda_correlation_utils.mod.F90 cp_gga_exchange_utils.mod.F90 cp_gga_correlation_utils.mod.F90 \
+           cp_mgga_exchange_utils.mod.F90 cp_mgga_correlation_utils.mod.F90 \
+           cp_dxc_driver.mod.F90 cp_dgga_exchange_utils.mod.F90 cp_dgga_correlation_utils.mod.F90 switch_functionals_utils.mod.F90 \
+           scex_utils.mod.F90 \
+           dcacp_utils.mod.F90 \
+           bicanonicalCpmd.mod.F90 bicanonicalConfig.mod.F90 bicanonicalInputReader.mod.F90 bicanonicalCalculationConfig.mod.F90 bicanonicalCalculation.mod.F90 \
+          pi_prpt_utils.mod.F90 pi_npt_cpmd_utils.mod.F90 pi_stress_utils.mod.F90 pi_npt_bomd_utils.mod.F90 \
+          nvml_interfaces.mod.F90 nvml_types.mod.F90 nvml_utils.mod.F90 mts_utils.mod.F90 interface_utils.mod.F90 \
+          dftd3_driver.mod.F90 

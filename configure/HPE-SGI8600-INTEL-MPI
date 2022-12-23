@@ -1,0 +1,42 @@
+#INFO#
+#INFO# General Configuration NON-CUDA for Hewlett-Packard HPE SGI 8600 model
+#INFO# computing nodes XA730i, with 2 Intel Cascade Lake 6248 (20 cores 2,5 Ghz), 40 cores/node
+#INFO# converged nodes XA780i, with 2 Intel Cascade Lake 6248 and 4 GPUs Nvidia V100 SXM2 32 GB 
+#INFO# Intel Composer v.19 or later - Intel MPI + OMP 4.5 (or later)
+#INFO# Modules needed: intel-all/19.0.4        intltool/0.51.0/intel-19.0.4
+#INFO#                 intel-compilers/19.0.4  intel-mpi/19.0.4
+#INFO#                 intel-vtune/19.0.4      intel-advisor/19.0.4
+#INFO# Tested on the machine Jean-Zay of IDRIS (Paris)
+#INFO# (M. Boero, IPCMS & University of Nagoya, 2019). 
+#INFO#
+     IRAT=2
+     FC='mpiifort'
+     CC='mpiicc'
+     LD='mpiifort'
+     CPP='/lib/cpp -P -traditional'
+     CPPFLAGS='-D__INTEL -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC \
+         -D__PARALLEL -D__HAS_SIZEOF -D__HASNT_F08_ISO_FORTRAN_ENV -D__HAS_BF_STREAM_IO'
+     NOOPT_FLAG='-O1 -pc64'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+             -D__INTEL -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC \
+             -D__PARALLEL -D__HAS_SIZEOF -D__HASNT_F08_ISO_FORTRAN_ENV -D__HAS_BF_STREAM_IO'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='xiar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g'
+       CFLAGS='-g -Wall -m64'
+     else
+       FFLAGS='-O2 -pc64 -funroll-loops -heap-arrays 64 -align array64byte -assume byterecl \
+              -axCORE-AVX512 -axMIC-AVX512 -fma -ftz -finline-functions -fpp -xHost'
+       CFLAGS='-O2 -Wall  '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qopenmp'
+       OMP3_DISABLED='false'
+       LIBS='-static-intel -mkl=parallel -lm'
+     else
+       LIBS='-static-intel -mkl=serial -lm'
+     fi
+     LFLAGS=${LIBS}

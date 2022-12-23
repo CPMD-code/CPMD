@@ -1,0 +1,40 @@
+#INFO#
+#INFO# Compiler options for Hitachi SR-11000. 
+#INFO# WARNING: Note that this configuration is for the Japanese
+#INFO# version of the SR-11000 machine that, contrary to
+#INFO# the international versions, does NOT use Siemens software.
+#INFO# So, if you use a SR-11000 outside Japan your configuration
+#INFO# might be different.
+#INFO#
+     IRAT=2
+     FC='f90'
+     CC='cc'
+     LD='f90'
+     CPP='/usr/ccs/lib/cpp -P'
+     CPPFLAGS='-D__SR8000  -D__NOINT8 -D__PARALLEL -D__VECTOR -D__HASNT_OMP_45 \
+               -D__HAS_FFT_DEFAULT -D__HASNT_F03_EXECUTE_COMMAND_LINE -D__HASNT_F08_ISO_FORTRAN_ENV'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+               -D__SR8000  -D__NOINT8 -D__PARALLEL -D__VECTOR -D__HASNT_OMP_45 \
+               -D__HAS_FFT_DEFAULT -D__HASNT_F03_EXECUTE_COMMAND_LINE -D__HASNT_F08_ISO_FORTRAN_ENV' 
+     FFLAGS_GROMOS='$(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -W0,"opt(o(s),scope(0))" \
+               -W0,"list(e(4)),langlvl(intptr(1),conti199(1))" \
+               -nolimit -noloopsplit -64 -I/usr/mpi/include' 
+       CFLAGS='-g -O -64 -D__SR8000 -nolimit -parallel'
+     else
+       FFLAGS='-i,P -W0,"opt(o(s),scope(0))" \
+               -W0,"list(e(4)),langlvl(intptr(1),conti199(1))" \
+               -nolimit -noloopsplit -64 -I/usr/mpi/include' 
+       CFLAGS='-O -q64 -O -64 -D__SR8000 -nolimit -parallel'
+     fi
+     if [ $omp ]; then
+       OMP3_DISABLED='true'
+       LIBS='-L/usr/local/lib -llapack -lblas -lmpi -lf90c' 
+     else
+       LIBS='-L/usr/local/lib -llapack -lblas -lmpi -lf90c' 
+     fi
+     LFLAGS='-parallel -64 '${LIBS}

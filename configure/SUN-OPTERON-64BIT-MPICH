@@ -1,0 +1,38 @@
+#INFO#
+#INFO# Configuration to build a 64-bit parallel cpmd executable for
+#INFO# Solaris/Opteron (using MPICH)
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/usr/ccs/lib/cpp -P'
+     CPPFLAGS="-D__HASNT_BF_STREAM_IO -D__SUN -D__HAS_FFT_DEFAULT   \\
+	-D__DATE__=\"'\`date '+%b %e %Y'\`'\" \\
+	-D__TIME__=\"'\`date '+%T'\`'\" \\
+	-D__PARALLEL "
+     FFLAGS_GROMOS='$(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/ccs/bin/ar'
+     RANLIB='/usr/ccs/bin/ranlib'
+     if [ -f /usr/xpg4/bin/awk ]; then
+       AWK="/usr/xpg4/bin/awk"
+     fi
+     if [ $debug ]; then
+       FFLAGS='-g -xtarget=opteron -xarch=amd64 -dalign -ftrap=%none'
+       CFLAGS='-D__SUN -g -C -errtags -xtarget=opteron -xarch=amd64'
+       LFLAGS='-xlic_lib=sunperf -L/opt/mpich64-1.2.7p1/lib -R/opt/mpich64-1.2.7p1/lib -lmpich'
+     else
+       FFLAGS='-fast -xO4 -xtarget=opteron -xarch=amd64 -dalign -ftrap=%none'
+       CFLAGS='-D__SUN -fast -xtarget=opteron -xarch=amd64'
+       LFLAGS='-xlibmopt -xlic_lib=sunperf -L/opt/mpich64-1.2.7p1/lib -R/opt/mpich64-1.2.7p1/lib -lmpich'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS= 
+     else
+       LIBS= 
+     fi
+     LFLAGS=${LFLAGS}' '${LIBS}
+

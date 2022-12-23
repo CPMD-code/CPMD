@@ -1,0 +1,47 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for a linux pc using 
+#INFO# the Portland Group Fortran compiler pgf90.
+#INFO#
+#INFO# use '-tp p7' in FFLAGS to optimize for intel pentium iv cpus
+#INFO# use '-tp p6' in FFLAGS to optimize for intel pentium iii or amd athlon cpus
+#INFO# use '-tp px' in FFLAGS to optimize for a generic x86 cpu, recommended.
+#INFO#
+#INFO# Since the newer Portland use shared runtime libraries by default,
+#INFO# the creation of static binaries (-Bstatic) is highly recommended for optimal 
+#INFO# portability of the binary. With a dynamic binary you have to install
+#INFO# the same shared runtime libraries on _every_ machine, where you want to run cpmd.
+#INFO#
+#INFO# For optimal performance use either a combined LAPACK/ATLAS library (see the 
+#INFO# atlas manual for instructions) or the intel math kernel library (MKL); 
+#INFO# you can use the pentium iii version of the mkl on amd athlon cpus.
+#INFO# e.g. LFLAGS=-L/opt/intel/mkl/lib/32 -lmkl_lapack -lmkl_p3  -Bstatic
+#INFO#
+#INFO# see <http://www.theochem.ruhr-uni-bochum.de/~axel.kohlmeyer/cpmd-linux.html>
+#INFO# for more information on compiling and running CPMD on x86 linux machines.
+#INFO#
+#INFO# NOTE: CPMD cannot be compiled with the GNU Fortran compiler.
+#INFO#
+     IRAT=2
+     FC='pgf90'
+     CC='gcc'
+     LD='pgf90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__HAS_EXTERNAL_C_ERF '
+     FFLAGS_GROMOS=' $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID '
+     if [ $debug ]; then
+       FFLAGS='-g -Mr8 -pc64 -Msignextend -Msecond_underscore'
+       CFLAGS='-g -Wall'
+     else
+       FFLAGS='-fast -tp px -Mr8 -pc64 -Msignextend -Msecond_underscore'
+       CFLAGS='-O2 -Wall -tp px'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS='-L$(PGI)/linux86/lib -llapack -lblas -lpgc -lpgftnrtl'
+     else
+       LIBS='-L$(PGI)/linux86/lib -llapack -lblas -lpgc -lpgftnrtl'
+     fi
+     LFLAGS=' '${LIBS}

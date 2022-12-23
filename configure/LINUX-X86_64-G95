@@ -1,0 +1,31 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for x86_64 using 
+#INFO# the G95 fortran compiler.
+#INFO#
+#INFO# V. Weber
+#INFO#
+#INFO#
+
+     IRAT=2
+     FC='/sp/vwe/prog/G95/g95-install/bin/g95'
+     CC='gcc'
+     LD='/sp/vwe/prog/G95/g95-install/bin/g95'
+     CPP='/usr/bin/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT  -D__HAS_SIZEOF'
+     FFLAGS_GROMOS='-ffixed-form $(FFLAGS)' 
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)' 
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -Wall -pedantic -fbounds-check -ftrace=full'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-g -O2'
+       CFLAGS='-g -O2'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS='/sp/vwe/lib/liblapack342_intel_g95_0.94.a /sp/vwe/lib/libblas342_intel_g95_0.94.a'
+     else
+       LIBS='/sp/vwe/lib/liblapack342_intel_g95_0.94.a /sp/vwe/lib/libblas342_intel_g95_0.94.a'
+     fi
+     LFLAGS=' '${LIBS} 

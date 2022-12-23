@@ -1,0 +1,35 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for x86_64 using 
+#INFO# the OPENFortran compiler.
+#INFO#
+#INFO# V. Weber
+#INFO#
+#INFO#
+     FC='gfortran-8.1.0'
+     CC='gcc-8.1.0'
+     LD='gfortran-8.1.0'
+     CPP=''
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__HAS_LIBXC'
+     FFLAGS_GROMOS='-ffixed-form  $(FFLAGS)' 
+     FFLAGS_GROMOS_MODULES='  $(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-fmax-errors=0 -g -fbacktrace -O0 -fcheck=all -Wuninitialized -finit-derived -finit-integer=1234567890 -finit-logical=false -finit-real=snan'
+       CFLAGS='-O0'
+     else
+       FFLAGS='-O2 -Wall'
+       CFLAGS='-O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp'
+       LIBS='/home/vwe/libs/lapack/3.5.0-gfortran-4.9.0/liblapack.a /home/vwe/libs/lapack/3.5.0-gfortran-4.9.0/libblas.a'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${GREP} version | ${AWK} '{ print ( $3 < "4.7.0" ) ? "true" : "false" }'`
+     else
+       LIBS='/home/vwe/libs/lapack/3.5.0-gfortran-4.9.0/liblapack.a /home/vwe/libs/lapack/3.5.0-gfortran-4.9.0/libblas.a'
+     fi
+     if [ $coverage ]; then
+       FFLAGS=${FFLAGS}' --coverage'
+       LFLAGS='--coverage '${LFLAGS}
+     fi
+     LIBS=${LIBS}' /home/vwe/libs/libxc/4.0.4-gnu-8.1.0/lib/libxcf03.a /home/vwe/libs/libxc/4.0.4-gnu-8.1.0/lib/libxc.a'
+     FFLAGS=${FFLAGS}' -I/home/vwe/libs/libxc/4.0.4-gnu-8.1.0/include'
+     LFLAGS=' '${LIBS}

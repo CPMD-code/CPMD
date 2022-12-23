@@ -1,0 +1,45 @@
+#INFO#
+#INFO# Configuration to build a parallel QM/MM cpmd executable
+#INFO# for a SGI Altix ICE X machine with Infiniband (IB 4x FDR) double plan
+#INFO# Note that this machine uses:
+#INFO#      CPU Xeon 12-Core E5-2680 v3 2.50 GHz 
+#INFO#      Intel C/Fortran compiler + Intel Math Kernel Library
+#INFO#      MPT/2.12 (Intel MPI available optionally)
+#INFO# WARNING: In order to avoid the freeze of threads intel/15.0.5.223
+#INFO#          or later must be loaded before compiling the code
+#INFO#
+#INFO# M. Boero, T. Ikeda - Hyogo/Strasbourg/Tokyo - January 2018
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='icc'
+     LD='mpif90'
+     CPP='/usr/bin/cpp -E -P -traditional'
+     CPPFLAGS='-D__Linux -D__INTEL -D__ALTIX -D__HAS_FFT_FFTW3 -D__PARALLEL -D__HASNT_OMP_45 \
+               -D__HASNT_OMP_COLLAPSE -D__HASNT_F08_ISO_FORTRAN_ENV -D__HAS_LIBXC'
+     NOOPT_FLAG=' -O1  -pc64 -xCORE-AVX2 -I$(MKLROOT)/include/fftw'
+     NOOPT_OBJS=' jrotation_utils.mod.o '
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+               -D__Linux -D__INTEL -D__ALTIX -D__HAS_FFT_DEFAULT -D__PARALLEL -D__HASNT_OMP_45 \
+               -D__HASNT_OMP_COLLAPSE -D__HASNT_F08_ISO_FORTRAN_ENV -D__HAS_LIBXC'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='ar ruv'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -I$(MKLROOT)/include/fftw'
+       CFLAGS='-g'
+     else
+       FFLAGS='-O3  -pc64 -xCORE-AVX2 -I$(MKLROOT)/include/fftw'
+       CFLAGS=' -O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qopenmp'
+       NOOPT_FLAG=${NOOPT_FLAG}' -qopenmp'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${AWK} '{ print ( $2 < "12.0.4" ) ? "true" : "false" }'`
+       LIBS='-mkl=parallel'
+     else
+       LIBS='-mkl=sequential'
+     fi
+     LIBS=${LIBS}' -L$(LIBDIR)/libxc/lib -lxcf03 -lxc'
+     FFLAGS=${FFLAGS}' -I$(LIBDIR)/libxc/include'
+     LFLAGS=' '${LIBS}

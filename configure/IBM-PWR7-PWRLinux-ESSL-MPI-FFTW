@@ -1,0 +1,37 @@
+#INFO#  
+#INFO#  IBM-PWR7-PWRLinux-MPI-64bit-essl 
+#INFO#  you need lapack and essl 64 bit libraries
+#INFO#  
+#INFO#  V. Weber
+#INFO#  hint: make -j16 provides a good compromise (memory usage/compilation speed)
+#INFO#  
+     IRAT=2
+     CC='xlc_r'
+     FC='mpfort -compiler xlf95_r'
+     LD='mpfort -compiler xlf95_r'
+     FFLAGS_GROMOS='-q64 -qarch=pwr7 -qtune=pwr7 -qdpc'
+     FFLAGS_GROMOS_MODULES='-q64 -qarch=pwr7 -qtune=pwr7 -qdpc'
+     CPP=' /usr/bin/cpp -P -C -traditional'
+     CPPFLAGS=' -D__IBM   -D__HAS_FFT_FFTW3 -D__PWRLinux   -D__PARALLEL  -D__NOMEMINFO  -D__HAS_EXTERNAL_IDAMIN -D__HASNT_MPI_30'
+     NOOPT_FLAG=' -q64 -O0 '
+     NOOPT_OBJS=' control_utils.mod.o  '
+     AR='/usr/bin/ar ruv'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       CFLAGS='-g -C -qflttrap  -q64 -qarch=pwr7 '
+       FFLAGS='-g -C -qflttrap  -q64 -qmaxmem=131072 -qtune=pwr7 -qarch=pwr7 -qnosave'
+     else
+       CFLAGS=' -q64 -qarch=pwr7 '
+       FFLAGS=' -O2 -q64 -qmaxmem=131072 -qtune=pwr7 -qarch=pwr7 -qnosave'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qsmp=omp'
+       NOOPT_FLAG=${NOOPT_FLAG}' -qsmp=omp'
+       LIBS='-L/sp/vwe/prog/FFTW-3.3.2-xl-ppc7-dbg/lib -lfftw3_omp \
+              -L/sp/LIB/LINUX64 -llapack330_pwr7_64 -lesslsmp '
+       OMP3_DISABLED='true'
+     else
+       LIBS='-L/sp/vwe/prog/FFTW-3.3.2-xl-ppc7-dbg/lib -lfftw3 \
+              -L/sp/LIB/LINUX64 -llapack330_pwr7_64 -lessl '
+     fi
+     LFLAGS=' '${LIBS}

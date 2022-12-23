@@ -1,0 +1,19 @@
+subroutine mp_max_${NAME}(data,comm)
+#ifdef __PARALLEL
+  use mpi
+#endif
+  implicit none
+  ! Arguments
+  integer, intent(in) :: comm
+  ${TYPE}${KIND}, intent(inout) :: data
+  ! Variables
+  character(*),parameter :: procedureN='mp_max_${NAME}'
+#ifdef __PARALLEL
+  integer :: ierr
+  ${TYPE}${KIND} :: stack_buff
+  call mpi_allreduce(data,stack_buff,1,${MPI_TYPE},&
+         MPI_MAX,comm,ierr)
+  call mp_mpi_error_assert(ierr,procedureN,__LINE__,__FILE__)
+  data=stack_buff
+#endif
+end subroutine mp_max_${NAME}

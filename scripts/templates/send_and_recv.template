@@ -1,0 +1,48 @@
+subroutine mp_send_${NAME}(data,${ARG_LEN_NAME} dest,tag,comm)
+#ifdef __PARALLEL
+  use mpi
+#endif
+  use pstat
+  ! Arguments 
+  integer, intent(in) :: ${ARG_LEN_NAME} dest,tag,comm
+  ${TYPE}${KIND}, intent(in) ${DIMENSION} :: data
+  ! Variables
+  integer :: ierr
+  real(real_8) :: tim1,tim2
+  real(real_8), external :: timef
+  character(*),parameter::procedureN='mp_isend_${NAME}'
+  !cmcal(ipar_send)=cmcal(ipar_send)+1.0d0
+  !cmlen(ipar_send)=cmlen(ipar_send)+${MPI_LEN}*{TYPE_SIZE_IN_BYTES}
+  !tim1=timef()
+#ifdef __PARALLEL
+  call mpi_send(data,${MPI_LEN},${MPI_TYPE},dest,tag,comm,ierr)
+  call mp_mpi_error_assert(ierr,procedureN,__LINE__,__FILE__)
+#endif
+  !tim2=timef()
+  !cmtim(ipar_send)=cmtim(ipar_send)+tim2-tim1
+end subroutine mp_send_${NAME}
+
+subroutine mp_recv_${NAME}(data,${ARG_LEN_NAME} src,tag,comm)
+#ifdef __PARALLEL
+  use mpi
+#endif
+  use pstat
+  ! Arguments
+  integer, intent(in) :: ${ARG_LEN_NAME} src,tag,comm
+  ${TYPE}${KIND}, intent(out) ${DIMENSION} :: data
+  ! Variables
+  integer :: ierr
+  real(real_8) :: tim1,tim2
+  real(real_8), external :: timef
+  character(*),parameter::procedureN='mp_recv_${NAME}'
+  !cmcal(ipar_send)=cmcal(ipar_send)+1.0d0
+  !cmlen(ipar_send)=cmlen(ipar_send)+${MPI_LEN}*{TYPE_SIZE_IN_BYTES}
+  !tim1=timef()
+#ifdef __PARALLEL
+  call mpi_recv(data,${MPI_LEN},${MPI_TYPE},src,tag,comm,&
+        MPI_STATUS_IGNORE,ierr)
+  call mp_mpi_error_assert(ierr,procedureN,__LINE__,__FILE__)
+#endif
+  !tim2=timef()
+  !cmtim(ipar_send)=cmtim(ipar_send)+tim2-tim1
+end subroutine mp_recv_${NAME}

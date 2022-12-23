@@ -1,0 +1,47 @@
+#INFO#  
+#INFO#  IBM-PWR8-CUDA
+#INFO#  
+#INFO#  V. Weber and C. Malossi
+#INFO#
+#INFO#  a) added -Uvector -Ubool to bypass a bug in cpp for power8
+#INFO#  b) few regs crash with -qnoscrict. revert to strict till compiler fixed.
+#INFO#
+     CUDA_PATH='/usr/local/cuda'
+     CC='xlc_r'
+     FC='xlf2008_r'
+     LD='xlf2008_r'
+     NVCC=${CUDA_PATH}'/bin/nvcc'
+     #cuda 8
+     #NVCCFLAGS='--default-stream per-thread -O3 -arch=sm_30 -gencode=arch=compute_60,code=sm_60 -gencode=arch=compute_61,code=sm_61 -gencode=arch=compute_61,code=compute_61'
+     #cuda 9
+     NVCCFLAGS='--default-stream per-thread -O3 -arch=sm_30 -gencode=arch=compute_60,code=sm_60 -gencode=arch=compute_61,code=sm_61 -gencode=arch=compute_62,code=sm_62 -gencode=arch=compute_70,code=sm_70 -gencode=arch=compute_70,code=compute_70'
+     CPP='/usr/bin/cpp -P -traditional -Uvector -Ubool'
+     CPPFLAGS='-D__IBM -D__PWRLinux -D__NOMEMINFO -D__HAS_SIZEOF  -D__HAS_CUDA -D__HAS_FFT_DEFAULT -D__HAS_NVTX_TIMER -D__HAS_LIBXC '
+     FFLAGS_GROMOS='-qfixed -q64 -qarch=pwr8 -qtune=pwr8 -qdpc'
+     FFLAGS_GROMOS_MODULES='-q64 -qarch=pwr8 -qtune=pwr8 -qdpc'
+     NOOPT_FLAG=${CPPFLAGSF}' -q64 -O0'
+     NOOPT_OBJS='control_utils.mod.o'
+     AR='/usr/bin/ar ruv'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       CFLAGS='-g -C -qflttrap -q64 -qarch=pwr8'
+       FFLAGS='-g -C -qflttrap -q64 -qmaxmem=131072 -qtune=pwr8 -qarch=pwr8 -qlanglvl=tspure'
+     else
+       CFLAGS='-O3 -qhot -qstrict -qprefetch=aggressive:dscr=7 -qsimd=auto -qaltivec -q64 -qmaxmem=-1 -qtune=pwr8 -qarch=pwr8'
+       FFLAGS='-O3 -qhot -qstrict -qprefetch=aggressive:dscr=7 -qsimd=auto -qaltivec -q64 -qmaxmem=-1 -qtune=pwr8 -qarch=pwr8 -qlanglvl=tspure'
+     fi
+     if [ $omp ]; then
+       CFLAGS=${CFLAGS}' -qsmp=omp -qthreaded'
+       FFLAGS=${FFLAGS}' -qsmp=omp -qthreaded'
+       NOOPT_FLAG=${NOOPT_FLAG}' -qsmp=omp -qthreaded'
+       LIBS='-Wl,-rpath -Wl,/opt/ibmmath/essl/5.5/lib64 /fl/sp/vwe/lib/liblapack342_pwr8_xl_15.1.3.a -lesslsmp -lmass -lmassv -lmass_simdp8'
+       OMP3_DISABLED='false'
+     else
+       LIBS='-Wl,-rpath -Wl,/opt/ibmmath/essl/5.5/lib64 /fl/sp/vwe/lib/liblapack342_pwr8_xl_15.1.3.a -lessl -lmass -lmassv -lmass_simdp8'
+     fi
+     CFLAGS=${CFLAGS}' -I'${CUDA_PATH}'/include'
+     LIBS=${LIBS}' -L'${CUDA_PATH}'/lib64 -lcudart -lcufft -lcusolver -lcublas -lnvToolsExt /usr/lib64/nvidia/libnvidia-ml.so'
+     LIBS=${LIBS}' /fl/sp/vwe/prog/LIBXC-3.0.0-xl-15.1.4-pwr8/lib/libxcf03.a /fl/sp/vwe/prog/LIBXC-3.0.0-xl-15.1.4-pwr8/lib/libxc.a'
+     FFLAGS=${FFLAGS}' -I/fl/sp/vwe/prog/LIBXC-3.0.0-xl-15.1.4-pwr8/include'
+     LFLAGS=' '${LIBS}
+

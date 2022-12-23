@@ -1,0 +1,30 @@
+#INFO#
+#INFO# Configuration to build a 64-bit serial CPMD executable for
+#INFO# Fedora Linux (version 6 and up). Required packages:
+#INFO# gcc-gfortran, atlas-devel, fftw2-devel
+#INFO# 
+#INFO#
+
+     IRAT=2
+     FC='gfortran'
+     CC='gcc'
+     LD='gfortran'
+     CPP=''
+     CPPFLAGS='-D__Linux    '
+     FFLAGS_GROMOS='  $(FFLAGS)' 
+     FFLAGS_GROMOS_MODULES='  $(FFLAGS)' 
+     if [ $debug ]; then
+       FFLAGS='-g -O0'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS=' -O2'
+       CFLAGS=' -O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${GREP} version | ${AWK} '{ print ( $3 < "4.7.0" ) ? "true" : "false" }'`
+       LIBS='-L/usr/lib64/atlas/ -llapack -lblas -lfftw'
+     else
+       LIBS='-L/usr/lib64/atlas/ -llapack -lblas -lfftw'
+     fi
+     LFLAGS=' '${LIBS}

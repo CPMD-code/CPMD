@@ -1,0 +1,33 @@
+#INFO#
+#INFO# Configuration for LINUX_IA64_INTEL-MPI - QM/MM version
+#INFO# For Itanium-based HPC cluster with OMP
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='   -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC \
+         -D__PARALLEL  -D__HAS_EXTERNAL_IZAMAX  '
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+            -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC  \
+         -D__PARALLEL  -D__HAS_EXTERNAL_IZAMAX'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -convert big_endian'
+       CFLAGS='-g'
+     else
+       FFLAGS='-O2 -convert big_endian'
+       CFLAGS='-O'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${AWK} '{ print ( $2 < "12.0.4" ) ? "true" : "false" }'`
+       LIBS='-mkl=parallel'
+     else
+       LIBS='-mkl=sequential'
+     fi
+     LFLAGS='-static-intel '${LIBS}

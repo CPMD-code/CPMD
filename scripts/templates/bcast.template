@@ -1,0 +1,15 @@
+subroutine mp_bcast_${NAME}(data, ${ARG_LEN_NAME} root,comm)
+#ifdef __PARALLEL
+  use mpi
+#endif
+  ! Arguments
+  integer, intent(in) :: ${ARG_LEN_NAME} root,comm
+  ${TYPE}${KIND}, intent(inout) ${DIMENSION} :: data
+  ! Variables
+  integer :: ierr
+  character(*),parameter :: procedureN='mp_bcast_${NAME}'
+#ifdef __PARALLEL
+  call mpi_bcast(data,${MPI_LEN},${MPI_TYPE},root,comm,ierr)
+  call mp_mpi_error_assert(ierr,procedureN,__LINE__,__FILE__)
+#endif
+end subroutine mp_bcast_${NAME}

@@ -1,0 +1,38 @@
+#INFO#
+#INFO# Configuration is for TOKYO TECH TSUBAME 2.0
+#INFO# Note that this machine uses:
+#INFO#   Xeon Sextet-Core X5670 2.93 GHz * 2/node, Memory: 54 GB/node
+#INFO#   NVIDIA Tesla M2050 * 3/node
+#INFO#   SUSE Linux Enterprise Server 11 SP1
+#INFO#   Intel fortran compiler 11.1.072
+#INFO#   Intel C compiler 11.0.072
+#INFO#   Intel Math Kernel Library 10.3
+#INFO#   OpenMPI 1.4.2 (mvapich2 available optionally)
+#INFO#
+
+     IRAT=2
+     FC='mpif90'
+     CC='icc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_FFTW3 -DLINUX_IFC -D__HAS_EXTERNAL_IZAMAX  \
+                -D__PARALLEL '
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-g'
+       CFLAGS='-g'
+     else
+       FFLAGS='-pc64 -O3 -xHost -I$(MKLROOT)/include/fftw'
+       CFLAGS=' -O2'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       OMP3_DISABLED='true'
+       LIBS='-L$(MKLROOT)/lib/em64t -lmkl_intel_lp64 \
+             -lmkl_parallel -liomp5 -lmkl_core'
+     else
+       LIBS='-L$(MKLROOT)/lib/em64t -lmkl_intel_lp64 \
+             -lmkl_sequential -liomp5 -lmkl_core'
+     fi
+     LFLAGS='-static-intel '${LIBS}

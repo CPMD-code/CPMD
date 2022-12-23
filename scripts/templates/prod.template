@@ -1,0 +1,19 @@
+subroutine mp_prod_${NAME}(data_in,data_out,${ARG_LEN_NAME} comm)
+#ifdef __PARALLEL
+  use mpi
+#endif
+  ! Arguments
+  integer, intent(in) :: ${ARG_LEN_NAME} comm
+  ${TYPE}${KIND}, intent(in) ${DIMENSION} :: data_in
+  ${TYPE}${KIND}, intent(inout) ${DIMENSION} :: data_out
+  ! Variables
+  character(*),parameter :: procedureN='mp_prod_${NAME}'
+#ifdef __PARALLEL
+  integer :: ierr
+  call mpi_allreduce(data_in,data_out,${MPI_LEN},${MPI_TYPE},&
+       MPI_PROD,comm,ierr)
+  call mp_mpi_error_assert(ierr,procedureN,__LINE__,__FILE__)
+#else
+  data_out ${COPY}=data_in ${COPY}
+#endif
+end subroutine mp_prod_${NAME}

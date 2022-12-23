@@ -1,0 +1,38 @@
+#INFO#
+#INFO# Configuration to build a parallel MPI/OMP QM/MM executable for IBM x3750 
+#INFO# with Intel ES 4600 quadri-processor (sockets) Intel Sandy Bridge 8-Core 
+#INFO# 2.7 GHZ with Intel Fortran/C Compiler with EM64T extensions.
+#INFO# NOTE: Recent versions of the cpp pre-compiler require to omit 
+#INFO# the deprecated option -C
+#INFO# See https://software.intel.com/en-us/forums/topic/330003
+#INFO# (IPCMS/Nagoya University, January 2019).
+#INFO#
+     IRAT=2
+     FC='mpiifort'
+     CC='mpiicc'
+     LD='mpiifort'
+     CPP='/usr/bin/cpp -P -traditional'
+     CPPFLAGS='-D__Linux -DLINUX_IFC -D__HAS_FFT_DEFAULT -D__HAS_BF_STREAM_IO \
+               -D__PARALLEL -D__HASNT_F03_EXECUTE_COMMAND_LINE \
+               -D__HASNT_F08_ISO_FORTRAN_ENV -D__HASNT_OMP_45'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+                      -D__Linux  -DLINUX_IFC -D__HAS_FFT_DEFAULT -D__HAS_BF_STREAM_IO\
+                      -D__PARALLEL -D__HASNT_F03_EXECUTE_COMMAND_LINE \
+                      -D__HASNT_F08_ISO_FORTRAN_ENV -D__HASNT_OMP_45'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-g -pc64 -funroll-loops -heap-arrays 64'
+       CFLAGS='-g -Wall -m64  -Wall -m64'
+     else
+       FFLAGS='-O2 -pc64 -funroll-loops -heap-arrays 64'
+       CFLAGS='-O2 -Wall -m64'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp -fpp'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${AWK} '{ print ( $2 < "12.0.4" ) ? "true" : "false" }'`
+       LIBS='-mkl=parallel -lm'
+     else
+       LIBS='-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm -lpthread -liomp5'
+     fi
+     LFLAGS='-static-intel '${LIBS}

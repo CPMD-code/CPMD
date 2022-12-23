@@ -1,0 +1,34 @@
+#INFO#
+#INFO# Configuration for Quad Xeon Linux HPC 8/32 GB with
+#INFO# Intel Fortran Composer ver.13 or later + OpenMPI & OMP 3.0
+#INFO# HPC Cluster "Eniac" @ IPCMS-CNRS/UdS (Alineos SA)
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC \
+                -D__PARALLEL -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+               -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC \
+                -D__PARALLEL -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g '
+       CFLAGS='-g'
+     else
+       FFLAGS='-O2 -pc64 -unroll '
+       CFLAGS='-O2 -Wall  '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       OMP3_DISABLED='false'
+       LIBS='-mkl=parallel -openmp -lm'
+     else
+       LIBS='-mkl=parallel -lm'
+     fi
+     LFLAGS='-static-intel '${LIBS}

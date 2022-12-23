@@ -1,0 +1,30 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for a CRAY-XE6 using 
+#INFO# the PGI Fortran compiler.
+#INFO#
+#INFO# V. Weber
+#INFO#
+
+     IRAT=2
+     FC='ftn'
+     CC='cc'
+     LD='ftn'
+     CPP='/usr/bin/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__PARALLEL  \
+               -D__HAS_EXTERNAL_C_ERF -D__HAS_SIZEOF'
+     FFLAGS_GROMOS='  $(FFLAGS)' 
+     FFLAGS_GROMOS_MODULES='  $(FFLAGS)' 
+     if [ $debug ]; then
+       FFLAGS='-g -O0'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-O2 -g -fastsse'
+       CFLAGS='-O2'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -mp'
+       LIBS=''
+     else
+       LIBS=''
+     fi
+     LFLAGS=''${LIBS}

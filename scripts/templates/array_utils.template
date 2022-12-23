@@ -1,0 +1,73 @@
+  SUBROUTINE ${prefix}_array_alloc_${suffix} ( this, n, lb )
+    ${type}, DIMENSION( ${rank} ), ALLOCATABLE, INTENT( INOUT ) :: this
+    INTEGER, INTENT( IN ) :: n ${dim}
+    INTEGER, INTENT( IN ), OPTIONAL :: lb ${dim}
+    INTEGER :: istat, my_lb ${dim}
+    CHARACTER(*), PARAMETER :: procedureN = '${prefix}_array_alloc_${suffix}'
+    IF(ALLOCATED(this)) CALL stopgm( procedureN, 'array already allocated',&
+         __LINE__,__FILE__)
+    my_lb = 1
+    IF( PRESENT( lb ) ) my_lb = lb
+    ALLOCATE( this( ${alloc_bounds} ), &
+         STAT=istat )
+    IF(istat/=0) CALL stopgm( procedureN,'allocation problem',&
+         __LINE__,__FILE__)
+  END SUBROUTINE ${prefix}_array_alloc_${suffix}
+
+  SUBROUTINE ${prefix}_array_dealloc_${suffix} ( this )
+    ${type}, DIMENSION( ${rank} ), ALLOCATABLE, INTENT( INOUT ) :: this
+    INTEGER :: istat
+    CHARACTER(*), PARAMETER :: procedureN = '${prefix}_array_dealloc_${suffix}'
+    IF( ALLOCATED( this ) ) THEN
+       DEALLOCATE( this, STAT=istat )
+       IF(istat/=0) CALL stopgm( procedureN,'deallocation problem',&
+            __LINE__,__FILE__)
+    ENDIF
+  END SUBROUTINE ${prefix}_array_dealloc_${suffix}
+
+  SUBROUTINE ${prefix}_array_realloc_${suffix} ( this, n, keep_data )
+    ${type}, DIMENSION( ${rank} ), ALLOCATABLE, INTENT( INOUT ) :: this
+    INTEGER, INTENT( IN ) :: n ${dim}
+    LOGICAL, INTENT( IN ), OPTIONAL :: keep_data
+    INTEGER :: ub ${dim}, nb ${dim}
+    ${type_temp}, DIMENSION( ${rank} ), ALLOCATABLE :: tmp
+    LOGICAL :: my_keep_data
+    CHARACTER(*), PARAMETER :: procedureN = '${prefix}_array_realloc_${suffix}'
+    my_keep_data = .FALSE.
+    IF( PRESENT( keep_data ) ) my_keep_data = keep_data
+    IF (ALLOCATED(this)) THEN
+       IF( my_keep_data ) THEN
+          ${get_bounds}
+          ${new_bounds}
+          CALL array_alloc ( tmp, nb )
+          tmp( ${copy_bounds} ) = this( ${copy_bounds} )
+          CALL MOVE_ALLOC( tmp, this )
+       ELSE
+          CALL array_dealloc ( this )
+          CALL array_alloc ( this, n )
+       ENDIF
+    ELSE
+        CALL array_alloc ( this, n )
+    ENDIF
+  END SUBROUTINE ${prefix}_array_realloc_${suffix}
+
+  SUBROUTINE ${prefix}_array_ensure_size_${suffix} ( this, n, keep_data, growing_factor )
+    ${type}, DIMENSION( ${rank} ), ALLOCATABLE, INTENT( INOUT ) :: this
+    INTEGER, INTENT( IN ) :: n ${dim}
+    LOGICAL, INTENT( IN ), OPTIONAL :: keep_data
+    REAL( real_8 ), INTENT( IN ), OPTIONAL :: growing_factor ${dim}
+    INTEGER :: new_n ${dim}
+    CHARACTER(*), PARAMETER :: procedureN = '${prefix}_array_ensure_size_${suffix}'
+    IF( ALLOCATED( this ) ) THEN
+       IF( ${check_bounds} ) THEN
+          IF( PRESENT( growing_factor ) ) THEN
+             new_n = INT( n * growing_factor )
+          ELSE
+             new_n = INT( n * array_default_growing_factor )
+          ENDIF
+          CALL array_realloc ( this, new_n, keep_data=keep_data )
+       ENDIF
+    ELSE
+       CALL array_alloc ( this, n )
+    ENDIF
+  END SUBROUTINE ${prefix}_array_ensure_size_${suffix}

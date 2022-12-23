@@ -1,0 +1,39 @@
+C $Id: cenmas.h,v 1.1 2006-12-27 11:15:43 itavern Exp $ -*-fortran-*-
+C control flags for cenmas and stopcm
+
+
+
+COMMVAR ICMNON,ICMCOM,ICMVEL,ICMACC,ICMROT,ICMMIN,ICMMAX
+C vals for ICM which is an argument to subroutine L<CENMAS>
+C
+C     ICM =  0    : NOTHING IS DONE
+C         = -1,+1 : XCM IS CALCULATED
+C         = -2,+2 : IN ADDITION, EKCM AND VCM ARE CALCULATED
+C         = -3,+3 : IN ADDITION, ACM IS CALCULATED
+C         = -4,+4 : IN ADDITION, EKROT AND OCM ARE CALCULATED
+C                 : IF ICM>0 THE RESULTS ARE PRINTED
+      INTEGER ICMNON,ICMCOM,ICMVEL,ICMACC,ICMROT,ICMMIN,ICMMAX
+
+      PARAMETER (ICMNON = 0)
+      PARAMETER (ICMCOM = 1)
+      PARAMETER (ICMVEL = 2)
+      PARAMETER (ICMACC = 3)
+      PARAMETER (ICMROT = 4)
+      PARAMETER (ICMMIN = -ICMROT, ICMMAX = ICMROT)
+COMMEND
+
+
+COMMVAR ISCNON,ISCTRA,ISCROT,ISCMIN, ISCMAX
+C     vals for NSTPCM which is anargument to subroutine L<STOPCM>
+      INTEGER ISCNON,ISCTRA,ISCROT,ISCMIN,ISCMAX
+C do nothing
+      PARAMETER (ISCNON = 0)
+
+C just translational
+      PARAMETER (ISCTRA = 1)
+
+C translational and rotational
+      PARAMETER (ISCROT = 2)
+
+      PARAMETER (ISCMIN = ISCNON, ISCMAX = ISCROT)
+COMMEND

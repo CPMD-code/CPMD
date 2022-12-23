@@ -1,0 +1,34 @@
+#INFO#
+#INFO# Configuration to build a parallel cpmd executable for a CRAY-XE6 using 
+#INFO# the GNU Fortran compiler.
+#INFO#
+#INFO# V. Weber
+#INFO#
+
+     IRAT=2
+     FC='ftn'
+     CC='cc'
+     LD='ftn'
+     CPP=''
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT  \
+           -D__PARALLEL -D__HAS_SIZEOF'
+     FFLAGS_GROMOS='$(FFLAGS) -ffixed-form' 
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -fbounds-check -Wuninitialized'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-O2 -ffast-math -funroll-loops'
+       CFLAGS='-O2'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp'
+       LIBS=''
+     else
+       LIBS=''
+     fi
+     LFLAGS=''${LIBS}
+     if [ $coverage ]; then
+       FFLAGS=${FFLAGS}' --coverage'
+       LFLAGS='--coverage '${LFLAGS}
+     fi

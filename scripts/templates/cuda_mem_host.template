@@ -1,0 +1,151 @@
+SUBROUTINE cuda_alloc_host_${NAME} ( mem, sizes, lbs )
+  ${TYPE}${KIND} ${DIMENSION} , POINTER __CONTIGUOUS    :: mem
+  INTEGER, INTENT(IN) ${SIZE_DIMS}         :: sizes
+  INTEGER, INTENT(IN), OPTIONAL ${SIZE_DIMS} :: lbs
+
+  CHARACTER(*), PARAMETER :: procedureN = 'cuda_alloc_host_${NAME}'
+  ${TYPE}${KIND} ${DIMENSION} , POINTER __CONTIGUOUS    :: mem_tmp
+  INTEGER(KIND(cudaSuccess))           :: c_status
+  INTEGER(C_SIZE_T)                    :: c_n_bytes
+  TYPE( C_PTR )                        :: cptr
+
+#if defined(_HAS_CUDA)
+
+  c_n_bytes = INT( ${PRODUCT}, C_SIZE_T ) * INT( ${SIZEOF_KIND}, C_SIZE_T )
+
+  c_status = cudaMallocHost( cptr, c_n_bytes )
+  IF( c_status /= cudaSuccess ) CALL stopgm(procedureN,"cuda error: "//TRIM(int2str( INT( c_status ) ))//&
+         ' trying to allocate '//TRIM(int2str( INT(c_n_bytes,int_8) ))//' bytes'&
+         //". "//trim(cuda_get_error_string(c_status)),&
+       __LINE__,__FILE__)
+
+  CALL C_F_POINTER( cptr, mem_tmp, [ sizes ] )
+  IF(PRESENT( lbs ) ) THEN
+     mem ${LBOUNDS} => mem_tmp
+  ELSE
+     mem => mem_tmp
+  ENDIF
+
+#else
+
+  CALL stopgm(procedureN,"no cuda available",&
+       __LINE__,__FILE__)
+
+#endif
+
+END SUBROUTINE cuda_alloc_host_${NAME}
+
+
+SUBROUTINE cuda_alloc_host_portable_${NAME} ( mem, sizes, lbs )
+  ${TYPE}${KIND} ${DIMENSION} , POINTER __CONTIGUOUS    :: mem
+  INTEGER, INTENT(IN) ${SIZE_DIMS}         :: sizes
+  INTEGER, INTENT(IN), OPTIONAL ${SIZE_DIMS} :: lbs
+
+  CHARACTER(*), PARAMETER :: procedureN = 'cuda_alloc_host_portable_${NAME}'
+  ${TYPE}${KIND} ${DIMENSION} , POINTER __CONTIGUOUS    :: mem_tmp
+  INTEGER(KIND(cudaSuccess))           :: c_status
+  INTEGER(C_SIZE_T)                    :: c_n_bytes
+  TYPE( C_PTR )                        :: cptr
+
+#if defined(_HAS_CUDA)
+
+  c_n_bytes = INT( ${PRODUCT}, C_SIZE_T ) * INT( ${SIZEOF_KIND}, C_SIZE_T )
+
+  c_status = cudaHostAlloc( cptr, c_n_bytes, cudaHostAllocPortable )
+  IF( c_status /= cudaSuccess ) CALL stopgm(procedureN,"cuda error: "//TRIM(int2str( INT( c_status ) ))//&
+         ' trying to allocate '//TRIM(int2str( INT(c_n_bytes,int_8) ))//' bytes'&
+         //". "//trim(cuda_get_error_string(c_status)),&
+       __LINE__,__FILE__)
+
+  CALL C_F_POINTER( cptr, mem_tmp, [ sizes ] )
+  IF(PRESENT( lbs ) ) THEN
+     mem ${LBOUNDS} => mem_tmp
+  ELSE
+     mem => mem_tmp
+  ENDIF
+
+#else
+
+  CALL stopgm(procedureN,"no cuda available",&
+       __LINE__,__FILE__)
+
+#endif
+
+END SUBROUTINE cuda_alloc_host_portable_${NAME}
+
+
+SUBROUTINE cuda_dealloc_host_${NAME} ( mem )
+  ${TYPE}${KIND} ${DIMENSION}, POINTER __CONTIGUOUS  :: mem
+
+  CHARACTER(*), PARAMETER               :: procedureN = 'cuda_dealloc_host_${NAME}'
+  INTEGER(KIND(cudaSuccess))            :: c_status
+
+#if defined(_HAS_CUDA)
+
+  c_status = cudaFreeHost( C_LOC( mem ) )
+  IF( c_status /= cudaSuccess ) CALL stopgm(procedureN,"cuda error: "//TRIM(int2str( INT( c_status ) ))&
+         //". "//trim(cuda_get_error_string(c_status)),&
+       __LINE__,__FILE__)
+
+  NULLIFY( mem )
+
+#else
+
+  CALL stopgm(procedureN,"no cuda available",&
+       __LINE__,__FILE__)
+
+#endif
+
+END SUBROUTINE cuda_dealloc_host_${NAME}
+
+
+SUBROUTINE cuda_host_register_${NAME} ( mem )
+  ${TYPE}${KIND} ${DIMENSION}, INTENT(IN), TARGET :: mem
+
+  CHARACTER(*), PARAMETER :: procedureN = 'cuda_host_register_${NAME}'
+
+  INTEGER(C_SIZE_T)                        :: c_n_bytes
+  INTEGER(KIND(cudaSuccess))               :: c_status
+
+#if defined(_HAS_CUDA)
+
+  c_n_bytes = INT( SIZE( mem ), C_SIZE_T ) * INT( sizeof_complex_8, C_SIZE_T )
+
+  c_status = cudaHostRegister ( C_LOC( mem ), c_n_bytes, cudaHostRegisterPortable )
+  IF( c_status /= cudaErrorHostMemoryAlreadyRegistered ) THEN
+     IF( c_status /= cudaSuccess ) CALL stopgm(procedureN,"cuda error: "//TRIM(int2str( INT( c_status ) ))&
+         //". "//trim(cuda_get_error_string(c_status)),&
+          __LINE__,__FILE__)
+  ENDIF
+
+#else
+
+  CALL stopgm(procedureN,"no cuda available",&
+       __LINE__,__FILE__)
+
+#endif
+
+END SUBROUTINE cuda_host_register_${NAME}
+
+SUBROUTINE cuda_host_unregister_${NAME} ( mem )
+  ${TYPE}${KIND} ${DIMENSION}, INTENT(IN), TARGET :: mem
+
+  CHARACTER(*), PARAMETER :: procedureN = 'cuda_host_unregister_${NAME}'
+
+  INTEGER(KIND(cudaSuccess))               :: c_status
+
+#if defined(_HAS_CUDA)
+
+  c_status = cudaHostUnregister ( C_LOC( mem ) )
+  IF( c_status /= cudaSuccess ) CALL stopgm(procedureN,"cuda error: "//TRIM(int2str( INT( c_status ) ))&
+         //". "//trim(cuda_get_error_string(c_status)),&
+       __LINE__,__FILE__)
+
+#else
+
+  CALL stopgm(procedureN,"no cuda available",&
+       __LINE__,__FILE__)
+
+#endif
+
+END SUBROUTINE cuda_host_unregister_${NAME}

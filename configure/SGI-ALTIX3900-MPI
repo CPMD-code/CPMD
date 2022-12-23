@@ -1,0 +1,35 @@
+#INFO#
+#INFO# Minimal configuration to build a parallel QM/MM cpmd
+#INFO# executable for a SGI Altix3900 machine with MPI&OMP
+#INFO# Note that this machine uses:
+#INFO#      Intel C/Fortran compiler + Intel Math Kernel Library
+#INFO#      SGI ProPack 3 SP4
+#INFO#      CPU Itanium 2, 1.6 GHz, 64 Bit
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='icc'
+     LD='mpif90'
+     CPP='/usr/bin/cpp -E -P -traditional'
+     CPPFLAGS='-D__Linux  -D__ALTIX -D__HAS_FFT_DEFAULT -D__PARALLEL  '
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+               -D__Linux  -D__ALTIX -D__HAS_FFT_DEFAULT -D__PARALLEL  '
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='ar -r'
+     if [ $debug ]; then
+       FFLAGS='-g -lmpi -O0'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-lmpi -O3 -r8 -align dcommons -fpp'
+       CFLAGS=' -O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${AWK} '{ print ( $2 < "12.0.4" ) ? "true" : "false" }'`
+       LIBS='-L/opt/software/SGI/intel/mkl/10.0.3.020/lib/em64t -lmkl_lapack -lmkl=parallel \
+             -lmkl_intel_lp64 -lguide -lpthread -lm -lmpi'
+     else
+       LIBS='-lmkl -lmkl_lapack -lguide -lm -lpthread'
+     fi
+     LFLAGS='-static-intel '${LIBS}

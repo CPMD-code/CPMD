@@ -1,0 +1,34 @@
+#INFO#
+#INFO# Compiler options for Hitachi SR-11000 Power5, 
+#INFO# IBM Fortran compiler, ESSL libraries and MPI-SMP 
+#INFO# Hitachi is dismissing its own Fortran compiler
+#INFO# since year 2007
+#INFO#
+     IRAT=2
+     FC='mpxlf_r'
+     CC='xlc_r'
+     LD='mpxlf_r'
+     CPP='/usr/ccs/lib/cpp -P'
+     CPPFLAGS='-D__IBM -D__SR11KIBM -D__HAS_FFT_ESSL -D__HASNT_F08_ISO_FORTRAN_ENV -D__HASNT_OMP_45 \
+               -D__PARALLEL  -D__NO_MEMSIZE -D__HAS_EXTERNAL_IDAMIN -D__HASNT_F03_EXECUTE_COMMAND_LINE'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+                      -D__PARALLEL -D__HASNT_OMP_45 -D__HASNT_F08_ISO_FORTRAN_ENV -D__NO_MEMSIZE'
+     FFLAGS_GROMOS='$(FFLAGS) -qfixed'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar ruv'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -qstrict -q64 -qmaxmem=-1 -qtune=pwr5 -qarch=pwr5 -qnosave -qreport=smplist'
+       CFLAGS='-g -qstrict -q64 -qarch=pwr5'
+     else
+       FFLAGS='-O3 -qstrict -q64 -qmaxmem=-1 -qtune=pwr5 -qarch=pwr5 -qnosave -qreport=smplist'
+       CFLAGS='-O3 -qstrict -q64 -qarch=pwr5'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qsmp=omp'
+       OMP3_DISABLED='true'
+       LIBS='-L/home/bu2306/LAPACK -llapacksmp -lesslsmp'
+     else
+       LIBS='-L/home/bu2306/LAPACK -llapack -lessl'
+     fi
+     LFLAGS='-blpdata '${LIBS}

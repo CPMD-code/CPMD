@@ -1,0 +1,2 @@
+IFFIINTER_SRC = iffi_comm.mod.F90   iffi_types.mod.F90   iffi_mgmt.mod.F90 \
+                iffi_elstat.mod.F90 iffi_inter.mod.F90 iffi_wfct.mod.F90

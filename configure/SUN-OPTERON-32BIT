@@ -1,0 +1,36 @@
+#INFO#
+#INFO# Configuration to build a 32-bit serial cpmd executable for
+#INFO# Solaris/Opteron
+#INFO#
+     IRAT=2
+     FC='f95'
+     CC='cc'
+     LD='f95'
+     CPP='/usr/ccs/lib/cpp -P'
+     CPPFLAGS="-D__HASNT_BF_STREAM_IO -D__SUN -D__HAS_FFT_DEFAULT \\
+	-D__DATE__=\"'\`date '+%b %e %Y'\`'\" \\
+	-D__TIME__=\"'\`date '+%T'\`'\" "
+     FFLAGS_GROMOS='$(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/ccs/bin/ar'
+     RANLIB='/usr/ccs/bin/ranlib'
+     if [ -f /usr/xpg4/bin/awk ]; then
+       AWK="/usr/xpg4/bin/awk"
+     fi
+     if [ $debug ]; then
+       LFLAGS='-xlic_lib=sunperf'
+       FFLAGS='-xtarget=opteron -dalign -ftrap=%none'
+       CFLAGS='cc -D__SUN -g -C -errtags -xtarget=opteron'
+     else
+       LFLAGS='-xlibmopt -xlic_lib=sunperf'
+       FFLAGS='-fast -xO4 -xtarget=opteron -dalign -ftrap=%none'
+       CFLAGS='cc -D__SUN -fast -xtarget=opteron'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS=''
+     else
+       LIBS=''
+     fi
+     LFLAGS=${LFLAGS}' '${LIBS}

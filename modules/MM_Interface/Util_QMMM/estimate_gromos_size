@@ -1,0 +1,106 @@
+#! /bin/sh
+# $Id: estimate_gromos_size,v 1.1 2006/12/27 11:10:48 itavern Exp $
+# get the number of charge groups, exclusions and 1-4 excl
+#
+
+cat << *** > awkpr
+     BEGIN{I=1000000}
+     {if(\$1=="SOLUTEATOM") I=0;
+      if(index(\$1,"#")==0 && I<1000000 && \$1!="SOLUTEATOM")I++;
+      if( I<1000000 && \$1=="END") I=1000000;
+      if(I>1 && I<1000000 )
+             {NAA++;
+              if(NAA==1)
+                 { NAT_F++;
+                  if(NAT_F != \$1) print "error in awk",skip,NAA
+                  nex=\$8;
+                  EXTOT=EXTOT+nex;
+                  if(NF<(nex+8))skip=1;
+                  if(\$7==1)NCG++ }
+               if(NAA==2 && skip==1)
+                 { skip=0;
+                  NAA=1 }
+               if(NAA==2)
+                 {EX14TOT=EX14TOT+\$1;
+                 if(NF<(\$1+1))NAA=-1;
+                 if(NF==(\$1+1))NAA=0
+                 }  
+              }
+     }
+     END {print NCG+100,EX14TOT+100,EXTOT+20000}
+***
+      
+#if NOT Fujitsu VPP-series or PRIMEPOWER use the following
+/usr/bin/awk -f awkpr $1 > o1
+
+cat << ENDF > get_str
+/usr/bin/awk -v STRFIND=\$2 -v FIELD=\$3     \
+     'BEGIN{I=100000} {I++;if(\$1==STRFIND) I=0;if(index(\$1,"#")==0 && I<100000 && I!=0 ){I=100000;print \$FIELD+100}}' \$1  
+ENDF
+
+##if Fujitsu VPP-series or PRIMEPOWER use the following
+#/usr/bin/nawk -f awkpr $1 > o1
+#
+#cat << ENDF > get_str
+#/usr/bin/nawk -v STRFIND=\$2 -v FIELD=\$3  \
+#     'BEGIN{I=100000} {I++;if(\$1==STRFIND) I=0;if(index(\$1,"#")==0 && I<100000 && I!=0 ){I=100000;print \$FIELD+100}}' \$1  
+#ENDF
+
+chmod a+x get_str
+
+MAXATT=`./get_str $1 ATOMTYPENAME 1`   
+MAXAA2=`./get_str $1 RESNAME 1`   
+MAXNRP=`./get_str $1 SOLUTEATOM 1`   
+MAXNBT=`./get_str $1 BONDTYPE 1`   
+MAXBNH=`./get_str $1 BONDH 1`   
+MAXBON=`./get_str $1 BOND 1`   
+MAXTTY=`./get_str $1 BONDANGLETYPE  1`   
+MXQHEH=`./get_str $1 BONDANGLEH 1`   
+MAXTHE=`./get_str $1 BONDANGLE 1`   
+MAXQTY=`./get_str $1 IMPDIHEDRALTYPE 1`   
+MAXHIH=`./get_str $1 IMPDIHEDRALH 1`   
+MAXQHI=`./get_str $1 IMPDIHEDRAL 1`   
+MAXPTY=`./get_str $1 DIHEDRALTYPE 1`   
+MXPHIH=`./get_str $1 DIHEDRALH 1`   
+MAXPHI=`./get_str $1 DIHEDRAL 1`   
+##if NOT Fujitsu VPP-series or PRIMEPOWER use the following
+MAXCAG=`/usr/bin/awk '{print $1}' o1`
+MXEX14=`/usr/bin/awk '{print $2}' o1`
+MAXAEX=`/usr/bin/awk '{print $3}' o1`
+##if Fujitsu VPP-series or PRIMEPOWER use the following
+#MAXCAG=`/usr/bin/nawk '{print $1}' o1`
+#MXEX14=`/usr/bin/nawk '{print $2}' o1`
+#MAXAEX=`/usr/bin/nawk '{print $3}' o1`
+
+#
+# TEMPLATE FOR: ARRAYSIZES ... END ARRAYSIZES
+# with a dummy memo for MAXINB and MAXJNB
+# 
+cat << END_TOPO 
+ ARRAYSIZES
+
+ MAXATT ${MAXATT}
+ MAXAA2 ${MAXAA2}
+ MAXNRP ${MAXNRP}
+ MAXNBT ${MAXNBT}
+ MAXBNH ${MAXBNH}
+ MAXBON ${MAXBON}
+ MAXTTY ${MAXTTY}
+ MXQHEH ${MXQHEH}
+ MAXTH  ${MAXTHE}
+ MAXQTY ${MAXQTY}
+ MAXHIH ${MAXHIH}
+ MAXQHI ${MAXQHI}
+ MAXPTY ${MAXPTY}
+ MXPHIH ${MXPHIH}
+ MAXPHI ${MAXPHI}
+ MAXCAG ${MAXCAG}
+ MAXAEX ${MAXAEX}
+ MXEX14 ${MXEX14}
+ MAXINB
+ MAXJNB
+
+ END ARRAYSIZES
+
+END_TOPO
+rm -f o1 awkpr get_str

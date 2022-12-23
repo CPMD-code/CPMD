@@ -1,0 +1,39 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for intel machine using 
+#INFO# the GNU Fortran compiler.
+#INFO#
+#INFO# V. Weber
+#INFO#
+     FC='/sp/vwe/prog/GCC-7.2.0-intel/bin/gfortran-intel-7.2.0'
+     CC='/sp/vwe/prog/GCC-7.2.0-intel/bin/gcc-intel-7.2.0'
+     LD='/sp/vwe/prog/GCC-7.2.0-intel/bin/gfortran-intel-7.2.0'
+#     FC='/sp/vwe/prog/GCC-6.1.0-intel/bin/gfortran-intel-6.1.0'
+#     CC='/sp/vwe/prog/GCC-6.1.0-intel/bin/gcc-intel-6.1.0'
+#     LD='/sp/vwe/prog/GCC-6.1.0-intel/bin/gfortran-intel-6.1.0'
+     CFLAGS=
+     CPP=''
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__HAS_LIBXC \
+             -D__MINPACK'
+     FFLAGS_GROMOS='-ffixed-form  $(FFLAGS) -std=gnu'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)' 
+     if [ $debug ]; then
+       FFLAGS='-Wall -fmax-errors=0 -g -fbacktrace -O0 -fcheck=all -Wuninitialized -finit-character=0 -finit-integer=1234567890 -finit-logical=false -finit-real=snan -std=f2008ts -fall-intrinsics -ffree-line-length-none'
+       CFLAGS='-O0'
+     else
+       FFLAGS='-O2 -Wall -std=f2008ts -fall-intrinsics -ffree-line-length-none'
+       CFLAGS='-O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp'
+       LIBS='/sp/LIB/LINUX64/BLADE84/MINPACK/GFORTRAN/libminpack.a /sp/vwe/lib/liblapack342_intel_gcc_4.4.6.a /sp/vwe/lib/libblas342_intel_gcc_4.4.6.a'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${GREP} version | ${AWK} '{ print ( $3 < "4.7.0" ) ? "true" : "false" }'`
+     else
+       LIBS='/sp/LIB/LINUX64/BLADE84/MINPACK/GFORTRAN/libminpack.a /sp/vwe/lib/liblapack342_intel_gcc_4.4.6.a /sp/vwe/lib/libblas342_intel_gcc_4.4.6.a'
+     fi
+     if [ $coverage ]; then
+       FFLAGS=${FFLAGS}' --coverage'
+       LFLAGS='--coverage '${LFLAGS}
+     fi
+     LIBS=${LIBS}' /sp/vwe/prog/LIBXC-3.0.0-gcc-6.1.0/lib/libxcf03.a /sp/vwe/prog/LIBXC-3.0.0-gcc-6.1.0/lib/libxc.a'
+     FFLAGS=${FFLAGS}' -I/sp/vwe/prog/LIBXC-3.0.0-gcc-6.1.0/include'
+     LFLAGS=' '${LIBS}

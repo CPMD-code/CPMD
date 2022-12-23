@@ -1,0 +1,43 @@
+#INFO#
+#INFO# General Configuration for Intel KNL architecture 
+#INFO# Modules needed: licsrv/intel  flavor/buildtarget/x86_64
+#INFO#                 intel/17.0.6.256  mkl/17.0.6.256
+#INFO#                 feature/mkl/lp64 flavor/buildcompiler/intel/17
+#INFO#                 flavor/buildmpi/openmpi/2.0  feature/openmpi/net/auto
+#INFO#                 .tuning/openmpi/2.0  mpi/openmpi/2.0.4
+#INFO# Intel Composer v.17 or later - OpenMPI 2.0 or later + OMP 3.0 (or later)
+#INFO# For optimal performance you should use the Intel xiar driver
+#INFO# instead of the standard GNU ar
+#INFO# Flags for KNL are slightly cumbersome, yet necessary.
+#INFO# (M. Boero, IPCMS & University of Nagoya, 2018). 
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -traditional'
+     CPPFLAGS='-D__INTEL -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC -D__HASNT_OMP_45 \
+         -D__PARALLEL -D__HAS_SIZEOF -D__HASNT_F08_ISO_FORTRAN_ENV -D__HAS_BF_STREAM_IO'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+             -D__INTEL -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC -D__HASNT_OMP_45 \
+             -D__PARALLEL -D__HAS_SIZEOF -D__HASNT_F08_ISO_FORTRAN_ENV -D__HAS_BF_STREAM_IO'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='xiar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g'
+       CFLAGS='-g -Wall -m64'
+     else
+       FFLAGS='-O2 -pc64 -funroll-loops -heap-arrays 64 -align array64byte -assume byterecl \
+              -axMIC-AVX512 -fma -ftz -finline-functions -fpp'
+       CFLAGS='-O2 -Wall  '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qopenmp'
+       OMP3_DISABLED='false'
+       LIBS='-static-intel -mkl=parallel -lm'
+     else
+       LIBS='-static-intel -mkl=serial -lm'
+     fi
+     LFLAGS=${LIBS}

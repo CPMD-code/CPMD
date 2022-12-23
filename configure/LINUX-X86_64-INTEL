@@ -1,0 +1,32 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for x86_64 using 
+#INFO# the INTEL Fortran compiler.
+#INFO#
+#INFO# V. Weber
+#INFO# 
+
+     IRAT=2
+     FC='ifort'
+     CC='icc'
+     LD='ifort'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     CPP='/usr/bin/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT    '
+     AR='/usr/bin/ar ruv'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -traceback -check all,noarg_temp_created '
+       CFLAGS='-g -O0 '
+     else
+       FFLAGS='-O2'
+       CFLAGS='-O2'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       LIBS='-mkl=parallel'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${AWK} '{ print ( $2 < "12.0.4" ) ? "true" : "false" }'`
+     else
+       LIBS='-mkl=sequential'
+     fi
+     LFLAGS='-static-intel '${LIBS}

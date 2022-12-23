@@ -1,0 +1,35 @@
+#INFO#
+#INFO# Configuration is for Fujitsu PRIMERGY UX900 
+#INFO# Xeon  2.93 GHz * 2/node, Memory: 24 GB/node
+#INFO# OS: RedHat Enterprise Linux, Intel Fortan Compiler
+#INFO# Tokyo/Strasbourg, Januray 2018
+#INFO#
+     IRAT=2
+     FC='mpiifort'
+     CC='mpiicc'
+     LD='mpiifort'
+     CPP='/usr/bin/cpp -P -traditional'
+     CPPFLAGS='-D__PRIMERGY -D__ALPHALINUX  -D__HAS_FFT_DEFAULT -D__PARALLEL \
+               -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV -D__HASNT_OMP_45' 
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+                -D__PRIMERGY -D__ALPHALINUX  -D__HAS_FFT_DEFAULT -D__PARALLEL \
+                -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV -D__HASNT_OMP_45'
+     FFLAGS_GROMOS='-Fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -pc64 -O0 '
+       CFLAGS='-g -Wall -O0 -m64 $(CPPFLAGS)'
+     else
+       FFLAGS='-O3 -pc64 -funroll-loops '
+       CFLAGS='-O3 -Wall -m64'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       OMP3_DISABLED='true'
+       LIBS='-mkl=parallel'
+     else
+       LIBS='-mkl=sequential'
+     fi
+     LFLAGS=' '${LIBS}

@@ -1,0 +1,38 @@
+#INFO#
+#INFO# Minimal configuration to build a parallel QM/MM cpmd executable
+#INFO# for a SGI Altix ICE machine with Infiniband (IB 4x DDR) double plan
+#INFO# Note that this machine uses:
+#INFO#      CPU Xeon Quad-Core E5472 3.00 GHz 
+#INFO#      Intel fortran/C compiler 12.1.3 or later + Intel Math Kernel Library
+#INFO#      MPT/1.22 (OpenMPI available optionally - install needed !)
+#INFO#      SGI ProPack 3 SP4
+#INFO# Strasbourg/Tokyo, 11 Feb 2014
+#INFO#
+     IRAT=2
+     FC='ifort'
+     CC='icc'
+     LD='ifort'
+     CPP='/usr/bin/cpp -E -P -traditional'
+     CPPFLAGS='-D__Linux  -D__ALTIX -D__HAS_FFT_DEFAULT -D__PARALLEL '
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+               -D__Linux -D__ALTIX -D__HAS_FFT_DEFAULT -D__PARALLEL '
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='ar -r'
+     if [ $debug ]; then
+       FFLAGS='-g -lmpi -O0 -r8 -align dcommons -xHost -heap-arrays 64 -fpp'
+       CFLAGS='-g -O0 -Wall'
+     else
+       FFLAGS='-lmpi -O3 -r8 -align dcommons -xHost -heap-arrays 64 -fpp'
+       CFLAGS='-O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${AWK} '{ print ( $2 < "12.0.4" ) ? "true" : "false" }'`
+       LIBS='-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm \
+             -lpthread -liomp5 -openmp'
+     else
+       LIBS='-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm \
+             -lpthread -liomp5'
+     fi
+     LFLAGS=''${LIBS}

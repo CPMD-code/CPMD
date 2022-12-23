@@ -1,0 +1,51 @@
+The script generate_gromos_size is used to generate the
+file toposz.h used by Gromos/Amber force field.
+
+The usage is simply:
+./generate_gromos_size topology
+
+___________________________________________________________
+The script estimate_gromos_size is used to generate
+the array size section to be included in the &QMMM
+... &END section in the new dynamical topology 
+allocation.
+
+The usage is
+./estimate_gromos_size topology
+
+and you will get the following (example) block
+
+ ARRAYSIZES
+ MAXATT 28
+ MAXAA2 16326
+ MAXNRP 50085
+ MAXNBT 48
+ MAXBNH 49176
+ MAXBON 986
+ MAXTTY 82
+ MXQHEH 1032
+ MAXTH  1529
+ MAXQTY 10
+ MAXHIH 10
+ MAXQHI 10
+ MAXPTY 49
+ MXPHIH 2250
+ MAXPHI 2783
+ MAXCAG 16795
+ MAXAEX 72683
+ MXEX14 3358
+ END ARRAYSIZES
+
+...then simply cut&paste this in your input file.
+
+___________________________________________________________
+                 >>>>> WARNING <<<<< 
+If you are using a Fujutsu VPP machine or a PRIMEPOWER
+"nawk" must be used instead of "awk"; edit the file
+generate_gromos_size or estimate_gromos_size
+and comment/uncomment the related awk/nawk parts.
+___________________________________________________________
+
+...and good luck. As usual, no guarantee on anything.
+
+   Mauro, Axel and Alessandro

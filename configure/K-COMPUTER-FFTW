@@ -1,0 +1,31 @@
+#INFO#
+#INFO# Configuration for K-Computer (Fujitsu)
+#INFO# http://www.fujitsu.com/global/about/tech/k/
+#INFO# SPARC64 VIIIfx CPU designed and developed by Fujitsu
+#INFO# Tofu interconnect: 6-Dimensional Mesh/Torus Topology Network Technology
+#INFO# Hyogo/Tokyo/Strasbourg - August 2017
+#INFO#
+     FC='mpifrtpx'
+     CC='fccpx'
+     LD='mpifrtpx'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__PRIMEHPC -D__HAS_FFT_FFTW3 -D__Linux -D__INTEL -D__PARALLEL \
+        -D__HAS_SIZEOF  -D__FFT_HAS_SPECIAL_COPY=1 \
+        -D__SUMFNL_ISNT_TRHEADED -D__HASNT_OMP_COLLAPSE \
+        -D__HASNT_F03_EXECUTE_COMMAND_LINE -D__HASNT_F08_ISO_FORTRAN_ENV'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID $(CPPFLAGS)'
+     FFLAGS_GROMOS='$(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -I/home/apps/fftw/3.3.3/include'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-Kfast,openmp -X03 -fi -Qt -Kocl -Koptmsg=2 \
+               -I/home/apps/fftw/3.3.3/include'
+       CFLAGS='-O'
+     fi
+     LFLAGS='-Kopenmp -SSL2BLAMP \
+             -L/home/apps/fftw/3.3.3/lib64 -lfftw3_omp -lfftw3 -lm'
+

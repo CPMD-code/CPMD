@@ -1,0 +1,47 @@
+#INFO#
+#INFO# Compiler options for Hitachi SR-11000. 
+#INFO# WARNING: Note that this configuration is for the Japanese
+#INFO# version of the SR-11000 machine model K1. 
+#INFO# If you use a SR-11000/K1 outside Japan your configuration
+#INFO# might be different.
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='cc'
+     LD='mpif90'
+     CPP='/opt/optc/bin/cpp -PC'
+     CPPFLAGS='-D__SR8000 -D__SR11000  -D__NOINT8 -D__PARALLEL -D__VECTOR \
+               -D__HAS_FFT_DEFAULT -D__HASNT_F08_ISO_FORTRAN_ENV -D__HASNT_OMP_45'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+                      -D__SR8000 -D__SR11000  -D__NOINT8 -D__PARALLEL -D__VECTOR \
+                      -D__HAS_FFT_DEFAULT -D__HASNT_F08_ISO_FORTRAN_ENV -D__HASNT_OMP_45'
+     FFLAGS_GROMOS='$(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -64 -model=K1 -Oss -parallel -fullmsg -intptr -nolimit -loglist'
+       CFLAGS='-g -O -64 -D__SR8000 -D__SR11000 -model=K1 -parallel '
+     else
+       FFLAGS='-64 -model=K1 -Oss -parallel -fullmsg -intptr -nolimit -loglist'
+       CFLAGS='-O -64 -O -64 -D__SR8000 -D__SR11000 -model=K1 -parallel '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -omp'
+       CFLAGS=${CFLAGS}' -omp'
+       OMP3_DISABLED='true'
+       LIBS='-Wl,-binitfini:poe_remote_main \
+             -I/usr/lpp/ppe.poe/include/thread64 \
+             -L/opt/common/freeware/LAPACK/LIB.L/ -llapack_p64 \
+             -L/opt/common/freeware/BLAS/LIB.L/ -lblas_p64 \
+             -L/opt/common/freeware/ScaLAPACK/lib -lscalapack -lblacs \
+             -lf90c' 
+     else
+       LIBS='-Wl,-binitfini:poe_remote_main \
+             -I/usr/lpp/ppe.poe/include/thread64 \
+             -L/opt/common/freeware/LAPACK/LIB.L/ -llapack_p64 \
+             -L/opt/common/freeware/BLAS/LIB.L/ -lblas_p64 \
+             -L/opt/common/freeware/ScaLAPACK/lib -lscalapack -lblacs \
+             -lf90c' 
+     fi
+     LFLAGS=' '${LIBS}

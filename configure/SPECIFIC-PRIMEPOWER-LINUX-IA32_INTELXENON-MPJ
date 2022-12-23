@@ -1,0 +1,34 @@
+#INFO#
+#INFO# Configuration is for Kaede/Corona Intel Xenon cluster @ Tsukuba
+#INFO  PRIMEPOWER RX300 Cluster
+#INFO# Intel Xeon 3.2GHz, 2GByte Memory
+#INFO# OS: Linux RedHat 8, SCore que system
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__PARALLEL  \
+               -DLINUX_IFC -D__HAS_EXTERNAL_IZAMAX'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+                      -D__Linux  -DLINUX_IFC -D__HAS_EXTERNAL_IZAMAX'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g'
+       CFLAGS='-g'
+     else
+       FFLAGS='-w90 -w95 -O2 -pc64 -tpp7 -cm -unroll'
+       CFLAGS='-O2 -Wall'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS='-L/opt/intel/mkl61/lib/32 -lmkl_lapack -lmkl_ia32 -lguide'
+     else
+       LIBS='-L/opt/intel/mkl61/lib/32 -lmkl_lapack -lmkl_ia32 -lguide'
+     fi
+     LFLAGS=' '${LIBS}

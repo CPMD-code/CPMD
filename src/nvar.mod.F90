@@ -1,0 +1,4 @@
+MODULE nvarmod
+  IMPLICIT NONE
+  INTEGER, SAVE :: nvar = HUGE(0)
+END MODULE nvarmod

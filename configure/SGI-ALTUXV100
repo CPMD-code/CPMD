@@ -1,0 +1,47 @@
+#INFO#
+#INFO# Configuration to build a parallel MPI/OMP QM/MM executable for 
+#INFO# SGI ALTUXV 100 Shared memory Multiprocessor Silicon Graphics
+#INFO# SGI Built-in MPT 2.04 or later used as parallel interface 
+#INFO#  Padova/Tokyo/Strasbourg - March 2018
+#INFO#
+     IRAT=2
+     FC='mpif90 -I/opt/sgi/mpt/mpt-2.04/include'
+     CC='mpicc'
+     LD='mpif90 -I/opt/sgi/mpt/mpt-2.04/include'
+     CPP='/lib/cpp -P -E -traditional'
+     CPPFLAGS='-D__Linux  -DLINUX_IFC -D__HAS_FFT_DEFAULT  \
+               -D__HAS_SIZEOF -D__PARALLEL -D__HASNT_OMP_COLLAPSE -D__HASNT_F03_EXECUTE_COMMAND_LINE \
+               -D__HASNT_F08_CONTIGUOUS -D__HASNT_F08_ASYNCHRONOUS -D__HASNT_F08_POINTER_REMAPPING \
+               -D__HASNT_F08_ISO_FORTRAN_ENV -D_HASNT_MPI_30 -D__HASNT_OMP_45'
+     NOOPT_FLAG=' -O1  -pc64 '
+     NOOPT_OBJS=' jrotation_utils.mod.o '
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+             -D__Linux  -DLINUX_IFC -D__HAS_FFT_DEFAULT  \
+             -D__HAS_SIZEOF -D__PARALLEL -D__HASNT_OMP_COLLAPSE -D__HASNT_F03_EXECUTE_COMMAND_LINE \
+             -D__HASNT_F08_CONTIGUOUS -D__HASNT_F08_ASYNCHRONOUS -D__HASNT_F08_POINTER_REMAPPING \
+             -D__HASNT_F08_ISO_FORTRAN_ENV -D_HASNT_MPI_30 -D__HASNT_OMP_45'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -pc64 -heap-arrays 64 '
+       CFLAGS='-g -Wall -O0'
+     else
+       FFLAGS='-O2 -pc64 -heap-arrays 64 '
+       CFLAGS='-O2 -Wall '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       OMP3_DISABLED='false'
+       LIBS=' -L/opt/sgi/mpt/mpt-2.04/lib -lmpi \
+              -L//opt/intel/mkl/lib/intel64/libmkl_solver_lp64_sequential.a \
+              -Wl,--start-group /opt/intel/mkl/lib/intel64/libmkl_intel_lp64.a \
+              /opt/intel/mkl/lib/intel64/libmkl_sequential.a \
+              /opt/intel/mkl/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread'
+     else
+       LIBS=' -L/opt/sgi/mpt/mpt-2.04/lib -lmpi \
+              -L//opt/intel/mkl/lib/intel64/libmkl_solver_lp64_sequential.a \
+              -Wl,--start-group /opt/intel/mkl/lib/intel64/libmkl_intel_lp64.a \
+              /opt/intel/mkl/lib/intel64/libmkl_sequential.a \
+              /opt/intel/mkl/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread'
+     fi
+     LFLAGS=${LIBS}

@@ -1,0 +1,35 @@
+#INFO#
+#INFO# Configuration for Linux HPC superclusters using the following modules:
+#INFO# Intel Composer v.18 (or later) + OpenMPI 3.0.0 (or later) + OMP 3.0 (or later)
+#INFO# For optimal performance you should use a specifically tuned MKL (BLAS+LAPACK)
+#INFO# (M. Boero, IPCMS/University of Tokyo/Nagoya University, October 2018). 
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -traditional'
+     CPPFLAGS='  -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC -D__HASNT_OMP_45 \
+         -D__PARALLEL -D__HAS_SIZEOF -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+              -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC -D__HASNT_OMP_45 \
+             -D__PARALLEL -D__HAS_SIZEOF -D__HAS_BF_STREAM_IO -D__HASNT_F08_ISO_FORTRAN_ENV'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='xiar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g'
+       CFLAGS='-g -Wall -m64'
+     else
+       FFLAGS='-O2 -no-prec-div -pc64 -funroll-loops -fpp -heap-arrays 64'
+       CFLAGS='-O2 -Wall  '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qopenmp'
+       OMP3_DISABLED='false'
+       LIBS='-static-intel -mkl=parallel -lm'
+     else
+       LIBS='-static-intel -mkl=serial -lm'
+     fi
+     LFLAGS=${LIBS}

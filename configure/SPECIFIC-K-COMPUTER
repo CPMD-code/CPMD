@@ -1,0 +1,43 @@
+#INFO#
+#INFO# Configuration for K-Computer (Fujitsu)
+#INFO# http://www.fujitsu.com/global/about/tech/k/
+#INFO# SPARC64 VIIIfx CPU designed and developed by Fujitsu
+#INFO# Tofu interconnect: 6-Dimensional Mesh/Torus Topology Network Technology 
+#INFO# WARNING: The clause "collapse(n)" had troubles on the Fujitsu compiler
+#INFO#          (K-computer and Fujitsu FX10 machine) until the version
+#INFO#          Fujitsu Fortran Driver Ver. 1.2.1 P-id T01641-02 (2013).
+#INFO#          You might well need to better tune your own compilation !
+#INFO#          The above bug should have been fixed in Fujitsu Fortran Driver
+#INFO#          Ver. 1.2.1 P-id T01641-04 (2014) and later versions.
+#INFO# (IPCMS-University of Tokyo, August 2017). 
+#INFO#
+     IRAT=2
+     FC='mpifrtpx -c'
+     CC='mpifccpx -c -O'
+     LD='mpifrtpx'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS=' -D__ALPHALINUX -D__HPC -D__PARALLEL -D__HAS_FFT_DEFAULT \
+                -D__HAS_EXTERNAL_IZAMAX -D__HASNT_OMP_COLLAPSE -D__HASNT_F08_ISO_FORTRAN_ENV'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+                -D__ALPHALINUX -D__HPC -D__PARALLEL -D__HAS_FFT_DEFAULT \
+                -D__HAS_EXTERNAL_IZAMAX -D__HASNT_OMP_COLLAPSE -D__HASNT_F08_ISO_FORTRAN_ENV'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g'
+       CFLAGS='-g -D__ALPHALINUX'
+     else
+       FFLAGS='-Kvisimpact,array_private,auto,ilfunc,ocl,NOFLTLD \
+               -Am -X9 -V -Ec -Qa,d,i,p,t,x -Koptmsg=2 -V -Cpp -Ccpp'
+       CFLAGS='-O2 -D__ALPHALINUX'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -Kopenmp'
+       OMP3_DISABLED='true'
+       LIBS='-SSL2BLAMP -SCALAPACK -Ntl_trt'
+     else
+       LIBS='-SSL2BLAMP -SCALAPACK -Ntl_trt'
+     fi
+     LFLAGS='$(FFLAGS) '${LIBS}

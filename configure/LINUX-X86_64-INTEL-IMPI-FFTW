@@ -1,0 +1,44 @@
+#INFO#
+#INFO# Configuration to build a parallel cpmd executable for a 
+#INFO# Xeon Phi x86_64 machine using INTEL Fortran compiler 
+#INFO# version 16/17 or later, intelMPI and MKL.
+#INFO# WARNING: (1) Intel Fortran Compilers up to version 13.1.0.146
+#INFO#          are affected by a bug compilation in the Jacobi
+#INFO#          rotation (GMAX -> Infinity) if optimization levels
+#INFO#          higher than -O1 are used.
+#INFO#          (2) If the option -cpp is not included, intel places a
+#INFO#          nasty and undesired line in the .f90 routines starting
+#INFO#          with '/* Copyright(C) 1991-2012 ... etc.' with TAB
+#INFO#          and other characters that make the code not compilable.
+#INFO#
+#INFO# M. Boero, K. Koizumi - Strasbourg/Tokyo/Okazaki January 2018
+#INFO#
+
+     IRAT=2
+     FC='mpiifort -cpp'
+     CC='mpiicc'
+     LD='mpiifort -cpp'
+     FFLAGS_GROMOS='$(FFLAGS) -fixed'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     CPP='/usr/bin/cpp -P -traditional'
+     CPPFLAGS='-D__Linux -D__HAS_FFT_FFTW3 -D__PARALLEL -DLINUX_IFC -D__HASNT_OMP_45 \
+      -D__HASNT_F03_EXECUTE_COMMAND_LINE -D__HASNT_F08_ISO_FORTRAN_ENV'
+     NOOPT_FLAG=' -O1 '
+     NOOPT_OBJS=' jrotation_utils.mod.o '
+     AR='/usr/bin/ar ruv'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -I$(MKLROOT)/include/fftw -gen_interfaces -traceback -check all,noarg_temp_created '
+       CFLAGS='-g -O0 '
+     else
+       FFLAGS='-O2 -I$(MKLROOT)/include/fftw -axMIC-AVX512 -free'
+       CFLAGS='-O2'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qopenmp'
+       LIBS='-mkl=parallel -axMIC-AVX512 -free'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${AWK} '{ print ( $2 < "12.0.4" ) ? "true" : "false" }'`
+     else
+       LIBS='-mkl=sequential -axMIC-AVX512 -lfftw3_mpi'
+     fi
+     LFLAGS='-static-intel '${LIBS}

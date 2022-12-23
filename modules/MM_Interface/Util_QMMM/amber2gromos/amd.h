@@ -1,0 +1,612 @@
+C $Id: amd.h,v 1.1 2006-12-27 11:13:34 itavern Exp $ -*-fortran-*-
+C HEADER FILE FOR ANALYSIS-MD PROGRAM
+C 
+C This file is included in all post-md analysis programs 
+C and in the I/O routines of rdamd.f.
+C It is used:
+C   - for array size definition (parameter)
+C   - for behaviour of specific subroutine calls (parameter)
+C   - for units definition (parameter)
+C   - for transmission of information from the I/O routines (common)
+C   - formats of general usage
+C Initialisation of variables is done in BLOCK DATA AMDBLK of
+C rdamd.f
+C amd.h requires toposz.h and coordsz.h
+C
+C------------------------------------------------------------------------
+C
+C+++++ ARRAY SIZE PARAMETERS
+C
+      INTEGER NANALD,MAXLNT,MAXDAT,MAXLIS,MAXSYM,MAXNRQ,MAXNRA,
+     $     MAXAN,MAXFAC,MAXAIN,MAXPOS,MAXHAT,MAXREN,MAXQT,MAXNIA,
+     $     MAXNQV,MAXQV2,MAXDIS,MAXXP,MAXNHD,MAXNHA,MAXNHB,
+     $     MAXAHB,MAXNR,MAXAT,MAXHBT,MAXABT,MAXNSM,MAXSAT,MAXCBN,
+     $     MAXNIN,MAXJLI,MAXNRT,MAXJNB,MAXINP,MAXANB,MAXNS3,
+     $     MAXNBR,MAXRES
+C
+C---- ANALYSIS IS ALWAYS IN 3D
+      PARAMETER (NANALD=3)
+C
+C---- MAXIMAL LINE NUMBER OF TITLE RECORDS
+      PARAMETER (MAXLNT=10)
+C
+C---- MAXIMUM NUMBER OF HYDROGEN BOND DONOR,ACCEPTOR TYPES (IAT,IDT IN
+C     PROAHB,PROCHB)
+      PARAMETER (MAXDAT=20)
+C
+C---- MAXIMUM NUMBER OF ATOMS IN THE GIVEN LIST (LIS IN PROAVQ,PROAVS,
+C     PROCOX,PROTCF)
+
+C      PARAMETER (MAXLIS=100)
+      PARAMETER (MAXLIS=500)
+C
+C---- MAXIMUM NUMBER OF SYMMETRY TRANSFORMATIONS (SYMM -LAST INDEX- IN
+C     PROAVX)
+      PARAMETER(MAXSYM=48)
+C
+C---- MAXIMUM NUMBER OF QUANTITIES Q (BONDS, ANGLES, ETC.) OCCURRING
+C     IN THE SOLUTE (VARIOUS ARRAYS IN PROAJC,PROAVQ)
+      PARAMETER (MAXNRQ=845)
+C
+C---- MAXIMUM NUMBER OF ATOMS PER SOLVENT MOLECULE (ANMSS,IACSS IN PROAVS)
+      PARAMETER (MAXNRA=12)
+C
+C---- MAXIMUM NUMBER OF ATOM NAMES (AN,AN1,AN2,AN3,ATNAME IN PROAHB, PROCAB
+C     PROAVN,PROAVQ,PROAVS,PROAVX,PROCAB,PROCHB,PROCOX)
+      PARAMETER(MAXAN=90)
+C
+C---- MAXIMUM NUMBER OF RADII DR, FOR WHICH OCCUPANCY IS DETERMINED (FAC
+C     IN PROCOC)
+      PARAMETER (MAXFAC=3)
+C
+C---- MAXIMUM NUMBER OF SITES OR POSITIONS ( VARIOUS ARRAYS IN PROCOC )
+      PARAMETER (MAXPOS=100)
+C
+C---- MAXIMUM NUMBER OF ATOMS, FOR WHICH H-BONDS ARE MONITORED (JAT,JH1,JH2
+C     IN PROMHB)
+      PARAMETER (MAXHAT=25)
+C
+C---- ALL NAME STRINGS IN GROMOS95 HAVE THE CURRENTLY THE SAME LENGTH
+C     ( ATOM NAMES, RESIDUE NAMES... )
+C
+      PARAMETER (MAXAIN=5)
+C
+C---- MAXIMUM NUMBER OF RESIDUE NAMES
+C     IN: proavn.f,proavq.f,proavx.f,procab.f,procob.f,procoq.f,procox.f
+      PARAMETER(MAXREN=32)
+C
+C---- MAXIMUM NUMBER OF TYPES Q (BONDS, ANGLES, ETC.)
+C     IN: proavq.f,procoq.f
+      PARAMETER (MAXQT=300)
+C
+C---- MAXIMUM NUMBER OF Q-ATOM NAMES
+C     IN: proavq.f,procoq.f
+      PARAMETER (MAXNIA=100)
+C
+C---- MAXIMUM NUMBER OF Q-VALUES IN THE Q TIME SERIES
+C     IN: protcf.f
+      PARAMETER(MAXNQV=3125)
+C
+C---- TWO TIMES MAXNQV
+C     IN: protcf.f
+      PARAMETER(MAXQV2=2*MAXNQV)
+C
+C---- MAXIMUM NUMBER OF ABCIS POINTS IN THE DISTRIBUTION OF Q
+C     IN: protcf.f
+      PARAMETER(MAXDIS=720)
+C
+C---- MAXIMUM NUMBER OF SOLUTE COORDINATES
+C     IN: propdf.f,protcf.f
+      PARAMETER(MAXXP=4500)
+C
+C---- MAXIMUM NUMBER OF POTENTIAL HYDROGEN BOND DONORS, IHD AND JHD
+C     IN: proahb.f,prochb.f
+
+C      PARAMETER (MAXNHD=3000)
+      PARAMETER (MAXNHD=9000)
+
+C
+C---- MAXIMUM NUMBER OF POTENTIAL HYDROGEN BOND ACCEPTORS, KHA
+C     IN: proahb.f,prochb.f
+
+C      PARAMETER (MAXNHA=2000) 
+      PARAMETER (MAXNHA=9000) 
+
+C
+C---- MAXIMUM NUMBER OF HYDROGEN BONDS PER FRAME, MHB AND PHB
+C     IN: IN: proahb.f,prochb.f
+
+C      PARAMETER (MAXNHB=4000 )
+      PARAMETER (MAXNHB=10000 )
+
+C
+C---- MAXIMUM NUMBER OF HYDROGEN BONDS TOTAL, MAHB AND PHB, ICD
+C     -> SHOULD BE .GE. MAXNHB
+C     IN: proahb.f
+
+C      PARAMETER (MAXAHB=4000)
+      PARAMETER (MAXAHB=10000)
+
+C
+C---- MAXIMUM NUMBER OF ATOMS
+C     IN: proahb.f,prochb.f,prococ.f
+
+C      PARAMETER (MAXNR=6000)
+C      PARAMETER (MAXNR=10000)
+      PARAMETER (MAXNR = MAXNAT)
+C
+C---- MAXIMUM NUMBER OF HYDROGEN BOND ATOM TYPES
+C     IN: proahb.f,prochb.f
+      PARAMETER (MAXAT=300)
+C 
+C---- MAXIMUM NUMBER OF THREE-CENTER HYDROGEN BONDS PER FRAME, MHBT AND PHBT
+C     IN: proahb.f
+      PARAMETER (MAXHBT=4000)
+C
+C---- MAXIMUM NUMBER OF THREE-CENTER HYDROGEN BONDS TOTAL, MAHBT AND PAHBT
+C     -> SHOULD BE .GE. MAXHBT
+C     IN: proahb.f
+      PARAMETER (MAXABT=4000)
+C
+C---- MAXIMUM NUMBER OF SOLVENT MOLECULES
+C     IN: proavs.f,procos.f,procps.f
+
+C      PARAMETER (MAXNSM=1480)
+      PARAMETER (MAXNSM=3000)
+
+C
+C---- MAXIMUM NUMBER OF SOLVENT ATOMS      
+C     IN: proavs.f
+
+C      PARAMETER (MAXSAT=3000)
+      PARAMETER (MAXSAT=8000)
+
+C
+C---- MAXIMUM NUMBER OF COVALENTLY BOUND NEIGHBOUR ATOMS PER ATOM,
+C     FOR WHICH ANGLES WITH THE PRINCIPAL AXES OF THE FLUCTUATION 
+C     TENSOR ARE PRINTED
+C     IN: procab.f
+      PARAMETER (MAXCBN=3)
+C 
+C---- MAXIMUM NUMBER OF INTERVALS FOR WHICH THE DISTANCES RIJ ARE COMPARED
+C     IN: procod.f
+      PARAMETER (MAXNIN=50)
+C
+C---- MAXIMUM NUMBER OF ATOMS
+C     IN: promcf.f
+C     PARAMETER (MAXJLI=6000)
+      PARAMETER (MAXJLI=MAXNAT)
+C
+C---- MAXIMUM NUMBER OF SOLUTE (PLUS SOLVENT) ATOMS
+C     IN: pronbl.f
+C     PARAMETER (MAXNRT=6000)
+      PARAMETER (MAXNRT=MAXNAT)
+C
+C---- APPROXIMATE MAXIMUM NUMBER OF NON-BONDED PAIRS (NTPA=3)
+C     IN: nbpal.f,nbpml.f,pronbl.f
+      PARAMETER (MAXJNB=50000)
+C 
+C---- MAXIMUM NUMBER OF CHARGE GROUPS PLUS SOLVENT MOLECULES (NTPA=3)`
+C     IN: pronbl.f
+      PARAMETER (MAXINP=2000) 
+C
+C---- MAXIMUM NUMBER OF NEIGHBOURS PER ATOM
+C     IN: pronbl.f
+      PARAMETER (MAXANB=200) 
+C
+C---- MAXIMUM NUMBER OF NEIGHBOURS PER MOLECULE
+C     IN: procos.f,procps.f
+      PARAMETER (MAXNS3=3*MAXNSM)
+C
+C     IN: procos.f
+      PARAMETER (MAXNBR=50)
+C
+C---- MAXIMUM NUMBER OF RESIDUES IN THE MOLECULE
+C     IN: procob.f
+      PARAMETER (MAXRES=420)
+C     
+
+
+
+
+
+C
+C ARRAY SIZES (some others are in amd.h)
+C
+
+      INTEGER MXNAT3
+      PARAMETER (MXNAT3=3*MAXNAT)
+      INTEGER MAXNRR
+      PARAMETER (MAXNRR=3*MAXNAT)
+C
+C MAXIMUM NUMBER OF INPUT COORDINATES
+C IN: proahb,protcf
+C MAXNRR
+C IN: proadr.f,proajc.f,proavn.f,proavq.f,proavs.f,proavx.f,
+C     prochb.f,procod.f,procoq.f,procos.f,promcf.f,propdf.f,propsf.f
+C MAXXCO
+C IN: proadr.f,proavs.f,proavx.f,prococ.f,procoq.f,procps.f,promhb.f,
+C     pronbl.f,propsf.f,rdamd.f
+C
+      INTEGER MXNRP3
+      PARAMETER (MXNRP3=3*MAXNRP)
+C
+C IN: proavx.f
+C
+
+
+
+C
+C---- for prosvt
+C
+      INTEGER MAXSAN,MAXBIN,MAXBNC,MAXSTA,MAXSFR,MAXCRT,
+     $     MAXLEG,MAXAAV,MAXTAV,MAXCOL
+      REAL EPSSM
+      INTEGER NUTR0,NUVEL,NUSVSI,NUSVSO
+C
+C---- maximal number of solvent molecules
+C-- for calculation
+C      PARAMETER (MAXSAN=5)
+C-- for analysis
+      PARAMETER (MAXSAN=40)
+C
+C---- maximal number of radial bins (except dipole relaxation)
+      PARAMETER (MAXBIN=1000)
+C
+C---- maximal number of radial bins (only dipole relaxation)
+C small system
+C      PARAMETER (MAXBNC=21)
+C big system
+      PARAMETER (MAXBNC=33)
+C
+C--- sizes for arrays STAT and SFR
+      PARAMETER (MAXSTA=19,MAXSFR=6)
+C
+C---- maximal time correlation bins
+      PARAMETER (MAXCRT=1500)
+C
+C---- maximal number of Legendre polynomials to be considered
+      PARAMETER (MAXLEG=3)
+C
+C---- maximal number of radial properties to be averaged 
+      PARAMETER (MAXAAV=8)
+C
+C---- maximal number of diffusion properties to be considered (MAXLEG+1)
+      PARAMETER (MAXTAV=4)
+C---- maximal number of columns on output
+      PARAMETER (MAXCOL=30)
+C
+C---- highest number to be considered as zero for taking logs
+C
+      PARAMETER (EPSSM=1.0E-10)
+C
+C---- units
+C     subaverages  : 11-18
+C     output averages : 19
+C     trajectories : 21-50
+C     velocities   : 51-80
+C
+      PARAMETER (NUSVSI=11,NUSVSO=19,NUTR0=20,NUVEL=50)
+C
+C------------------------------------------------------------------------
+C
+C+++++ SUBROUTINE CALL PARAMETERS
+C
+      INTEGER IBNDAN,IANGAN,ICOORD,ITINIT,ITCONT,IVINIT,IVCONT
+      CHARACTER*7 FSTNEW
+C
+C---- SWITCH VALUES FOR RDCOORD SUBROUTINE
+      PARAMETER (ICOORD=0,ITINIT=1,ITCONT=2,IVINIT=3,IVCONT=4)
+C
+C---- SWITCH VALUES FOR COBOND/ANGLE SUBROUTINES
+C     Two important switches currently GROMOS87 form is selected
+C     IBNDAN : choice of functional form for calling cobond
+C              ( 0 = IBND4 new functional form
+C                2 = IBNDH old harmonic functional form )
+C     IANGAN : choice of functional form for calling angle
+C              ( 0 = IANGC new functional form 
+C                1 = IANGH old harmonic in theta functional form )
+C
+C NEW FUNCTIONAL FORM
+C      PARAMETER (IBNDAN=0, IANGAN=0)
+C GROMOS87
+      PARAMETER (IBNDAN=2, IANGAN=1)
+C
+C---- SWITCH VALUES FOR COBOND/ANGLE SUBROUTINES
+C     status of files to open for writing: overwrite or not ? 
+C     ( UNKNOWN = do overwrite , NEW = do not )     
+C
+      PARAMETER (FSTNEW='UNKNOWN')
+C
+C------------------------------------------------------------------------
+C
+C+++++ UNIT DEFINITION PARAMETERS
+C
+C
+C Standardly used units in analysis programs
+C
+      INTEGER NUTOPO,NUSIN,NUAVER,NUDISR,NUSVT,NUSVT2,NUSVT3,
+     $        NUREF,NUCOCS,NUPOLI,NUSMIN,NUSMAX,NUXMIN,NUXMAX,
+     $        NUCMIN,NUCMAX,NUNMIN,NUNMAX,NUSOUT,NUJSPE
+C
+      PARAMETER ( NUSIN = 5, NUSOUT = 6 )
+C for control files and analysis results
+      PARAMETER ( NUTOPO = 10 )
+C molecular topology file
+      PARAMETER ( NUSMIN = 10 , NUSMAX = 40 )
+C sequence of files (trajectories, coordinates, subaverages, ...) 
+C are read from tape NUSMIN+1 to NUSMAX 
+C the number is usually controlled by the input parameter NRFL 
+C (0<NRFL<=NUSMAX-NUSMIN)
+      PARAMETER ( NUXMIN = 50 , NUXMAX = 66 )
+C for propsf
+      PARAMETER ( NUCMIN = 10 , NUCMAX = 20 )
+C for propdf
+      PARAMETER ( NUNMIN = 10 , NUNMAX = 26 )
+C for pronbl
+
+      PARAMETER (NUAVER=41,NUDISR=46,NUJSPE=46,
+     $           NUSVT=27,NUSVT2=21,NUSVT3=51,NUREF=22,
+     $           NUCOCS=9,NUPOLI=9)
+C
+C NUAVER IN: IN: proavq.f,protcf.f promcf.f
+C
+
+
+C------------------------------------------------------------------------
+C
+C+++++ VARIABLE DECLARATION AND TRANSMISSION FROM I/O ROUTINES
+C
+
+
+
+
+
+
+
+
+
+
+
+
+C
+C DECLARATION, DIMENSION AND COMMON BLOCKS FOR ALL ANALYSIS 
+C PROGRAMS INPUT PARAMETERS
+C
+      LOGICAL LPACK,LFORM,LWFORM,LEBOX
+C
+      INTEGER NTRR,NRFL,NRIS,NRRC,NSKP,NRR,
+     $     NPM,NSM,NPMI,NTTR,NRPI,NTBIN,
+     $     NRPC1,NRPC2,NPC2,NRPC3,NPC3,
+     $     NTQ1,NTQ2,NTQ3,NTQ4,NTQ5,NTQ6,NTCF,
+     $     NQM,NQN,NQO,NQP,NTCM,NTPR1,NPRI1,NTPR2,NDIS,
+     $     NTPR3,NPRI3,NINP,NSDMAX,NPRI2,NLIS,NMOL,
+     $     NTQ,NTPR,NTPL,NSYM,NTPLOT,NTB1,NTB2,
+     $     NTR1,NTR2,NRA1,NRA2,NRPI1,NPM1,NRPI2,NPM2,
+     $     NRPC11,NRPC21,NPC21,NRPC31,
+     $     NPC31,NRPC12,NRPC22,NPC22,NRPC32,NPC32
+      INTEGER NRDT,NRAT,NIMIN,NIMAX,NJMIN,NJMAX,NTSOL,LIS,
+     $     IAT,IDT,NRPTR,NRAMTR,NRQ,IPQ,JPQ,KPQ,LPQ,
+     $     NRAMS,NRAMS1,NRAMS2,IACSS,NRPM,NNAME,NTLIS,NTMASS,NTX,
+     $     NTDR,NTXR,NPMR,NPOS,NTRMS,IPP,JPP,KPP,LPP,
+     $     NMINPP,NMAXPP,IACPP,NSMA,
+     $     NSMA1,NSMA2,NTPO,NPFO,NTSH,NRSI,
+     $     NRPO,JAT,JH1,JH2,NAT,NSTRA,NRAMI,NTPA,NTMT,NTPC,
+     $     NRATTR,NTDX,NTRA,NTW,NSKPH,NEL,
+     $     NTX1,NTU1,MSKIP1,NTX2,NTU2,MSKIP2,NTXO,NFILE,NSEQ,
+     $     NPACK,NTWF,NATTOT,NRDBOX,NMXLIS,NMXRPC,
+     $     NTWX,NSTLIM,NRDSUB,NTRJ,NBIN,NBINC,NDOAV,
+     $     NCRTC,NTA,NFEPS,NINTER
+C
+      REAL BOXIN,DT,BETAIN,RCUT1,RCUT2,RKT,OM2,
+     $     DIS1,DIS2,RCUT,
+     $     ALFC,PERM,ALFS,PHIC,SYM,SYMM,DQT,AJ,BJ,
+     $     CJ,CDIS,DR0,DISH,DISC,XPP,FAC,
+     $     BOX1,BOX2,BETA1,BETA2,
+     $     T,RMAX,DIP,PREK,EPSK,DENS,DMAX
+C
+      CHARACTER*(MAXAIN) ATTR,ANAME,ANMQ,ANMSS,ATNAME,ANMPP
+      CHARACTER*(80) CMDTIT(MAXLNT)
+      INTEGER NCMDTI
+C
+      DIMENSION NQM(2),NQN(2),NQO(2),NQP(2),NTPL(2),
+     $     BOXIN(3),BOX1(3),BOX2(3),
+     $     LIS(MAXLIS),SYM(3,4),SYMM(3,4,MAXSYM),
+     $     IAT(MAXDAT),IDT(MAXDAT),
+     $     ANMQ(4),IPQ(MAXNRQ),JPQ(MAXNRQ),KPQ(MAXNRQ),LPQ(MAXNRQ),
+     $     ANMSS(MAXNRA),IACSS(MAXNRA),ATNAME(MAXAN),
+     $     IPP(MAXPOS),JPP(MAXPOS),KPP(MAXPOS),LPP(MAXPOS),
+     $     NMINPP(MAXPOS),NMAXPP(MAXPOS),IACPP(MAXPOS),
+     $     ANMPP(MAXPOS),XPP(4,MAXPOS),FAC(MAXFAC),
+     $     NSMA(2),JAT(MAXHAT),JH1(MAXHAT),JH2(MAXHAT),
+     $     NEL(50),NFILE(10),NSEQ(10)
+C
+      COMMON /INPLOG/LPACK,LFORM,LWFORM,LEBOX
+C
+      COMMON /INPIN1/NTRR,NRFL,NRIS,NRRC,NSKP,NRR
+      COMMON /INPIN2/
+     $     NPM,NSM,NPMI,NTTR,NRPI,NTBIN
+      COMMON /INPIN3/
+     $     NRPC1,NRPC2,NPC2,NRPC3,NPC3,
+     $     NTQ1,NTQ2,NTQ3,NTQ4,NTQ5,NTQ6,NTCF,
+     $     NQM,NQN,NQO,NQP
+      COMMON /INPIN4/
+     $     NTCM,NTPR1,NPRI1,NTPR2,NDIS
+      COMMON /INPIN9/
+     $     NTPR3,NPRI3,NINP,NSDMAX,NPRI2,NLIS
+      COMMON /INPIN5/
+     $     NMOL,NTQ,NTPR,NTPL,NSYM,NTPLOT,
+     $     NTB1,NTB2
+      COMMON /INPIN6/NCMDTI
+      COMMON /INPIN7/
+     $     NRDT,NRAT,NIMIN,NIMAX,NJMIN,NJMAX,NTSOL,LIS,
+     $     IAT,IDT,NRPTR,NRAMTR,NRQ,IPQ,JPQ,KPQ,LPQ,
+     $     NRAMS,NRAMS1,NRAMS2,IACSS,NRPM,NNAME,NTLIS,NTMASS,NTX,
+     $     NTDR,NTXR,NPMR,NPOS,NTRMS,IPP,JPP,KPP,LPP,
+     $     NMINPP,NMAXPP,IACPP,NSMA,NSMA1,NSMA2,
+     $     NTPO,NPFO,NTSH,NRSI,
+     $     NRPO,JAT,JH1,JH2,NAT,NSTRA,NRAMI,NTPA,NTMT,NTPC,
+     $     NRATTR,NTDX,NTRA,NTW,NSKPH,NEL,
+     $     NTX1,NTU1,MSKIP1,NTX2,NTU2,MSKIP2,NTXO,NFILE,NSEQ,
+     $     NPACK,NTWF,NATTOT,NRDBOX
+      COMMON /INPIN8/NMXLIS,NMXRPC,
+     $     NTWX,NSTLIM,NRDSUB,NTRJ,NBIN,NBINC,NDOAV,
+     $     NCRTC,NTA
+      COMMON /INPIN9/NFEPS
+
+      COMMON /INPCOD/NTR1,NTR2,NRA1,NRA2,NRPI1,NRPI2,
+     $     NPM1,NPM2,
+     $     NRPC11,NRPC21,NPC21,NRPC31,
+     $     NPC31,NRPC12,NRPC22,NPC22,NRPC32,NPC32,NINTER
+C
+      COMMON /INPRL/DT,BOXIN,BETAIN,RCUT1,
+     $     RCUT2,RKT,OM2,DIS1,DIS2,
+     $     RCUT,ALFC,PERM,ALFS,PHIC,SYM,SYMM,DQT,AJ,BJ,CJ,
+     $     CDIS,DR0,DISH,DISC,XPP,FAC,
+     $     BOX1,BOX2,BETA1,BETA2,
+     $     T,RMAX,DIP,PREK,EPSK,DENS,DMAX
+C
+      COMMON /INPCHR/CMDTIT,ATTR,ANAME,ANMQ,ANMSS,ATNAME,ANMPP
+C
+C THAT'S IT...
+C
+
+
+C
+C VARIABLES INITIALISED BY AMDBLK BLOCK DATA IN rdamd.f
+C
+
+C
+C A FEW USEFUL FORMATS
+C
+      CHARACTER*10 FMTIT,FMTIT2,FMTIT0
+      COMMON /FMTA/ FMTIT0,FMTIT,FMTIT2 
+C
+C $ -*-fortran-*-
+C GENERAL HEADER FILE FOR ANALYSIS-MD PROGRAMS
+C This file is included in the analysis programs but not in the I/O
+C routines of rdamd.h. It defines various quantities used in all or 
+C nearly all analysis programs.
+C It should be preceded by the inclusion of coordsz.h and toposz.h
+
+
+C
+C ARRAYS/VARIABLES COMMON TO ALL ANALYSIS PROGRAMS
+C
+
+C
+C Arrays:
+C
+C
+C Dummies and dummy arrays for clear subroutine calls.
+C these are not initialzed anywhere
+C
+      REAL X,F,XDUM,FDUM
+      REAL DUM,DUM3
+
+      INTEGER IDUM
+      LOGICAL LDUM
+
+
+C
+C Program string
+C
+      CHARACTER CDUM
+C      CHARACTER*(6) PRGSTR
+
+C
+C For using RDCONF these are initialized in rdamd.f
+C
+      CHARACTER*80 COOTIT(10),TRJTIT(10),DATTIT(10)
+      LOGICAL LRED,LEOF,LDFORM
+C
+
+C these variables should maybe belong to box.h
+C They are calculated by SETBOX()
+C
+      REAL BOXOH,BOXOQ
+      COMMON /BOXAMD/BOXOH,BOXOQ
+
+C A function
+C
+CC      EXTERNAL NSTR
+CC      INTEGER NSTR
+C     
+
+
+      CHARACTER*60 QSTR(8)
+      COMMON /QSTCOM/ QSTR
+
+C
+C A FEW USEFUL FORMATS
+C
+
+C
+C formats for printing the header of the output
+C these are initialized in rdamd.f
+C
+      CHARACTER*165 FMTOPH, FMTOP2, FMCMDH, FMCRDH, FMCSFH,
+     $              FMCPDH,FMDAAH, 
+     $              FMDAJH, FMDCQH, FMDCCH, FMDACH,
+     $              FMDAQH,FMDQCH,
+     $              FMSVSH, FMCRSH, FMCQSH, FMCXSH, FMCXQH, FMCXFH, 
+     $              FMCSXH,FMCSAH,FMCSRH,FMCACH, FMCDRH,FMCJVH,
+     $              FMFPMB, FMDAPH, FMDBOH, FMDHBH, FMCXBH
+C
+C formats for dihedral transition monitoring
+C
+      CHARACTER*100 FMDTR1
+
+      CHARACTER*100 FMDTR2
+      CHARACTER*140 FMDTR3
+      CHARACTER*70 FMDTRP
+      CHARACTER*30 FMARES
+      CHARACTER*100 FMAAVE
+
+
+
+      COMMON /AMDINT/IDUM,LDUM,
+     $     LRED,LEOF,LDFORM
+
+C
+C Formats for averaging reports
+C
+      CHARACTER*(150) FMADIF,FMADIC,FMADIR,
+     $     FMAATO,FMAATR,FMAARE,FMALIS,FMALSS,
+     $     FMARMS,FMARMD,FMARMA,FMARAA,
+     $     FMASCP,FMAAX3,FMAAX4
+      COMMON /ANAFMT/FMADIF,FMADIC,FMADIR,
+     $     FMAATO,FMAATR,FMAARE,FMALIS,FMALSS,
+     $     FMARMS,FMARMD,FMARMA,FMARAA,
+     $     FMASCP,FMAAX3,FMAAX4
+      CHARACTER*(25) FMS,FMI,FMF,FMA,FMIF,FM2IF,FM4IF,
+     $     FM5IF,FM6IF,FM7IF,FM8IF
+      COMMON /IOFMT/FMS,FMI,FMF,FMA,FMIF,FM2IF,FM4IF,FM5IF,
+     $     FM6IF,FM7IF,FM8IF
+      LOGICAL LBADIN,LSVT
+      COMMON /IOLOG/LBADIN,LSVT
+C done...
+
+      COMMON /AMDFMT/FMTOPH, FMTOP2,FMCMDH,FMDAAH,FMDAJH,FMDCQH,
+     $     FMDACH,
+     $     FMDCCH,FMDAQH,
+     $     FMDQCH,FMCRDH,FMCSFH,FMCPDH,
+     $     FMSVSH,FMFPMB,
+     $     FMCRSH,FMCQSH,FMCXSH,FMCXQH,FMCXFH,FMCSXH,FMCSAH,
+     $     FMCSRH,FMCACH,FMCDRH,FMCJVH,
+     $     FMDTR1,FMDTR2,FMDTR3,FMDTRP,FMARES,FMAAVE,
+     $     FMDAPH,FMDBOH,
+     $     FMDHBH,
+     $     FMCXBH,
+     $     CDUM,
+     $     COOTIT,TRJTIT,DATTIT
+C
+      INTEGER NDATTI,NTRJTI,NCOOTI
+      COMMON /AMDTS/NDATTI,NTRJTI,NCOOTI
+
+C      EQUIVALENCE (X(1),XDUM(1)),(F(1),FDUM(1))
+      
+      COMMON /AMDREL/XDUM(MXNAT3),FDUM(MXNAT3),DUM,DUM3(3)
+      COMMON /AMDR2/X(MXNAT3),   F(MXNAT3)
+
+C

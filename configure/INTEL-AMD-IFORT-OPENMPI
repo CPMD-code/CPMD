@@ -1,0 +1,47 @@
+#INFO#
+#INFO# Configuration for HPC Intel AMD Rome (Epyc) 2.6 GHz - 64 cores
+#INFO# Modules needed: intel/19.0.5.281, mkl/19.0.5.281
+#INFO# openmpi/4.0.2
+#INFO# Intel Composer v.19 or later + OpenMPI v.4.0 or later
+#INFO# Note that this architectures requires a switch to
+#INFO# mpi_init_thread ( MPI_THREAD_FUNNELED, provided, ierr )
+#INFO# insetad of
+#INFO# pi_init_thread ( MPI_THREAD_MULTIPLE, provided, ierr )
+#INFO# inside mp_interface.mod.F90 to avoid crash/core dump.
+#INFO# This is done by the inclusion of the __AMD preprocessing keyword.
+#INFO# For optimal performance you should use the Intel xiar driver
+#INFO# instead of the standard GNU ar
+#INFO# (M. Boero, IPCMS & Nagoya University, 2020).
+#INFO#
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -traditional'
+     CPPFLAGS='-D__INTEL -D__AMD -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC -D__HASNT_OMP_45 \
+         -D__PARALLEL -D__HAS_SIZEOF -D__HASNT_F08_ISO_FORTRAN_ENV -D__HAS_BF_STREAM_IO \
+         -D__HASNT_MULTITHREAD_MPI_SUPPORT'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+             -D__INTEL -D__AMD -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC -D__HASNT_OMP_45 \
+             -D__PARALLEL -D__HAS_SIZEOF -D__HASNT_F08_ISO_FORTRAN_ENV -D__HAS_BF_STREAM_IO \
+             -D__HASNT_MULTITHREAD_MPI_SUPPORT'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='xiar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g'
+       CFLAGS='-g -Wall -m64'
+     else
+       FFLAGS='-O2 -pc64 -funroll-loops -heap-arrays 64 -align array64byte -assume byterecl \
+              -axCORE-AVX512 -fma -ftz -finline-functions -fpp -xHost'
+       CFLAGS='-O2 -Wall '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qopenmp'
+       OMP3_DISABLED='false'
+       LIBS='-static-intel -mkl=parallel -lm'
+     else
+       LIBS='-static-intel -L$(MKLPATH) -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core \
+           -lm -lpthread -liomp5 '
+     fi
+     LFLAGS=${LIBS}

@@ -1,0 +1,43 @@
+#INFO#
+#INFO# Configuration is for T2K system: 10368 Cores, 95.39 TFlops
+#INFO# infiniband machine, 16 GB of I/O band, Lustrel file system
+#INFO# Center for Computational Sciences - Tsukuba University
+#INFO# Intel Fortran Compiler version
+#INFO# Universities of Strasbourg/Tokyo/Tsukuba - 6 April 2017
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux -D__HAS_FFT_DEFAULT -D__PARALLEL -DLINUX_IFC \
+               -D__HAS_EXTERNAL_IZAMAX -D__HPC  -D__PACS'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+                   -D__Linux -D__HAS_FFT_DEFAULT -D__PARALLEL -DLINUX_IFC \
+                   -D__HAS_EXTERNAL_IZAMAX -D__HPC  -D__PACS'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     AR='/usr/bin/ar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g'
+       CFLAGS='-g'
+     else
+       FFLAGS='-w90 -w95 -O2 -pc64 -cm -unroll -r8'
+       CFLAGS='-O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -openmp'
+       OMP3_DISABLED='true'
+       LIBS='-L/opt/intel/mkl/10.0.1.014/lib/em64t \
+             /opt/intel/mkl/10.0.1.014/lib/em64t/libmkl_lapack.a \
+             /opt/intel/mkl/10.0.1.014/lib/em64t/libmkl_em64t.a \
+             -lmkl_intel_lp64 -lmkl_parallel -lmkl_core -lm -lm -lpthread -liomp5 '
+     else
+       LIBS='-L/opt/intel/mkl/10.0.1.014/lib/em64t \
+             /opt/intel/mkl/10.0.1.014/lib/em64t/libmkl_lapack.a \
+             /opt/intel/mkl/10.0.1.014/lib/em64t/libmkl_em64t.a \
+             -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm -lm -lpthread -liomp5 '
+
+     fi
+     LFLAGS=' '${LIBS}

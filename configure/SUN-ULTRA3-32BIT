@@ -1,0 +1,37 @@
+#INFO#
+#INFO# Configuration to build a 32-bit serial cpmd executable on a Sun Fire Machine.
+#INFO#
+#INFO# Unless you need more than about 2GB memory per processor, building a 32-bit
+#INFO# executable is highly recommended. The 32-bit version is significantly faster
+#INFO#
+     IRAT=2
+     FC='f95'
+     CC='cc'
+     LD='f95'
+     CFLAGS= 
+     CPP='/usr/ccs/lib/cpp -P'
+     CPPFLAGS="-D__HASNT_BF_STREAM_IO -D__SUN -D__HAS_FFT_DEFAULT            \\
+	-D__DATE__=\"'\`date '+%b %e %Y'\`'\"            \\
+	-D__TIME__=\"'\`date '+%T'\`'\" "
+     #-sb is to use Workshop package
+     FFLAGS_GROMOS=' $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='/usr/ccs/bin/ar'
+     RANLIB='/usr/ccs/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -xarch=v8plusb -dalign'
+       CFLAGS='-D__SUN -g  -C -errtags -xarch=v8plusb'
+       LFLAGS='-xlic_lib=sunperf'
+     else
+       FFLAGS='-fast  -fns=no -xtarget=ultra3 -xarch=v8plusb -dalign'
+       CFLAGS='-D__SUN -fast -fns=no -xtarget=ultra3 -xarch=v8plusb'
+       LFLAGS='-xlibmopt -xlic_lib=sunperf'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS=''
+     else
+       LIBS=''
+     fi
+     LFLAGS=${LFLAGS}' '${LIBS}

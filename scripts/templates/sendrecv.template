@@ -1,0 +1,29 @@
+subroutine mp_sendrecv_${NAME}(data_in,n_in,dest,data_out,n_out,src,comm)
+#ifdef __PARALLEL
+  use mpi
+#endif
+  use pstat
+  ! Arguments
+  integer, intent(in) :: n_in,n_out,src,dest,comm
+  ${TYPE}${KIND}, intent(in) ${DIMENSION} :: data_in
+  ${TYPE}${KIND}, intent(out) ${DIMENSION} :: data_out
+  ! Variables
+  integer :: ierr,tag_in,tag_out
+  real(real_8) :: tim1,tim2
+  real(real_8), external :: timef
+  character(*),parameter::procedureN='mp_sendrecv_${NAME}'
+  !cmcal(ipar_send)=cmcal(ipar_send)+1.0d0
+  !cmlen(ipar_send)=cmlen(ipar_send)+scount
+  !tim1=timef()
+#ifdef __PARALLEL
+  tag_in=1;tag_out=1
+  call mpi_sendrecv(data_in,n_in,${MPI_TYPE},dest,tag_in,&
+       data_out,n_out,${MPI_TYPE},src,tag_out,comm,&
+       MPI_STATUS_IGNORE,ierr)
+  call mp_mpi_error_assert(ierr,procedureN,__LINE__,__FILE__)
+#else
+  call mp_mpi_error_assert(1,procedureN,__LINE__,__FILE__)
+#endif
+  !tim2=timef()
+  !cmtim(ipar_send)=cmtim(ipar_send)+tim2-tim1
+end subroutine mp_sendrecv_${NAME}

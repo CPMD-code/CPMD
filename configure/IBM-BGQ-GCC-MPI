@@ -1,0 +1,28 @@
+#INFO#
+#INFO#   IBM BG/Q - SMP version
+
+     IRAT=2
+     CC='/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc'
+     FC='/bgsys/drivers/ppcfloor/comm/gcc/bin/mpif90'
+     LD='/bgsys/drivers/ppcfloor/comm/gcc/bin/mpif90'
+     FFLAGS_GROMOS='$(FFLAGS) -ffixed-form'
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)'
+     CPP=''
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT -D__PARALLEL  -D__HAS_SIZEOF'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID -D__BG'
+     if [ $debug ]; then
+       CFLAGS='-O0 -g'
+       FFLAGS='-O0 -g -funderscoring'
+     else
+       CFLAGS='-O2 -g'
+       FFLAGS='-O2 -g -funderscoring'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp'
+       LIBS='/gpfs/DDNgpfs1/cur/LIBS/liblapack-gcc-4.4.6.a \
+             /gpfs/DDNgpfs1/cur/LIBS/libblas-gcc-4.4.6.a '
+     else
+       LIBS='/gpfs/DDNgpfs1/cur/LIBS/liblapack-gcc-4.4.6.a \
+             /gpfs/DDNgpfs1/cur/LIBS/libblas-gcc-4.4.6.a '
+     fi
+     LFLAGS=' '${LIBS}

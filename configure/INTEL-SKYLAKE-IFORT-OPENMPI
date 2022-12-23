@@ -1,0 +1,47 @@
+#INFO#
+#INFO# Configuration for Intel Skylake HPC architecture
+#INFO# Modules needed: profile/base autoload intel/pe-xe-2016--binary
+#INFO#                 intelmpi/5.1--binary mkl/11.3--binary
+#INFO# Intel Composer v.17 or later + OpenMPI 
+#INFO# Note that with Intel compilers older than version 18 the option
+#INFO# -axSKYLAKE-AVX512 generates an MPI error of the type 
+#INFO# file: sum_in_place.inc
+#INFO# procedure: mp_sum_in_place_int4_r1
+#INFO# error message: MPI_ERR_OTHER: known error not in list
+#INFO# This can be avoided by switching to intelmpi/2019.0.5.075
+#INFO# as recommended by Intel, but no guarantee of success.
+#INFO# For optimal performance you should use the Intel xiar driver
+#INFO# instead of the standard GNU ar
+#INFO# (M. Boero, IPCMS & Nagoya University, 2019). 
+#INFO#
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='/lib/cpp -P -traditional'
+     CPPFLAGS='-D__INTEL -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC -D__HASNT_OMP_45 \
+         -D__PARALLEL -D__HAS_SIZEOF -D__HASNT_F08_ISO_FORTRAN_ENV -D__HAS_BF_STREAM_IO'
+     CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID \
+             -D__INTEL -D__HAS_FFT_DEFAULT -D__ALPHALINUX -D__HPC -D__HASNT_OMP_45 \
+             -D__PARALLEL -D__HAS_SIZEOF -D__HASNT_F08_ISO_FORTRAN_ENV -D__HAS_BF_STREAM_IO'
+     FFLAGS_GROMOS='-fixed $(FFLAGS)'
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)'
+     AR='xiar -r'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g'
+       CFLAGS='-g -Wall -m64'
+     else
+       FFLAGS='-O2 -pc64 -funroll-loops -heap-arrays 64 -align array64byte -assume byterecl \
+              -axCORE-AVX512 -fma -ftz -finline-functions -fpp -xHost'
+       CFLAGS='-O2 -Wall  '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qopenmp'
+       OMP3_DISABLED='false'
+       LIBS='-static-intel -mkl=parallel -lm'
+     else
+       LIBS='-static-intel -L$(MKLPATH) -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core \
+             -lm -lpthread -liomp5 '
+     fi
+     LFLAGS=${LIBS}

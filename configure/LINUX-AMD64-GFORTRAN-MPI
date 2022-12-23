@@ -1,0 +1,39 @@
+#INFO#
+#INFO# Configuration to build a parallel MPI/OMP QM/MM executable for a linux HPC
+#INFO# with Intel64 CPUs (AMD64/Opteron/Athlon64/Xeon E5-2630 v3 2.40GHz 16-cores or later)
+#INFO# using GNU Fortran/C ver.4.9.2 to 6.3 and OpenMPI 1.10.3 to 2.0.2
+#INFO# Note:The options "-ffast-math"i and "-fstrength-reduce" might allow the code
+#INFO#      to run faster, or die trying (especially the last one !).
+#INFO# More information at https://gcc.gnu.org/onlinedocs/gcc-3.4.6/g77/Optimize-Options.html
+#INFO# Strasbourg/Tokyo - Spetember 2018
+#INFO#
+
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='cpp -P -traditional'
+     CPPFLAGS='-D__Linux -D__GNU -D__HAS_FFT_DEFAULT -D__HAS_SIZEOF -D__HASNT_OMP_45 \
+               -D__PARALLEL -D__HPC -D__HAS_BF_STREAM_IO'
+     FFLAGS_GROMOS='-ffixed-form  $(FFLAGS)' 
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)' 
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -fcheck=all -Wuninitialized -Wall'
+       CFLAGS='-g -O0 -Wall'
+     else
+       FFLAGS='-O2 -Wall -ffree-line-length-none -falign-commons -funroll-loops'
+       CFLAGS='-O2 -Wall -ffree-line-length-none -falign-commons -funroll-loops'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp'
+       OMP3_DISABLED='false'
+       LIBS='-static-libgfortran -llapack -lblas'
+     else
+       LIBS='-static-libgfortran -llapack -lblas'
+     fi
+     LFLAGS=' '${LIBS}
+     if [ $coverage ]; then
+       FFLAGS=${FFLAGS}' --coverage'
+       LFLAGS='--coverage '${LFLAGS}
+     fi
+

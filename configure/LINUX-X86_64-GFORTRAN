@@ -1,0 +1,36 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for a linux pc using 
+#INFO# the GNU Fortran compiler.
+#INFO#
+#INFO# V. Weber
+#INFO#
+
+     IRAT=2
+     FC='/sp/vwe/prog/GCC-4.9.1-intel/bin/gfortran-intel-4.9.1'
+     CC='/sp/vwe/prog/GCC-4.9.1-intel/bin/gcc-intel-4.9.1'
+     LD='/sp/vwe/prog/GCC-4.9.1-intel/bin/gfortran-intel-4.9.1'
+     CPP=''
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT    '
+     FFLAGS_GROMOS='-ffixed-form $(FFLAGS)' 
+     FFLAGS_GROMOS_MODULES=' $(FFLAGS)' 
+     AR='/usr/bin/ar ruv'
+     RANLIB='/usr/bin/ranlib'
+     if [ $debug ]; then
+       FFLAGS='-g -O0 -fcheck=all -Wuninitialized -Wall'
+       CFLAGS='-g -O0 -Wall'
+     else
+       FFLAGS='-O2 -Wall'
+       CFLAGS='-O2 -Wall'
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp'
+       OMP3_DISABLED=`{ ${FC} -v; } 2>&1 | ${GREP} version | ${AWK} '{ print ( $3 < "4.7.0" ) ? "true" : "false" }'`
+       LIBS='/sp/vwe/lib/liblapack342_intel_gcc_4.8.0.a /sp/vwe/lib/libblas342_intel_gcc_4.8.0.a'
+     else
+       LIBS='/sp/vwe/lib/liblapack342_intel_gcc_4.8.0.a /sp/vwe/lib/libblas342_intel_gcc_4.8.0.a'
+     fi
+     LFLAGS=' '${LIBS}
+     if [ $coverage ]; then
+       FFLAGS=${FFLAGS}' --coverage'
+       LFLAGS='--coverage '${LFLAGS}
+     fi

@@ -1,0 +1,31 @@
+#INFO#
+#INFO# Configuration to build a serial cpmd executable for x86_64 using 
+#INFO# the SUN Fortran compiler.
+#INFO#
+#INFO# V. Weber
+#INFO#
+#INFO#
+
+     IRAT=2
+     FC='sunf95'
+     CC='suncc'
+     LD='sunf95'
+     CPP='/usr/bin/cpp -P -C -traditional'
+     CPPFLAGS='-D__Linux  -D__HAS_FFT_DEFAULT '
+     FFLAGS_GROMOS='-fixed $(FFLAGS)' 
+     FFLAGS_GROMOS_MODULES='$(FFLAGS)' 
+     if [ $debug ]; then
+       FFLAGS='-g -O0'
+       CFLAGS='-g -O0'
+     else
+       FFLAGS='-g -O2'
+       CFLAGS='-g -O2'
+     fi
+     if [ $omp ]; then
+       echo "OMP settings not available!"
+       exit 1
+       LIBS=''
+     else
+       LIBS=''
+     fi
+     LFLAGS=' '${LIBS}
