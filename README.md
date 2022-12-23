@@ -10,7 +10,7 @@ The development of CPMD started in 1990 by a team of researchers at IBM Research
 
 ## Copyright Notice
 
-The CPMD program is © 1990-2023 by IBM Corp. and © 1994-2001 by Max Planck Institute, Stuttgart. 
+The CPMD program is © 1990-2022 by IBM Corp. and © 1994-2001 by Max Planck Institute, Stuttgart. 
 
 
 ## License
