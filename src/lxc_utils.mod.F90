@@ -8,7 +8,10 @@ MODULE lxc_utils
   USE, INTRINSIC :: iso_c_binding,     ONLY: C_PTR,C_NULL_PTR
 
 #if defined(_HAS_LIBXC)
-
+#include <xc_version.h>
+#if XC_MAJOR_VERSION>=5
+  USE kinds,                           ONLY: int_8
+#endif
   USE xc_f03_lib_m, ONLY: xc_f03_func_t, xc_f03_func_info_t, &
        xc_f03_lda_exc_vxc, xc_f03_gga_exc_vxc, xc_f03_func_info_get_family, xc_f03_func_get_info, xc_f03_func_init, &
        xc_f03_functional_get_number, &
@@ -133,8 +136,13 @@ CONTAINS
     CHARACTER(*), PARAMETER                  :: procedureN = 'lxc_lda_exc_vxc'
 
 #if defined(_HAS_LIBXC)
-
+#if XC_MAJOR_VERSION>=5
+    INTEGER(int_8)                           :: inp
+    inp = np
+    CALL xc_f03_lda_exc_vxc( p, inp, rho, zk, vrho )
+#else
     CALL xc_f03_lda_exc_vxc( p, np, rho, zk, vrho )
+#endif
 
 #else
 
@@ -155,8 +163,14 @@ CONTAINS
     CHARACTER(*), PARAMETER                  :: procedureN = 'lxc_gga_exc_vxc'
 
 #if defined(_HAS_LIBXC)
-
+#if XC_MAJOR_VERSION>=5
+    INTEGER(int_8)                           :: inp
+    inp = np
+    CALL xc_f03_gga_exc_vxc( p, inp, rho, sigma, zk, vrho, vsigma )
+#else
     CALL xc_f03_gga_exc_vxc( p, np, rho, sigma, zk, vrho, vsigma )
+#endif
+
 
 #else
 
