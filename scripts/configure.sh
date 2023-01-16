@@ -110,7 +110,7 @@ if [ $# -eq 0 ]; then
 fi
 
 echo " " >&2
-echo "** CPMD 4.1 configuration script" >&2
+echo "** CPMD 4.3 configuration script" >&2
 echo "** " >&2
 #Is it help option or debug option
 info=0
