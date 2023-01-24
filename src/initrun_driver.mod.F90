@@ -13,6 +13,7 @@ MODULE initrun_driver
                                              taup,&
                                              velp
   USE copot_utils,                     ONLY: copot
+  USE cppt,                            ONLY: inyh
   USE elct,                            ONLY: crge
   USE error_handling,                  ONLY: stopgm
   USE fint,                            ONLY: fint1
@@ -23,6 +24,12 @@ MODULE initrun_driver
   USE linres,                          ONLY: lractive
   USE merge_utils,                     ONLY: merge
   USE metr,                            ONLY: metr_com
+  USE mimic_wrapper,                   ONLY: mimic_ifc_sort_fragments,&
+                                             mimic_revert_dim,&
+                                             mimic_save_dim,&
+                                             mimic_switch_dim,&
+                                             mimic_update_coords,&
+                                             mimic_control
   USE mm_dim_utils,                    ONLY: mm_dim
   USE mm_dimmod,                       ONLY: mm_go_mm,&
                                              mm_go_qm,&
@@ -113,6 +120,9 @@ CONTAINS
 
     CALL tiset(procedureN,isub)
     CALL mm_dim(mm_go_mm,status)
+    IF (cntl%mimic) THEN
+      CALL mimic_save_dim()
+    ENDIF
 
     IF (corel%tinlc) THEN
        ALLOCATE(vnlt(ncpw%nhg*2),STAT=ierr)
@@ -146,14 +156,29 @@ CONTAINS
 #endif
        IF (cntl%tshop) CALL stopgm('INITRUN','NEED A RESTART FILE',& 
             __LINE__,__FILE__)
+       IF (cntl%mimic) THEN
+         CALL mimic_switch_dim(go_qm=.TRUE.)
+       ENDIF
        ! Randomize cell parameters
        IF (cntl%tranc) CALL ranc(tau0)
        ! Randomization of the atomic coordinates.
        IF (cntl%tranp.AND.paral%io_parent) CALL ranp(tau0)
-       CALL mp_bcast(tau0,3*maxsys%nax*maxsys%nsx,parai%io_source,parai%cp_grp)
+       IF (cntl%mimic) THEN
+         CALL mimic_switch_dim(go_qm=.FALSE.)
+       ENDIF
+       CALL mp_bcast(tau0,size(tau0),parai%io_source,parai%cp_grp)
+       IF (cntl%mimic.AND.mimic_control%long_range_coupling) THEN
+          CALL mimic_ifc_sort_fragments()
+       END IF
        ! INITIALIZATION OF WAVEFUNCTION
        CALL mm_dim(mm_go_qm,statusdummy)
+       IF (cntl%mimic) THEN
+         CALL mimic_switch_dim(go_qm=.TRUE.)
+       ENDIF
        CALL rinitwf(c0,cm,sc0,nstate,tau0,taup,rhoe,psi)
+       IF (cntl%mimic) THEN
+         CALL mimic_switch_dim(go_qm=.FALSE.)
+       ENDIF
     ELSEIF (restart1%restart.AND.restart1%rnon) THEN
        IF (bsclcs.EQ.1) resthswf = .TRUE.
 #if defined (__GROMOS)
@@ -161,21 +186,42 @@ CONTAINS
           IF (rtr_l%restart_traj) CALL mm_restart_traj(tau0,velp,irec)
        ENDIF
 #endif
+       IF (cntl%mimic) THEN
+         CALL mimic_switch_dim(go_qm=.FALSE.)
+       ENDIF
        IF (restart1%rgeo.AND.paral%io_parent) CALL geofile(tau0,velp,'READ')
+       IF (cntl%mimic) THEN
+         CALL mimic_switch_dim(go_qm=.TRUE.)
+       ENDIF
        ! Randomize cell parameters
        IF (cntl%tranc) CALL ranc(tau0)
        ! Randomization of the atomic coordinates.
        IF (cntl%tranp.AND.paral%parent) CALL ranp(tau0)
-       CALL mp_bcast(tau0,3*maxsys%nax*maxsys%nsx,parai%io_source,parai%cp_grp)
-       CALL mp_bcast(velp,3*maxsys%nax*maxsys%nsx,parai%io_source,parai%cp_grp)
+       IF (cntl%mimic) THEN
+         CALL mimic_switch_dim(go_qm=.FALSE.)
+       ENDIF
+       CALL mp_bcast(tau0,size(tau0),parai%io_source,parai%cp_grp)
+       CALL mp_bcast(velp,size(velp),parai%io_source,parai%cp_grp)
+       IF (cntl%mimic.AND.mimic_control%long_range_coupling) THEN
+          CALL mimic_ifc_sort_fragments()
+       END IF
        ! INITIALIZATION OF WAVEFUNCTION
        CALL mm_dim(mm_go_qm,statusdummy)
+       IF (cntl%mimic) THEN
+         CALL mimic_switch_dim(go_qm=.TRUE.)
+       ENDIF
        CALL rinitwf(c0,cm,sc0,nstate,tau0,taup,rhoe,psi)
+       IF (cntl%mimic) THEN
+         CALL mimic_switch_dim(go_qm=.FALSE.)
+       ENDIF
        IF (restart1%rgeo.AND.paral%io_parent) CALL geofile(tau0,velp,'READ')
-       CALL mp_bcast(tau0,3*maxsys%nax*maxsys%nsx,parai%io_source,parai%cp_grp)
-       CALL mp_bcast(velp,3*maxsys%nax*maxsys%nsx,parai%io_source,parai%cp_grp)
+       CALL mp_bcast(tau0,size(tau0),parai%io_source,parai%cp_grp)
+       CALL mp_bcast(velp,size(velp),parai%io_source,parai%cp_grp)
     ELSEIF ((restart1%restart.AND. .NOT.restart1%rnon).OR.cntl%tmerge) THEN
        IF (bsclcs.EQ.1) resthswf = .FALSE.
+       IF (cntl%mimic) THEN
+         CALL mimic_switch_dim(go_qm=.FALSE.)
+       ENDIF
        ! READ RESTART FILE
        IF (cntl%tmerge) THEN
           CALL MERGE(c0,cm,rhoe,psi)
@@ -188,18 +234,31 @@ CONTAINS
           IF (rtr_l%restart_traj) CALL mm_restart_traj(tau0,velp,irec)
        ENDIF
 #endif
+       IF (cntl%mimic) THEN
+          CALL mimic_update_coords(tau0, c0, cm, nstate, ncpw%ngw, inyh)
+          IF (mimic_control%long_range_coupling) THEN
+             CALL mimic_ifc_sort_fragments()
+          END IF
+          CALL mimic_switch_dim(go_qm=.TRUE.)
+       END IF
        CALL mm_dim(mm_go_qm,statusdummy)
        CALL ainitwf(c0,nstate,tau0,taup,rhoe,psi)
        CALL mm_dim(mm_go_mm,statusdummy)
+       IF (cntl%mimic) THEN
+         CALL mimic_switch_dim(go_qm=.FALSE.)
+       ENDIF
        ! Randomize cell parameters
        IF (cntl%tranc) CALL ranc(tau0)
        ! Randomization of the atomic coordinates.
        IF (cntl%tranp.AND.paral%io_parent) CALL ranp(tau0)
-       CALL mp_bcast(tau0,3*maxsys%nax*maxsys%nsx,parai%io_source,parai%cp_grp)
-       CALL mp_bcast(velp,3*maxsys%nax*maxsys%nsx,parai%io_source,parai%cp_grp)
+       CALL mp_bcast(tau0,size(tau0),parai%io_source,parai%cp_grp)
+       CALL mp_bcast(velp,size(velp),parai%io_source,parai%cp_grp)
        ! Update symmetry operation
        IF (irec(irec_co).EQ.1) CALL updatsym(tau0)
        ! INITIALIZE A NEW WAVEFUNCTION
+       IF (cntl%mimic) THEN
+         CALL mimic_switch_dim(go_qm=.TRUE.)
+       ENDIF
        CALL mm_dim(mm_go_qm,statusdummy)
        IF (irec(irec_wf).EQ.0) THEN
           IF (cntl%tshop) CALL stopgm('INITRUN','NEED WAVEFUNCTIONS',& 
@@ -286,6 +345,9 @@ CONTAINS
        trwanncx(ipx)=vdwwfl%trwannc
     ENDIF
     CALL mm_dim(mm_go_mm,statusdummy)
+    IF (cntl%mimic) THEN
+      CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     IF (paral%io_parent) THEN
        IF (.NOT.lqmmm%qmmm) THEN
           ! we cannot do this since the gromos/cpmd translation
@@ -317,6 +379,9 @@ CONTAINS
     ! Initialization of density and potential
     ! for diagonalization schemes
     CALL mm_dim(mm_go_qm,statusdummy)
+    IF (cntl%mimic) THEN
+      CALL mimic_switch_dim(go_qm=.TRUE.)
+    ENDIF
     IF (cntl%tdiag.AND..NOT.clc%classical) THEN
        IF (cntl%tshop) CALL stopgm('INITRUN','CNTL%TDIAG AND TSHOP NOT SUPPORTED'&
             ,& 
@@ -345,6 +410,9 @@ CONTAINS
     iteropt%ndisrs=0
     iteropt%ndistp=0
     CALL mm_dim(mm_revert,status)
+    IF (cntl%mimic) THEN
+      CALL mimic_revert_dim()
+    ENDIF
     CALL tihalt(procedureN,isub)
     ! ==--------------------------------------------------------------==
     RETURN

@@ -97,6 +97,8 @@ SUBROUTINE cpmd
   USE cp_cuda_utils, ONLY: cp_cuda_init, cp_cuda_finalize
   USE ortho_utils, ONLY: ortho_init, ortho_finalize
   USE mts_utils, ONLY: read_mts_input
+  USE mimic_wrapper, ONLY: mimic_read_input, mimic_ifc_handshake,&
+                           mimic_ifc_request_sizes, mimic_ifc_destroy
 
   IMPLICIT NONE
   CHARACTER(*), PARAMETER                    :: procedureN = 'cpmd'
@@ -161,6 +163,13 @@ SUBROUTINE cpmd
 
   ! READ ATOMS, PSEUDOPOTENTIALS, COORDINATES
   CALL detsp                ! detect number of species.
+
+  IF (cntl%mimic) THEN
+      CALL mimic_read_input
+      CALL mimic_ifc_handshake
+      CALL mimic_ifc_request_sizes
+  endif
+
   CALL mm_init              ! set up some QM/MM stuff
   ! also needed for non-qmmm runs, so we can 
   ! reduce use of #if defined(__GROMOS)/#endif 
@@ -410,7 +419,11 @@ SUBROUTINE cpmd
 
     call Delete(bicanonicalCpmdConfig)
     if (biCanonicalEnsembleDo) call Delete(bicanonicalCpmdInputConfig)
-    
+
+  IF (cntl%mimic) THEN
+    CALL mimic_ifc_destroy
+  END IF
+
   CALL finalize_cp_grp()
   CALL mp_end()
   ! ==--------------------------------------------------------------==

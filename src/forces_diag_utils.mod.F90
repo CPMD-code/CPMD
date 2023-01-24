@@ -365,7 +365,7 @@ CONTAINS
           ! AK: NOTE: Restraints are already treated in FORCEDR()
        ENDIF
        !CALL mp_bcast(fion,3*maxsys%nax*maxsys%nsx,parai%source,parai%allgrp)
-       CALL mp_bcast(fion,3*maxsys%nax*maxsys%nsx,parai%io_source,parai%cp_grp)
+       CALL mp_bcast(fion,size(fion),parai%source,parai%cp_grp)
     ENDIF
 200 CONTINUE
     ! Reset calste correctly even for soft exit

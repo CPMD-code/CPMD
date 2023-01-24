@@ -39,6 +39,9 @@ MODULE rv30_utils
   USE machine,                         ONLY: m_flush
   USE meta_multiple_walkers_utils,     ONLY: mw_filename
   USE metr,                            ONLY: metr_com
+  USE mimic_wrapper,                   ONLY: mimic_save_dim,&
+                                             mimic_switch_dim,&
+                                             mimic_revert_dim
   USE mm_dimmod,                       ONLY: clsaabox
   USE mm_extrap,                       ONLY: cold,&
                                              nnow,&
@@ -121,6 +124,10 @@ CONTAINS
     LOGICAL                                  :: fexist
 
     CALL tiset(proceduren,isub)
+    IF (cntl%mimic) THEN
+       CALL mimic_save_dim()
+       CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     ! ==--------------------------------------------------------------==
     ! Construct the filename
     IF (paral%io_parent) THEN
@@ -192,6 +199,9 @@ CONTAINS
        WRITE(6,fformat)&
             ' RESTART INFORMATION READ ON FILE ',filnam(ia:ie)
        CLOSE(nr)
+    ENDIF
+    IF (cntl%mimic) THEN
+       CALL mimic_revert_dim()
     ENDIF
     ! ==--------------------------------------------------------------==
     CALL tihalt(proceduren,isub)

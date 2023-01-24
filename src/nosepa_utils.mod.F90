@@ -35,6 +35,7 @@ MODULE nosepa_utils
   USE system,                          ONLY: cnti,&
                                              cntl,&
                                              cntr,&
+                                             iatpt,&
                                              maxsp,&
                                              maxsys,&
                                              spar
@@ -167,7 +168,7 @@ CONTAINS
     IF (.NOT.(cntl%tpath.AND.cntl%tpimd)) THEN
        IF (ddof.LT.1.e-2_real_8) THEN
           dofst=dofst-3._real_8
-          IF (isos1%tisos.AND..NOT.lqmmm%qmmm) THEN
+          IF (isos1%tisos.AND.(.NOT.lqmmm%qmmm.AND..NOT.cntl%mimic)) THEN
              IF (ions1%nat.EQ.1) THEN
                 dofst=dofst
              ELSEIF (ions1%nat.EQ.2) THEN
@@ -768,9 +769,13 @@ CONTAINS
             'RANGE START GREATER THAN RANGE STOP',& 
             __LINE__,__FILE__)
        DO ia=istart,istop
-          ica=NAT_cpmd(ia)
-          isp=cpsp(ia)
-          ias=cpat(ia)
+          IF (cntl%mimic) THEN
+             ias=iatpt(1,ia)
+             isp=iatpt(2,ia)
+          ELSE
+             isp=cpsp(ia)
+             ias=cpat(ia)
+          END IF
           IF (lcttab(isp,ias).NE.0) THEN
              IF (lcttab(isp,ias).EQ.idxlct) THEN
                 IF (paral%io_parent)&
@@ -826,18 +831,16 @@ CONTAINS
        ENDDO
     ENDDO
     ! DEBUG 
-    DO idxlct=1,loct%nloct
-       ! WRITE(6,*)PARENT,'ATOMS IN THERMOSTATNO.',IDXLCT,NLCTMBM(IDXLCT)
-       DO k=1,nlctmbm(idxlct)
-          is=lctmemb(1,k,idxlct)
-          ia=lctmemb(2,k,idxlct)
-          iag=gratom((is-1)*maxsys%nax+ia)
-          ! WRITE(6,'(I5)') IAG
-       ENDDO
-       ! PRINT *
-    ENDDO
-
-
+    ! DO idxlct=1,loct%nloct
+    !    ! WRITE(6,*)PARENT,'ATOMS IN THERMOSTATNO.',IDXLCT,NLCTMBM(IDXLCT)
+    !    DO k=1,nlctmbm(idxlct)
+    !       is=lctmemb(1,k,idxlct)
+    !       ia=lctmemb(2,k,idxlct)
+    !       iag=gratom((is-1)*maxsys%nax+ia)
+    !       ! WRITE(6,'(I5)') IAG
+    !    ENDDO
+    !    ! PRINT *
+    ! ENDDO
     ! ==--------------------------------------------------------------==
     RETURN
   END SUBROUTINE ilctmemb
@@ -857,18 +860,31 @@ CONTAINS
 ! ==--------------------------------------------------------------==
 
     IF (cotc0%mcnstr.EQ.0) RETURN
-    ALLOCATE(n1(3*maxsys%nax*mmdim%nspm+1),STAT=ierr)
+    IF (cntl%mimic) THEN
+       ALLOCATE(n1(3*maxsys%nax*ions1%nsp+1),STAT=ierr)
+    ELSE
+       ALLOCATE(n1(3*maxsys%nax*mmdim%nspm+1),STAT=ierr)
+    END IF
     IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
          __LINE__,__FILE__)
     CALL zeroing(ddc)!,loct%nloct)
     iat=0
     n1(1)=0
-    DO is=1,mmdim%nspm
-       DO ia=1,NAm(is)
-          iat=iat+1
-          n1(iat+1)=lcttab(is,ia)
+    IF (cntl%mimic) THEN
+       DO is=1,ions1%nsp
+          DO ia=1,ions0%na(is)
+             iat=iat+1
+             n1(iat+1)=lcttab(is,ia)
+          ENDDO
        ENDDO
-    ENDDO
+    ELSE
+       DO is=1,mmdim%nspm
+          DO ia=1,NAm(is)
+             iat=iat+1
+             n1(iat+1)=lcttab(is,ia)
+          ENDDO
+       ENDDO
+    END IF
     DO i=1,cotc0%mcnstr
        il1=n1(ntcnst(2,i)+1)
        ddc(il1)=ddc(il1)+1._real_8
@@ -895,7 +911,7 @@ CONTAINS
          WRITE(6,*) ' CONSTRAINTS ONLY ON EQUAL LOCAL THERMOSTATS ALLOWED '
     IF (paral%io_parent)&
          WRITE(6,*) ' WITH THIS TYPE OF NOSE THERMOSTATS  '
-    CALL stopgm('NOSCNST','NOSE + CONSTRAINTS',& 
+    CALL stopgm(procedureN,'NOSE + CONSTRAINTS',& 
          __LINE__,__FILE__)
   END SUBROUTINE loccnst
   ! ==================================================================

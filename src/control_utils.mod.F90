@@ -3159,8 +3159,23 @@ CONTAINS
                 previous_line = line
                 READ(iunit,'(A)',iostat=ierr) line
                 IF ( keyword_contains(previous_line,'IONS') ) THEN
-                   cntl%annei=.TRUE.
-                   CALL readsr(line,1,last,cntr%anneri,erread)
+                    cntl%annei=.TRUE.
+                    IF ( keyword_contains(previous_line,'DUAL') ) THEN
+                       cntl%anneal_dual = .TRUE.
+                       cntr%anneal_factors = 1.0_real_8
+                       first = 1
+                       DO i = 1, 2
+                          CALL readsr(line,first,last,cntr%anneal_factors(i),erread)
+                          first = last
+                          IF (erread) THEN
+                             error_message        = "ERROR WHILE READING VALUE"
+                             something_went_wrong = .true.
+                             go_on_reading        = .false.
+                          ENDIF
+                       END DO
+                   ELSE
+                      CALL readsr(line,1,last,cntr%anneri,erread)
+                   END IF
                 ELSEIF ( keyword_contains(previous_line,'ELECTRONS',alias='ELECTRON') ) THEN
                    cntl%annee=.TRUE.
                    CALL readsr(line,1,last,cntr%annere,erread)
@@ -4034,6 +4049,36 @@ CONTAINS
                 locpot2%tlpot=.TRUE.! cmb-kk -Printing local potential
              ELSEIF ( keyword_contains(line,'DCACP') ) THEN
                 vdwl%dcacp = .TRUE.
+             ELSEIF ( keyword_contains(line,'MIMIC') ) THEN
+#ifdef __MIMIC
+                cntl%mimic = .TRUE.
+#else
+                something_went_wrong = .true.
+                error_message        = 'MIMIC IS REQUESTED BUT CPMD IS NOT COMPILED WITH IT!'
+#endif
+             ELSEIF ( keyword_contains(line,'NEW', and='CONSTRAINTS')) THEN
+                cntl%new_constraints = .TRUE.
+                IF ( keyword_contains(line,'PBICGSTAB') ) cntl%pbicgstab = .TRUE. !Use pbicgstab (default is pcg)
+             ELSEIF ( keyword_contains(line,'SHAKE_MAXSTEP',alias='SHAKE_MAXSTEPS')) THEN
+                ! Maximum number of shake iterations (cnti%shake_maxstep)
+                previous_line = line
+                READ(iunit,'(A)',iostat=ierr) line
+                CALL readsi(line ,1,last,cnti%shake_maxstep,erread)
+                IF (erread) THEN
+                   error_message        = "ERROR WHILE READING VALUE"
+                   something_went_wrong = .true.
+                   go_on_reading        = .false.
+                ENDIF
+             ELSEIF ( keyword_contains(line,'SHAKE_CG_ITER')) THEN
+                ! Maximum number of pcg steps in each shake iteration (cnti%shake_cg_iter)
+                previous_line = line
+                READ(iunit,'(A)',iostat=ierr) line
+                CALL readsi(line ,1,last,cnti%shake_cg_iter,erread)
+                IF (erread) THEN
+                   error_message        = "ERROR WHILE READING VALUE"
+                   something_went_wrong = .true.
+                   go_on_reading        = .false.
+                ENDIF
              ELSE
                 ! Unknown keyword
                 IF (' '/=line) THEN

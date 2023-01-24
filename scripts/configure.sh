@@ -57,7 +57,8 @@ Description of options:
    -verbose    (-v) Display the name of files for the dependencies
    -coverage   (-c) With GCC compiler only, allows for specific configuration files,
                     to generate the code coverage/profiling during an execution
-   -qmmm            Generates a makefile for QMMM 
+   -mimic           Enable interface to MiMiC (requires MPI and that MiMiC is available)
+   -qmmm            Generates a makefile for QMMM
    -iphigenie       Support for external interface to iphigenie
    -omp             Enables the use of OMP instructions (if the config file allows that)
                     OMP3 is in general triggered by the config keyword OMP3_DISABLED,
@@ -129,6 +130,10 @@ do
       ;;
     -disable_omp3)
       omp3=0
+      ;;
+    -mimic|-m)
+      mimic=1
+      echo "** Enabling MiMiC interface (if MiMiC is available)" >&2
       ;;
     -qmmm|-q)
       qmmm=1
@@ -241,6 +246,25 @@ fi
 
 CPPFLAGS_GROMOS='-DEWALD -DEWATCUT -DHAT_SHAPE -DUNPACKED_GRID'
 
+if [ $mimic ]; then
+  mkdir mimic_test
+  cd mimic_test
+  echo "program test" > test.f90
+  echo "use mimic_main" >> test.f90
+  echo "end program test" >> test.f90
+  ${FC} test.f90 ${FFLAGS} ${LFLAGS} -lmimic -lmimiccommf -lmimiccomm
+  if [ $? != 0 ]
+  then
+    cd ..
+    rm -r mimic_test
+    echo "MiMiC was not found on your system!" >&2
+    exit 1
+  fi
+  cd ..
+  rm -r mimic_test
+  CPPFLAGS=${CPPFLAGS}' -D__MIMIC'
+  LFLAGS=${LFLAGS}' -lmimic -lmimiccommf -lmimiccomm -lstdc++ '
+fi
 #QM/MM compilation setup
 if [ $qmmm ]; then
   if [ -f ${MOD_DIR}/QMMM_SOURCES ]; then
@@ -852,6 +876,11 @@ do
                SkipInclude["mpi"] = 0;
                SkipInclude["rhjsx.inc"] = 0;
                SkipInclude["uhjsx.inc"] = 0;
+               SkipInclude["mimic_precision"] = 0;
+               SkipInclude["mimic_constants"] = 0;
+               SkipInclude["mimic_types"] = 0;
+               SkipInclude["mimic_tensors"] = 0;
+               SkipInclude["mimic_main"] = 0;
                if (qmmm != 1) {
                   SkipInclude["coordsz"] = 0;
                }

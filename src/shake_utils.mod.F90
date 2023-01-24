@@ -3,6 +3,8 @@ MODULE shake_utils
   USE cotr,                            ONLY: &
        anorm, cnsval, cnsval_dest, cotc0, dtm, fc, fv, grate, kshove, &
        mm_askel, ntcnst, xlagr, ylagr
+  USE constraint
+  USE constraint_utils
   USE error_handling,                  ONLY: stopgm
   USE ions,                            ONLY: ions0,&
                                              ions1
@@ -23,11 +25,61 @@ MODULE shake_utils
 
   PRIVATE
 
+  type(constraint_matrix) :: const_matrix
+
   PUBLIC :: cpmdshake
+  PUBLIC :: init_constraints
+  PUBLIC :: do_shake
+  PUBLIC :: do_rattle
   !public :: solvs
   !public :: andforces
 
 CONTAINS
+
+  SUBROUTINE init_constraints(ntcnst, cval, na, nsp)
+      ! CPMD constraint map
+      integer, dimension(:,:), intent(in) :: ntcnst
+      ! Reference values for constraints
+      real(real_8), dimension(:), intent(in) :: cval
+      ! Number of atoms per species
+      integer, dimension(:), intent(in) :: na
+      ! Number of atomic species
+      integer, intent(in) :: nsp
+      character(*), PARAMETER :: procedureN = 'init_constraints'
+      integer :: isub
+      call tiset(procedureN,isub)
+      const_matrix = build_constraints(ntcnst, cnsval, ions0%na, ions1%nsp)
+      xlagr(:) = 0.0_real_8
+      ylagr(:) = 0.0_real_8
+      call tihalt(procedureN,isub)
+  END SUBROUTINE init_constraints
+
+  SUBROUTINE do_shake(tau0, taup, velp)
+      !> CPMD coordinate matrix
+      real(real_8), dimension(:,:,:) :: tau0
+      real(real_8), dimension(:,:,:) :: taup
+      !> CPMD velocity matrix
+      real(real_8), dimension(:,:,:) :: velp
+      character(*), PARAMETER :: procedureN = 'do_shake'
+      integer :: isub
+      call tiset(procedureN,isub)
+      xlagr(:) = ylagr(:)
+      call new_shake(const_matrix, xlagr, tau0, taup, velp, dt_ions, dtb2mi)
+      call tihalt(procedureN,isub)
+  END SUBROUTINE do_shake
+
+  SUBROUTINE do_rattle(tau0, velp)
+      !> CPMD coordinate matrix
+      real(real_8), dimension(:,:,:) :: tau0
+      !> CPMD velocity matrix
+      real(real_8), dimension(:,:,:) :: velp
+      character(*), PARAMETER :: procedureN = 'do_rattle'
+      integer :: isub
+      call tiset(procedureN,isub)
+      ylagr(:) = 0.0_real_8
+      call new_rattle(const_matrix, ylagr, tau0, velp, dt_ions, dtb2mi)
+      call tihalt(procedureN,isub)
+  END SUBROUTINE do_rattle
 
   ! ==================================================================
   SUBROUTINE cpmdshake(tau0,taup,velp)

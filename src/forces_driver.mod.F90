@@ -24,6 +24,7 @@ MODULE forces_driver
   USE jrotation_utils,                 ONLY: set_orbdist
   USE kinds,                           ONLY: real_8
   USE kpts,                            ONLY: tkpts
+  USE mimic_wrapper,                   ONLY: mimic_energy
   USE mp_interface,                    ONLY: mp_sum
   USE nlforce_utils,                   ONLY: give_scr_nlforce,&
                                              nlforce
@@ -234,6 +235,13 @@ CONTAINS
        ENDIF
        ener_com%exc=ener_com%exc+ehfx
        ener_com%etot=ener_com%etot+ehfx
+       IF (cntl%mimic) THEN
+          mimic_energy%qm_energy = ener_com%etot
+          ener_com%etot = ener_com%etot &
+                          + ener_com%eext &
+                          + mimic_energy%qmmm_energy &
+                          + mimic_energy%mm_energy
+       END IF
        CALL tiset(procedureN//'_b',isub3)
        __NVTX_TIMER_START ( procedureN//'_b' )
 
@@ -422,7 +430,7 @@ CONTAINS
 2000 CONTINUE
     rsactive = .FALSE.
     IF (tfor) THEN
-       CALL mp_sum(fion,3*maxsys%nax*maxsys%nsx,parai%allgrp)
+       CALL mp_sum(fion,size(fion),parai%allgrp)
        IF (paral%parent) THEN
           CALL symvec(fion)
           CALL taucl(fion)

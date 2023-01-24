@@ -16,6 +16,9 @@ MODULE loadpa_utils
   USE kinds,                           ONLY: real_8
   USE kpts,                            ONLY: tkpts
   USE mm_dim_utils,                    ONLY: mm_dim
+  USE mimic_wrapper,                   ONLY: mimic_save_dim, &
+                                             mimic_switch_dim, &
+                                             mimic_revert_dim
   USE mm_dimmod,                       ONLY: mm_go_mm,&
                                              mm_revert
   USE mp_interface,                    ONLY: mp_sum,&
@@ -27,7 +30,7 @@ MODULE loadpa_utils
   USE sphe,                            ONLY: gcutwmax
   USE system,                          ONLY: &
        fpar, iatpe, iatpt, ipept, mapgp, natpe, ncpw, nkpt, norbpe, parap, &
-       parm, spar
+       parm, spar, cntl
   USE timer,                           ONLY: tihalt,&
                                              tiset
   USE zeroing_utils,                   ONLY: zeroing
@@ -104,6 +107,10 @@ CONTAINS
     ENDDO
 
     CALL mm_dim(mm_go_mm,oldstatus)
+    IF (cntl%mimic) THEN
+      CALL mimic_save_dim()
+      CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     ALLOCATE(iatpt(2,ions1%nat),STAT=ierr)
     IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
          __LINE__,__FILE__)
@@ -115,6 +122,9 @@ CONTAINS
           iatpt(2,iat)=is
        ENDDO
     ENDDO
+    IF (cntl%mimic) THEN
+      CALL mimic_switch_dim(go_qm=.TRUE.)
+    ENDIF
     CALL mm_dim(mm_revert,oldstatus)
 
     DO i=0,parai%nproc-1
@@ -430,6 +440,11 @@ CONTAINS
     ! ==--------------------------------------------------------------==
     CALL leadim(parm%nr1,parm%nr2,parm%nr3,fpar%kr1,fpar%kr2,fpar%kr3)
     fpar%nnr1=fpar%kr1*fpar%kr2s*fpar%kr3s
+
+    IF (cntl%mimic) THEN
+      CALL mimic_revert_dim()
+    ENDIF
+
     DEALLOCATE(thread_buff,STAT=ierr)
     IF(ierr/=0) CALL stopgm(procedureN,'deallocation problem', &
          __LINE__,__FILE__)

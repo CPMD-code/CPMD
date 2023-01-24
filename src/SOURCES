@@ -137,8 +137,8 @@ SRC_MODULES = kinds.mod.F90 machine.mod.F90 timer.mod.F90 error_handling.mod.F90
            meta_colvar_inp_utils.mod.F90 meta_exlagr_methods.mod.F90 meta_cv_utils.mod.F90 \
            meta_cv_qmmm_utils.mod.F90 tst2min_utils.mod.F90 tst2min_inp_utils.mod.F90 chain_dr_utils.mod.F90 meta_cell_utils.mod.F90 \
            meta_exl_mult_utils.mod.F90 meta_ex_mul_util_utils.mod.F90 meta_localizespin_utils.mod.F90 meta_colvar_util_utils.mod.F90 \
-           setbsstate_utils.mod.F90 io_utils.mod.F90 atoms_utils.mod.F90 dynit_utils.mod.F90 shake_utils.mod.F90 \
-           rattle_utils.mod.F90 resetac_utils.mod.F90 dispp_utils.mod.F90 \
+           setbsstate_utils.mod.F90 io_utils.mod.F90 atoms_utils.mod.F90 dynit_utils.mod.F90 constraint.mod.F90 constraint_utils.mod.F90 \
+           shake_utils.mod.F90 rattle_utils.mod.F90 resetac_utils.mod.F90 dispp_utils.mod.F90 \
            noseinit_utils.mod.F90 nospinit_utils.mod.F90 noseng_utils.mod.F90 nosepa_utils.mod.F90 noseup_utils.mod.F90 \
            enosmove_utils.mod.F90 pnosmove_utils.mod.F90 \
            vdw_utils.mod.F90 chksym_utils.mod.F90 symtrz_utils.mod.F90 multtb_utils.mod.F90 molsym_utils.mod.F90 \
@@ -269,4 +269,4 @@ SRC_MODULES = kinds.mod.F90 machine.mod.F90 timer.mod.F90 error_handling.mod.F90
            bicanonicalCpmd.mod.F90 bicanonicalConfig.mod.F90 bicanonicalInputReader.mod.F90 bicanonicalCalculationConfig.mod.F90 bicanonicalCalculation.mod.F90 \
           pi_prpt_utils.mod.F90 pi_npt_cpmd_utils.mod.F90 pi_stress_utils.mod.F90 pi_npt_bomd_utils.mod.F90 \
           nvml_interfaces.mod.F90 nvml_types.mod.F90 nvml_utils.mod.F90 mts_utils.mod.F90 interface_utils.mod.F90 \
-          dftd3_driver.mod.F90 
+          dftd3_driver.mod.F90 mimic_wrapper.mod.F90

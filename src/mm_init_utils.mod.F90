@@ -12,6 +12,10 @@ MODULE mm_init_utils
   USE ions,                            ONLY: ions0
   USE isos,                            ONLY: isos1
   USE kinds,                           ONLY: real_8
+  USE mimic_wrapper,                   ONLY: mimic_save_dim,&
+                                             mimic_switch_dim,&
+                                             mimic_revert_dim,&
+                                             mimic_control
   USE mm_dimmod,                       ONLY: &
        clsaabox, cpat, cpsp, gratom, inc_l, mm_charge, mm_stat, mmdim, nam, &
        naq, nat_cpmd, nat_grm, ncag_l, solsolv, solvvv
@@ -31,7 +35,8 @@ MODULE mm_init_utils
                                              paral
   USE rmas,                            ONLY: rmass
   USE store_types,                     ONLY: cprint
-  USE system,                          ONLY: maxsys
+  USE system,                          ONLY: cntl,&
+                                             maxsys
   USE zeroing_utils,                   ONLY: zeroing
 #include "sizeof.h"
 
@@ -369,6 +374,10 @@ CONTAINS
 
     INTEGER                                  :: i, ia, ierr, is, NATm
 
+    IF (cntl%mimic) THEN
+       CALL mimic_save_dim()
+       CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     mm_stat=.TRUE.       ! we are (and stay) in QM dimensions.
     lqmmm%qmmm_verbose=.FALSE. ! no verbose QM/MM output.
 
@@ -390,8 +399,13 @@ CONTAINS
        natm=natm+ions0%na(is)
     ENDDO
     mmdim%natm = natm
-    mmdim%natq=mmdim%natm
-    mmdim%naxq=maxsys%nax
+    IF (cntl%mimic) THEN
+       mmdim%natq=mimic_control%num_quantum_atoms
+       mmdim%naxq=mimic_control%max_quantum_atoms
+    ELSE
+       mmdim%natq=mmdim%natm
+       mmdim%naxq=maxsys%nax
+    END IF
     IF (cprint%maxwriteatom.GT.mmdim%natm) cprint%maxwriteatom=mmdim%natm
 
     CALL mp_bcast(mmdim%natm,parai%io_source,parai%cp_grp)
@@ -456,6 +470,9 @@ CONTAINS
     CALL mp_bcast(cpsp,SIZE(cpsp),parai%io_source,parai%cp_grp)
     CALL mp_bcast(cpat,SIZE(cpat),parai%io_source,parai%cp_grp)
     CALL mp_bcast(gratom,SIZE(gratom),parai%io_source,parai%cp_grp)
+    IF (cntl%mimic) THEN
+       CALL mimic_revert_dim()
+    ENDIF
     RETURN
   END SUBROUTINE mm_compat_init
 

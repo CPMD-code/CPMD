@@ -39,7 +39,10 @@ MODULE md_driver
                                              velp
   USE copot_utils,                     ONLY: copot,&
                                              give_scr_copot
-  USE cotr,                            ONLY: cotc0
+  USE cotr,                            ONLY: cotc0,&
+                                             cnsval,&
+                                             ntcnst
+  USE cppt,                            ONLY: inyh
   USE ddipo_utils,                     ONLY: give_scr_ddipo
   USE detdof_utils,                    ONLY: detdof
   USE dispp_utils,                     ONLY: dispp
@@ -99,6 +102,20 @@ MODULE md_driver
   USE meta_exlagr_utils,               ONLY: ekincv_global
   USE meta_multiple_walkers_utils,     ONLY: mw_assign_filenames,&
                                              mw_filename
+  USE mimic_wrapper,                   ONLY: mimic_ifc_collect_energies,&
+                                             mimic_ifc_collect_forces,&
+                                             mimic_ifc_sort_fragments,&
+                                             mimic_ifc_init,&
+                                             mimic_revert_dim,&
+                                             mimic_save_dim,&
+                                             mimic_ifc_send_coordinates,&
+                                             mimic_sum_forces,&
+                                             mimic_switch_dim,&
+                                             mimic_update_coords,&
+                                             mimic_control,&
+                                             mimic_energy,&
+                                             mimic_subsystem_temperatures,&
+                                             mimic_subsystem_dof
   USE mfep,                            ONLY: mfepi
   USE mm_extrap,                       ONLY: cold , cold_high, &
                                              numcold, numcold_high, &
@@ -168,7 +185,10 @@ MODULE md_driver
                                              tmpwr,&
                                              xf_fill_all_buffers,&
                                              xf_force_components
-  USE shake_utils,                     ONLY: cpmdshake
+  USE shake_utils,                     ONLY: cpmdshake,&
+                                             init_constraints,&
+                                             do_shake,&
+                                             do_rattle
   USE soc,                             ONLY: do_tsh_isc,&
                                              do_tsh_isc_lz,&
                                              isc_read_start,&
@@ -249,6 +269,10 @@ CONTAINS
     ! MTS]
 
     CALL tiset(procedureN,isub)
+    IF (cntl%mimic) THEN
+      CALL mimic_save_dim()
+      CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     IF (cntl%tddft.AND.cntl%tresponse) CALL stopgm("MDDIAG",&
          "cntl%tddft.AND.cntl%tresponse NOT POSSIBLE",& 
          __LINE__,__FILE__)
@@ -288,6 +312,13 @@ CONTAINS
             __LINE__,__FILE__)
        CALL zeroing(ch)!,nkpt%ngwk*n)
        ! CALL SETPOSOP
+    ELSE IF (cntl%mimic) THEN
+       ALLOCATE(ch(1,1,1),STAT=ierr)
+       IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
+                               __LINE__,__FILE__)
+       ALLOCATE(extf(fpar%kr1*fpar%kr2s*fpar%kr3s),STAT=ierr)
+       IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
+                               __LINE__,__FILE__)
     ELSE
        ALLOCATE(ch(1,1,1),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
@@ -380,12 +411,14 @@ CONTAINS
        IF (fexist) CALL mp_bcast(ene_tri,SIZE(ene_tri),parai%io_source,parai%cp_grp)
     ENDIF
     ! SOC]
-    ALLOCATE(taup(3,maxsys%nax,maxsys%nsx),stat=ierr)
-    IF(ierr/=0) CALL stopgm(proceduren,'allocation problem',&
-         __LINE__,__FILE__)
-    ALLOCATE(fion(3,maxsys%nax,maxsys%nsx),stat=ierr)
-    IF(ierr/=0) CALL stopgm(proceduren,'allocation problem',&
-         __LINE__,__FILE__)
+    IF (.NOT.cntl%mimic) THEN
+       ALLOCATE(taup(3,maxsys%nax,maxsys%nsx),stat=ierr)
+       IF(ierr/=0) CALL stopgm(proceduren,'allocation problem',&
+            __LINE__,__FILE__)
+       ALLOCATE(fion(3,maxsys%nax,maxsys%nsx),stat=ierr)
+       IF(ierr/=0) CALL stopgm(proceduren,'allocation problem',&
+            __LINE__,__FILE__)
+    END IF
     ! [EXACT FACTORIZATION
     IF (tshl%txfmqc) THEN
        ekincv=0._real_8
@@ -654,6 +687,10 @@ CONTAINS
        IF (cnti%nomore.LT.0) GOTO 10000
     ENDIF
     restf%nfnow=1
+    IF (cntl%mimic) THEN
+       CALL mimic_ifc_init(rhoe, extf, tau0)
+       mimic_control%update_potential = .TRUE.
+    END IF
     ! ==--------------------------------------------------------------==
     ! TIME STEP FUNCTIONS
     CALL dynit(ekincp,ekin1,ekin2,temp1,temp2,ekinh1,ekinh2)
@@ -670,6 +707,9 @@ CONTAINS
             ' WARNING! USE KPOINTS FULL  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
        WRITE(6,*)&
             ' ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    ENDIF
+    IF (cntl%mimic) THEN
+      CALL mimic_switch_dim(go_qm=.TRUE.)
     ENDIF
     ! ==--------------------------------------------------------------==
     ! == INITIALISATION                                               ==
@@ -756,6 +796,9 @@ CONTAINS
          CALL localize2(tau0,c0,c2,sc0,crge%n)
     ! ==--------------------------------------------------------------==
     ! 
+    IF (cntl%mimic) THEN
+      CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     CALL mp_bcast(taup,SIZE(taup),parai%io_source,parai%cp_grp)
     IF (paral%parent) CALL dcopy(3*maxsys%nax*maxsys%nsx,taup,1,taui,1)
     ! ==--------------------------------------------------------------==
@@ -768,6 +811,25 @@ CONTAINS
     ! EHR]
     ! INITIALIZE VELOCITIES
     IF (paral%parent) CALL detdof(tau0,taur)
+    IF (paral%io_parent.AND.cntl%new_constraints) THEN
+       WRITE(6, '(1x,a)') "USING NEW CONSTRAINTS SOLVER"
+       IF (cntl%pbicgstab) then
+          WRITE(6, '(1x,a)') "WITH PRECONDITIONED BICONJUGATE GRADIENT STABILIZED"
+       ELSE
+          WRITE(6, '(1x,a)') "WITH PRECONDITIONED CONJUGATE GRADIENT"
+       ENDIF
+       WRITE(6, '(1x,a,t60,i6)') "MAX NUMBER OF SHAKE ITERATIONS:", &
+                                  cnti%shake_maxstep
+       WRITE(6, '(1x,a,t60,i6)') "MAX NUMBER OF PCG STEPS IN EACH SHAKE ITERATION:", &
+                                  cnti%shake_cg_iter
+       CALL init_constraints(ntcnst, cnsval, ions0%na, ions1%nsp)
+       IF (.NOT.mimic_control%external_constraints) THEN
+          WRITE(6, '(1x,a)') "EXTERNAL CONSTRAINTS DEFINED THROUGH MIMIC WILL BE IGNORED"
+       ENDIF
+       IF (cntl%mimic) THEN
+          CALL mimic_subsystem_dof()
+       END IF
+    END IF
 
     ! INITIALIZE METADYNAMICS VARIABLES used also for 
     ! SHOOTING from SADDLE POINT with RANDOM VELOCITIES
@@ -781,11 +843,23 @@ CONTAINS
        ener_com%erestr = 0.0_real_8
        CALL rinvel(velp,c2,nstate)
        IF (paral%parent) CALL taucl(velp)
-       IF (paral%parent) CALL rattle(tau0,velp)
+       IF (paral%io_parent) THEN
+          IF (cntl%new_constraints) THEN
+             CALL do_rattle(tau0, velp)
+          ELSE
+             CALL rattle(tau0,velp)
+          END IF
+       END IF
        CALL rvscal(velp)
     ELSE
        IF (paral%parent) CALL taucl(velp)
-       IF (paral%parent) CALL rattle(tau0,velp)
+       IF (paral%io_parent) THEN
+          IF (cntl%new_constraints) THEN
+             CALL do_rattle(tau0, velp)
+          ELSE
+             CALL rattle(tau0,velp)
+          END IF
+       END IF
        IF (cntl%trescale) CALL rvscal(velp)
     ENDIF
     IF (cntl%quenchp) CALL zeroing(velp)!,3*maxsys%nax*maxsys%nsx)
@@ -808,6 +882,9 @@ CONTAINS
        itemp=irec(irec_nop1)+irec(irec_nop2)+irec(irec_nop3)&
             +irec(irec_nop4)
        IF (cntl%tnosep .AND. itemp.EQ.0) CALL nospinit(ipwalk)
+    ENDIF
+    IF (cntl%mimic) THEN
+      CALL mimic_switch_dim(go_qm=.TRUE.)
     ENDIF
     ! 
     CALL write_irec(irec)
@@ -872,6 +949,15 @@ CONTAINS
             'FORCES INITIALIZATION'
        WRITE(6,'(1X,64("="))')
     ENDIF
+    IF (cntl%mimic) THEN
+       CALL mimic_update_coords(tau0, c0, cm, nstate, ncpw%ngw, inyh)
+       IF (paral%io_parent) THEN
+          CALL mimic_ifc_send_coordinates()
+          IF (mimic_control%tot_scf_energy) THEN
+             CALL mimic_ifc_collect_energies()
+          END IF
+       END IF
+    END IF
     ifcalc=0
     IF (cntl%bsymm) THEN
        CALL bs_forces_diag(nstate,c0,c2,cm,sc0,cm(nx:),vpp,eigv,&
@@ -929,6 +1015,10 @@ CONTAINS
 
     IF (.NOT.cntl%bsymm) CALL dcopy(nnx,rin0,1,rm1(1),1)
 
+    IF (cntl%mimic) THEN
+       CALL mimic_sum_forces(fion)
+    END IF
+
     IF (paral%io_parent) THEN
        CALL wrgeof(tau0,fion)
        CALL fileopen(3,filen,fo_app+fo_verb+fo_nofp,ferror)
@@ -954,6 +1044,13 @@ CONTAINS
        IF (paral%parent) CALL dispp(tau0,taui,disa)
        ! ENERGY OF THE NOSE THERMOSTATS
        CALL noseng(iteropt%nfi,velp,enose,enosp,dummy(1),1)
+       IF (cntl%mimic) THEN
+          mimic_energy%qm_energy = ener_com%etot
+          ener_com%etot = ener_com%etot &
+                          + ener_com%eext &
+                          + mimic_energy%qmmm_energy &
+                          + mimic_energy%mm_energy
+       END IF
        econs=ekinp+ener_com%etot+enose+enosp+ener_com%ecnstr
        IF (cntl%cdft)econs=econs+cdftcom%cdft_v(1)*(cdftcom%cdft_nc+cdftcom%vgrad(1))
        time2 =m_walltime()
@@ -1007,6 +1104,9 @@ CONTAINS
        ELSE
           hubbu%tpom=.False.
        ENDIF
+       IF (cntl%mimic) THEN
+          CALL mimic_switch_dim(go_qm=.FALSE.)
+       ENDIF
        ! ANNEALING
        ! thermostats only if 1) standard dynamics 2) larger MTS step
        if ( .not.cntl%use_mts .or. mts_large_step ) then
@@ -1033,7 +1133,11 @@ CONTAINS
        ener_com%ecnstr = 0.0_real_8
        IF (paral%io_parent) THEN
           CALL posupi(tau0,taup,velp)
-          IF (cotc0%mcnstr.NE.0) CALL cpmdshake(tau0,taup,velp)
+          IF (cntl%new_constraints) THEN
+             CALL do_shake(tau0, taup, velp)
+          ELSE
+             IF (cotc0%mcnstr.NE.0) CALL cpmdshake(tau0,taup,velp)
+          END IF
 #if defined (__QMECHCOUPL)
           IF (qmmech) THEN
              CALL mm_cpmd_update_links(taup, ions0%na, ions1%nsp, maxsys%nax, ions1%nat)
@@ -1042,6 +1146,20 @@ CONTAINS
 #endif
        ENDIF
        CALL mp_bcast(taup,SIZE(taup),parai%io_source,parai%cp_grp)
+       IF (cntl%mimic) THEN
+          CALL mimic_update_coords(taup, c0, cm, nstate, ncpw%ngw, inyh)
+          mimic_control%update_potential = .TRUE.
+          IF (paral%io_parent) THEN
+             CALL mimic_ifc_send_coordinates()
+             IF (mimic_control%tot_scf_energy) THEN
+                CALL mimic_ifc_collect_energies()
+             END IF
+          END IF
+          IF (mimic_control%long_range_coupling.AND.(mod(iteropt%nfi-1,mimic_control%update_sorting).EQ.0)) THEN
+             CALL mimic_ifc_sort_fragments()
+          END IF
+          CALL mimic_switch_dim(go_qm=.TRUE.)
+       END IF
        ! Reset swap file to update (option BLOCK and ALL)
        IF (tkpts%tkblock) CALL reskpt_swap
        CALL phfac(taup)
@@ -1077,7 +1195,7 @@ CONTAINS
           ! switch off the info printing
           dmbi%inter_pt_firstcall=.FALSE.
        ELSE 
-
+          ifcalc = 0
           IF (cntl%bsymm) THEN
              CALL bs_forces_diag(nstate,c0,c2,cm,sc0,cm(nx:),vpp,eigv,&
                 rhoe,psi,&
@@ -1175,6 +1293,9 @@ CONTAINS
              ENDDO
           ENDIF
        ENDIF
+       IF (cntl%mimic) THEN
+          CALL mimic_sum_forces(fion)
+       END IF
        ! ==================================================================
 
        IF (ropt_mod%calste) CALL totstr
@@ -1187,6 +1308,9 @@ CONTAINS
           CALL mm_cpmd_elstat(taup,ions0%na,ions1%nsp,maxsys%nax,ions1%nat,c0,scr)
        ENDIF
 #endif
+       IF (cntl%mimic) THEN
+          CALL mimic_switch_dim(go_qm=.FALSE.)
+       ENDIF
        ! FINAL UPDATE FOR VELOCITIES
        ener_com%ecnstr = 0.0_real_8
        IF (paral%io_parent) THEN
@@ -1197,9 +1321,13 @@ CONTAINS
           ENDIF
 #endif
           IF (isos1%twall) CALL box_boundary(taup,velp)
-          CALL rattle(taup,velp)
+          IF (cntl%new_constraints) THEN
+             CALL do_rattle(taup, velp)
+          ELSE
+             CALL rattle(taup,velp)
+          END IF
        ENDIF
-       IF (paral%io_parent) CALL geofile(taup,velp,'WRITE')
+       IF (paral%parent.AND..NOT.cntl%mimic) CALL geofile(taup,velp,'WRITE')
        ! COMPUTE THE IONIC TEMPERATURE TEMPP
        IF (paral%io_parent) THEN
           CALL ekinpp(ekinp,velp)
@@ -1209,6 +1337,9 @@ CONTAINS
           ELSE
              tempp=ekinp*factem*2._real_8/glib
           ENDIF
+          IF (cntl%mimic) THEN
+             CALL mimic_subsystem_temperatures(velp)
+          END IF
           ! ..TSH[
           tempp_sh=tempp
           ! ..TSH]
@@ -1392,6 +1523,9 @@ CONTAINS
           ENDIF
        ENDIF
 #endif
+       IF (cntl%mimic) THEN
+          CALL mimic_switch_dim(go_qm=.FALSE.)
+       ENDIF
        ! temperature ramping
        CALL tempramp(temp1,temp2)
        ! UPDATE IONIC POSITIONS
@@ -1401,6 +1535,9 @@ CONTAINS
           CALL extrap(nnx,andr2%alxmix,rm1,rin0,rinp)
           CALL dcopy(nnx,rin0,1,rm1(1),1)
           CALL dcopy(nnx,rinp(1),1,rin0,1)
+       ENDIF
+       IF (cntl%mimic) THEN
+          CALL mimic_switch_dim(go_qm=.TRUE.)
        ENDIF
        ! STOP THE RUN IF THE USER HAS SET THE SIGNAL 30
        ! ..TSH[
@@ -1465,6 +1602,16 @@ CONTAINS
 #if defined(USE_IBM_HPM)
     CALL hpm_stop('MD LOOP')
 #endif
+
+    IF (cntl%mimic) THEN
+       CALL mimic_update_coords(taup, c0, cm, nstate, ncpw%ngw, inyh)
+       IF (paral%io_parent) THEN
+          CALL mimic_ifc_send_coordinates()
+       END IF
+       IF (mimic_control%long_range_coupling) THEN
+          CALL mimic_ifc_sort_fragments()
+       END IF
+    END IF
 
     IF (cntl%cdft)THEN
        IF (cntl%cdft_weight)CALL write_w(wdiff,"FINAL")
@@ -1687,6 +1834,9 @@ CONTAINS
             __LINE__,__FILE__)
     ENDIF
     ! SOC]
+    IF (cntl%mimic) THEN
+      CALL mimic_revert_dim()
+    ENDIF
     CALL tihalt(procedureN,isub)
     ! ==--------------------------------------------------------------==
   END SUBROUTINE mddiag

@@ -13,6 +13,9 @@ MODULE geofile_utils
   USE linres,                          ONLY: tshl
   USE meta_multiple_walkers_utils,     ONLY: mw_filename
   USE metr,                            ONLY: metr_com
+  USE mimic_wrapper,                   ONLY: mimic_revert_dim,&
+                                             mimic_save_dim,&
+                                             mimic_switch_dim
   USE mm_dim_utils,                    ONLY: mm_dim
   USE mm_dimmod,                       ONLY: clsaabox,&
                                              cpat,&
@@ -63,6 +66,10 @@ CONTAINS
 ! ==--------------------------------------------------------------==
 
     tag=my_tag
+    IF (cntl%mimic) THEN
+      CALL mimic_save_dim()
+      CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     CALL mm_dim(mm_go_mm,status)
     ALLOCATE(gr_tau(3,ions1%nat),STAT=ierr)
     IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
@@ -239,6 +246,9 @@ CONTAINS
             WRITE(6,'(A,A)') ' GEOFILE| UNKNOWN TAG: ',tag
     ENDIF
     CALL mm_dim(mm_revert,status)
+    IF (cntl%mimic) THEN
+      CALL mimic_revert_dim()
+    ENDIF
     DEALLOCATE(gr_tau,STAT=ierr)
     IF(ierr/=0) CALL stopgm(procedureN,'deallocation problem',&
          __LINE__,__FILE__)

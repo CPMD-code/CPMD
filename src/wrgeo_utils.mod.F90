@@ -9,6 +9,9 @@ MODULE wrgeo_utils
   USE ions,                            ONLY: ions0,&
                                              ions1
   USE kinds,                           ONLY: real_8
+  USE mimic_wrapper,                   ONLY: mimic_save_dim,&
+                                             mimic_switch_dim,&
+                                             mimic_revert_dim
   USE mm_dim_utils,                    ONLY: mm_dim
   USE mm_dimmod,                       ONLY: mm_go_mm,&
                                              mm_revert,&
@@ -21,7 +24,8 @@ MODULE wrgeo_utils
   USE store_types,                     ONLY: cprint,&
                                              iprint_force,&
                                              rout1
-  USE system,                          ONLY: cnti
+  USE system,                          ONLY: cnti,&
+                                             cntl
   USE timer,                           ONLY: tihalt,&
                                              tiset
 
@@ -43,6 +47,10 @@ CONTAINS
 
     INTEGER                                  :: ia, iat, is, k
 
+    IF (cntl%mimic) THEN
+       CALL mimic_save_dim()
+       CALL mimic_switch_dim(go_qm=.TRUE.)
+    ENDIF
     IF (paral%io_parent)&
          WRITE(6,'(/,1X,64("*"))')
     IF (paral%io_parent)&
@@ -74,6 +82,9 @@ CONTAINS
     IF (paral%io_parent)&
          WRITE(6,'(1X,64("*"),/)')
     ! ==--------------------------------------------------------------==
+    IF (cntl%mimic) THEN
+       CALL mimic_revert_dim()
+    ENDIF
     RETURN
   END SUBROUTINE wrgeo
   ! ==================================================================
@@ -87,8 +98,16 @@ CONTAINS
 
     CALL tiset(procedureN,isub)
 
+    IF (cntl%mimic) THEN
+       CALL mimic_save_dim()
+       CALL mimic_switch_dim(go_qm=.TRUE.)
+    ENDIF
+
     IF (cprint%iprint(iprint_force).LE.0) THEN
        CALL wrgeo(tau0)
+       IF (cntl%mimic) THEN
+          CALL mimic_revert_dim()
+       ENDIF
        CALL tihalt(procedureN,isub)
        RETURN
     ENDIF
@@ -120,6 +139,9 @@ CONTAINS
        ENDDO
     ENDIF
     ! ==--------------------------------------------------------------==
+    IF (cntl%mimic) THEN
+       CALL mimic_revert_dim()
+    ENDIF
     CALL tihalt(procedureN,isub)
     RETURN
   END SUBROUTINE wrgeof
@@ -161,6 +183,10 @@ CONTAINS
     LOGICAL                                  :: ferror, status
     REAL(real_8), ALLOCATABLE                :: gr_tau(:,:)
 
+    IF (cntl%mimic) THEN
+       CALL mimic_save_dim()
+       CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     IF (rout1%xgout .AND. MOD(infi,cnti%ngxyz).EQ.0) THEN
        iunit=1
        CALL mm_dim(mm_go_mm,status)
@@ -203,6 +229,9 @@ CONTAINS
        DEALLOCATE(gr_iat,STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'deallocation problem',&
             __LINE__,__FILE__)
+    ENDIF
+    IF (cntl%mimic) THEN
+       CALL mimic_revert_dim()
     ENDIF
     ! ==--------------------------------------------------------------==
     RETURN

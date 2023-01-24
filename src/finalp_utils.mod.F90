@@ -74,7 +74,7 @@ CONTAINS
        ENDIF
     ENDIF
     CALL dumpr
-    CALL cnstpr
+    IF (.NOT.cntl%new_constraints) CALL cnstpr
     IF (cntl%tdiag) CALL wreigen(eigv,crge%f,ener_com%amu,crge%n)
     IF (paral%io_parent) WRITE(6,*)
     ! ==--------------------------------------------------------------==

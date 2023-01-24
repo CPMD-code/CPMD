@@ -42,6 +42,9 @@ MODULE wv30_utils
   USE machine,                         ONLY: m_system
   USE meta_multiple_walkers_utils,     ONLY: mw_filename
   USE metr,                            ONLY: metr_com
+  USE mimic_wrapper,                   ONLY: mimic_save_dim,&
+                                             mimic_switch_dim,&
+                                             mimic_revert_dim
   USE mm_dimmod,                       ONLY: clsaabox
   USE mm_extrap,                       ONLY: cold,&
                                              nnow,&
@@ -125,6 +128,10 @@ CONTAINS
     IF (ibench(1).EQ.1) RETURN
     ! ==--------------------------------------------------------------==
     CALL tiset(procedureN,isub)
+    IF (cntl%mimic) THEN
+       CALL mimic_save_dim()
+       CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     ! ==--------------------------------------------------------------==
 
     ! Construct the filename
@@ -225,6 +232,9 @@ CONTAINS
     ENDIF
     IF (paral%parent)THEN
        IF (cntl%cdft)CALL wcdft_restart()
+    ENDIF
+    IF (cntl%mimic) THEN
+       CALL mimic_revert_dim()
     ENDIF
     ! ==--------------------------------------------------------------==
     CALL tihalt(procedureN,isub)
