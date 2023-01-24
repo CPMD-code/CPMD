@@ -1,0 +1,25 @@
+     IRAT=2
+     FC='mpiifort'
+     CC='mpiicc'
+     LD='mpiifort'
+     CPP='fpp'
+     CPPFLAGS=' -D__Linux -D__HAS_FFT_FFTW3 -D__PARALLEL -D__HAS_SIZEOF -D__HAS_BF_STREAM_IO '
+     AR='xiar -r'
+     RANLIB='ranlib'
+     if [ $debug ]; then
+       FFLAGS=' -g -O0 -check all -warn all -traceback '
+       CFLAGS=' -g -O0 -check all -warn all -traceback '
+     else
+       FFLAGS=' -xHost -O3 '
+       CFLAGS=' -xHost -O3 '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -qopenmp '
+       OMP3_DISABLED='false'
+       LIBS=' -qmkl=parallel -lm '
+     else
+       LIBS=' -qmkl=sequential -lm '
+     fi
+     LFLAGS=${LIBS}
+     FFLAGS=${FFLAGS}" -I/usr/include "
+     LFLAGS=${LFLAGS}" -L/usr/lib64 "

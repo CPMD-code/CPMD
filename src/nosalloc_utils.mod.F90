@@ -8,6 +8,9 @@ MODULE nosalloc_utils
                                              fo_verb
   USE ions,                            ONLY: ions0,&
                                              ions1
+  USE mimic_wrapper,                   ONLY: mimic_save_dim,&
+                                             mimic_revert_dim,&
+                                             mimic_switch_dim
   USE mm_dim_utils,                    ONLY: mm_dim
   USE mm_dimmod,                       ONLY: mm_go_mm,&
                                              mm_revert
@@ -58,6 +61,10 @@ CONTAINS
 ! ==--------------------------------------------------------------==
 
     CALL tiset(procedureN,isub)
+    IF (cntl%mimic) THEN
+       CALL mimic_save_dim()
+       CALL mimic_switch_dim(go_qm=.FALSE.)
+    END IF
     ! initialize oldstatus to keep overly eager compilers to optimize it away.
     oldstatus=.FALSE.
     IF (lqmmm%qmmm)CALL mm_dim(mm_go_mm,oldstatus)
@@ -285,6 +292,10 @@ CONTAINS
     ENDIF
 
     IF (lqmmm%qmmm)CALL mm_dim(mm_revert,oldstatus)
+
+    IF (cntl%mimic) THEN
+       CALL mimic_revert_dim()
+    END IF
 
 120 FORMAT(i12,i12,f12.2,f12.2,f12.4 )
 121 FORMAT(i12,i12,i12,f12.2,f12.2)

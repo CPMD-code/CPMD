@@ -53,6 +53,7 @@ MODULE updrho_utils
   USE kpnt,                            ONLY: wk
   USE kpts,                            ONLY: tkpts
   USE ksdiag_utils,                    ONLY: ksdiag
+  USE mimic_wrapper,                   ONLY: mimic_energy
   USE mixing_g_utils,                  ONLY: give_scr_mixing,&
                                              mixing_g
   USE mixing_r_utils,                  ONLY: mixing_r
@@ -655,7 +656,14 @@ CONTAINS
     ! CALL RNLRH(ENL,NSTATE,NKPTS)
     ener_com%etot=ener_com%eeig+(ener_com%exc-ener_com%vxc)+ener_com%eht&
          +vdwr%evdw ! Empirical van der Waals correction
-    ! Check total energy difference 
+    IF (cntl%mimic) THEN
+       mimic_energy%qm_energy = ener_com%etot
+       ener_com%etot = ener_com%etot &
+                       + ener_com%eext &
+                       + mimic_energy%qmmm_energy &
+                       + mimic_energy%mm_energy
+    END IF
+    ! Check total energy difference
     detot=ener_com%etot-etot0
     IF (ABS(detot).LT.cntr%toldetot) THEN
        netot=netot+1

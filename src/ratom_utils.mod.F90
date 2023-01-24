@@ -36,6 +36,7 @@ MODULE ratom_utils
   USE meta_cell_utils,                 ONLY: meta_cell_inp
   USE meta_colvar_inp_utils,           ONLY: meta_colvar_inp
   USE meta_dyn_def_utils,              ONLY: meta_dyn_def
+  USE mimic_wrapper,                   ONLY: mimic_control
   USE mm_dimmod,                       ONLY: mmdim
   USE mm_input,                        ONLY: g96_vel,&
                                              lqmmm
@@ -63,7 +64,8 @@ MODULE ratom_utils
   USE rmas,                            ONLY: rmass
   USE symm,                            ONLY: iun,&
                                              symmt
-  USE system,                          ONLY: maxsp,&
+  USE system,                          ONLY: cntl,&
+                                             maxsp,&
                                              maxsys
   USE tst2min_inp_utils,               ONLY: tst2min_inp
   USE velocitinp_utils,                ONLY: velocitinp
@@ -159,6 +161,11 @@ CONTAINS
 ! ==--------------------------------------------------------------==
 ! Initialization
 
+    IF (cntl%mimic) THEN
+       NSX_q = mimic_control%num_quantum_species
+       maxsys%nsx = mimic_control%num_species
+       maxsys%nax = mimic_control%max_atoms
+    ENDIF
     IF (lqmmm%qmmm)THEN
        NSX_q=mmdim%nspq
        maxsys%nsx=mmdim%nspm
@@ -385,6 +392,7 @@ CONTAINS
        ENDIF
        ! PSEUDOPOTENTIAL
        IF (lqmmm%qmmm)maxsys%nsx=mmdim%nspq
+       IF (cntl%mimic) maxsys%nsx = mimic_control%num_quantum_species
        IF (tnone) THEN
           CALL allelec(ions1%nsp,ecpnam)
        ELSEIF (tupf) THEN
@@ -393,6 +401,7 @@ CONTAINS
           CALL recpnew(ions1%nsp,ecpnam)
        ENDIF
        IF (lqmmm%qmmm)maxsys%nsx=mmdim%nspm
+       IF (cntl%mimic) maxsys%nsx = mimic_control%num_species
        IF (raggnew.GT.0._real_8) raggio(ions1%nsp)=raggnew
        ! ATOMIC COORDINATES
        IF (paral%io_parent)&
@@ -747,6 +756,10 @@ CONTAINS
     ! ==--------------------------------------------------------------==
     IF (lqmmm%qmmm)THEN
        maxsys%nsx=mmdim%nspq
+    ENDIF
+    IF (cntl%mimic) THEN
+       maxsys%nsx = mimic_control%num_quantum_species
+       maxsys%nax = mimic_control%max_quantum_atoms
     ENDIF
     ! ==--------------------------------------------------------------==
     RETURN

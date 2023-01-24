@@ -665,6 +665,13 @@ CONTAINS
     iface1%intwrite = .FALSE.
     intfn = "interface.bin"
     ! ==--------------------------------------------------------------==
+    cntl%mimic = .FALSE.
+    cntl%new_constraints = .FALSE.
+    cntl%pbicgstab = .FALSE.
+    cnti%shake_maxstep = 5000
+    cnti%shake_cg_iter = 50
+    cntl%anneal_dual = .FALSE.
+    cntr%anneal_factors = 1.0_real_8
     RETURN
   END SUBROUTINE control_def
   ! ==================================================================

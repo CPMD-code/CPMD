@@ -1,0 +1,23 @@
+     IRAT=2
+     FC='mpif90'
+     CC='mpicc'
+     LD='mpif90'
+     CPP='cpp -P -traditional'
+     CPPFLAGS=' -D__Linux -D__HAS_FFT_FFTW3 -D__PARALLEL -D__HAS_SIZEOF '
+     if [ $debug ]; then
+       FFLAGS=' -g -pg -Og -ffree-line-length-none '
+       CFLAGS=' -g -pg -Og '
+     else
+       FFLAGS=' -O3 -march=native -mtune=native '
+       CFLAGS=' -O3 -march=native -mtune=native '
+     fi
+     if [ $omp ]; then
+       FFLAGS=${FFLAGS}' -fopenmp '
+       OMP3_DISABLED='false'
+       LIBS=' -L/usr/lib64 -llapack -lopenblaso -lfftw3_omp -lfftw3 -lm '
+     else
+       LIBS=' -L/usr/lib64 -llapack -lopenblas -lfftw3 -lm '
+     fi
+     LFLAGS=${LIBS}
+     FFLAGS=${FFLAGS}" -I/usr/include -fallow-argument-mismatch -ffree-line-length-none"
+     LFLAGS=${LFLAGS}" -L/usr/lib64 "

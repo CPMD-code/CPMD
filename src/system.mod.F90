@@ -563,6 +563,10 @@ MODULE system
      LOGICAL :: thubb  = .FALSE.
      LOGICAL :: use_mts = .FALSE.
      LOGICAL :: use_scaled_hfx = .FALSE.
+     LOGICAL :: mimic = .FALSE.
+     LOGICAL :: new_constraints = .FALSE.
+     LOGICAL :: pbicgstab = .FALSE.
+     LOGICAL :: anneal_dual = .FALSE.
   END TYPE cntl_t
   TYPE(cntl_t), SAVE, PUBLIC :: cntl
   ! ==================================================================
@@ -673,6 +677,8 @@ MODULE system
      INTEGER :: isocs = HUGE(0) !vw not initialized at all
      INTEGER :: jsoct = HUGE(0) !vw not initialized at all
      INTEGER :: disortho_bsize = HUGE(0)
+     INTEGER :: shake_maxstep = HUGE(0)
+     INTEGER :: shake_cg_iter = HUGE(0)
   END TYPE cnti_t
   TYPE(cnti_t), SAVE, PUBLIC :: cnti
   ! ==================================================================
@@ -790,6 +796,7 @@ MODULE system
      REAL(real_8) :: dampge = HUGE(0.0_real_8)
      REAL(real_8) :: dampgc = HUGE(0.0_real_8)
      REAL(real_8) :: gfreq = HUGE(0.0_real_8) !vw not initialized at all
+     REAL(real_8), DIMENSION(2) :: anneal_factors = HUGE(0.0_real_8)
   END TYPE cntr_t
   TYPE(cntr_t), SAVE, PUBLIC :: cntr
   ! strings

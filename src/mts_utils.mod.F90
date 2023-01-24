@@ -94,6 +94,11 @@ contains
                write(output_unit,*) ' WARNING: MTS section will be ignored:', &
                   ' USE_MTS keyword missing in CPMD section!'
             end if
+            ! Stops if MTS is used with MiMiC
+            if (cntl%use_mts .and. cntl%mimic) then
+                CALL stopgm(procedureN,'USE_MTS cannot be used with MIMIC',&
+                   __LINE__,__FILE__)
+            end if
             !
             ! Main loop
             !

@@ -50,11 +50,14 @@ CONTAINS
                                                 tyy, tzz, vcgs
     INTEGER                                  :: ia, ig, ig1, is, isa, isub
     REAL(real_8)                             :: omtp
+    REAL(real_8), allocatable                :: fion_temp(:,:,:)
 
     CALL tiset(procedureN,isub)
     omtp=2._real_8*parm%omega*parm%tpiba
     ig1=1
     IF (geq0) ig1=2
+    allocate(fion_temp(3, maxval(ions0%na(1:ions1%nsp)), ions1%nsp))
+    fion_temp(:,:,:) = fion(1:3, 1:maxval(ions0%na(1:ions1%nsp)), 1:ions1%nsp)
 #if defined (__VECTOR)
     IF (cntl%bigmem) THEN
        !$omp parallel do private(ISA,IA,IS,IG,EI123,RP,RHET,RHOG,RHETS,RHOGS, &
@@ -77,9 +80,9 @@ CONTAINS
              gz=CMPLX(0._real_8,gk(3,ig),kind=real_8)
              vcgs=scg(ig)*rhogs
              ei123=ei123*(rhops(is,ig)*vcgs+vps(is,ig)*rhets)
-             fion(1,ia,is)=fion(1,ia,is)+REAL(ei123*gx)*omtp
-             fion(2,ia,is)=fion(2,ia,is)+REAL(ei123*gy)*omtp
-             fion(3,ia,is)=fion(3,ia,is)+REAL(ei123*gz)*omtp
+             fion_temp(1,ia,is)=fion_temp(1,ia,is)+REAL(ei123*gx)*omtp
+             fion_temp(2,ia,is)=fion_temp(2,ia,is)+REAL(ei123*gy)*omtp
+             fion_temp(3,ia,is)=fion_temp(3,ia,is)+REAL(ei123*gz)*omtp
           ENDDO
        ENDDO
     ELSE
@@ -104,9 +107,9 @@ CONTAINS
              gz=CMPLX(0._real_8,gk(3,ig),kind=real_8)
              vcgs=scg(ig)*rhogs
              ei123=ei123*(rhops(is,ig)*vcgs+vps(is,ig)*rhets)
-             fion(1,ia,is)=fion(1,ia,is)+REAL(ei123*gx)*omtp
-             fion(2,ia,is)=fion(2,ia,is)+REAL(ei123*gy)*omtp
-             fion(3,ia,is)=fion(3,ia,is)+REAL(ei123*gz)*omtp
+             fion_temp(1,ia,is)=fion_temp(1,ia,is)+REAL(ei123*gx)*omtp
+             fion_temp(2,ia,is)=fion_temp(2,ia,is)+REAL(ei123*gy)*omtp
+             fion_temp(3,ia,is)=fion_temp(3,ia,is)+REAL(ei123*gz)*omtp
           ENDDO
        ENDDO
     ENDIF
@@ -125,7 +128,7 @@ CONTAINS
        !$omp parallel do private(IG,IS,IA,ISA) &
        !$omp  private(RP,RHET,RHOG,RHETS,RHOGS,GX,GY,GZ,VCGS) &
        !$omp  private(TXX,TYY,TZZ,EI123) &
-       !$omp  reduction(+:FION)
+       !$omp  reduction(+:FION_TEMP)
 #endif
 #endif
        DO ig=ig1,ncpw%nhg
@@ -146,9 +149,9 @@ CONTAINS
              DO ia=1,ions0%na(is)
                 isa=isa+1
                 ei123=eigrb(ig,isa)
-                fion(1,ia,is)=fion(1,ia,is)+REAL(ei123*txx)*omtp
-                fion(2,ia,is)=fion(2,ia,is)+REAL(ei123*tyy)*omtp
-                fion(3,ia,is)=fion(3,ia,is)+REAL(ei123*tzz)*omtp
+                fion_temp(1,ia,is)=fion_temp(1,ia,is)+REAL(ei123*txx)*omtp
+                fion_temp(2,ia,is)=fion_temp(2,ia,is)+REAL(ei123*tyy)*omtp
+                fion_temp(3,ia,is)=fion_temp(3,ia,is)+REAL(ei123*tzz)*omtp
              ENDDO
           ENDDO
        ENDDO
@@ -165,7 +168,7 @@ CONTAINS
        !$omp parallel do private(IG,IS,IA,ISA) &
        !$omp  private(RP,RHET,RHOG,RHETS,RHOGS,GX,GY,GZ,VCGS) &
        !$omp  private(TXX,TYY,TZZ,EI123) &
-       !$omp  reduction(+:FION)
+       !$omp  reduction(+:FION_TEMP)
 #endif
 #endif
        DO ig=ig1,ncpw%nhg
@@ -187,14 +190,15 @@ CONTAINS
                 isa=isa+1
                 ei123=ei1(isa,inyh(1,ig))*ei2(isa,inyh(2,ig))*&
                      ei3(isa,inyh(3,ig))
-                fion(1,ia,is)=fion(1,ia,is)+REAL(ei123*txx)*omtp
-                fion(2,ia,is)=fion(2,ia,is)+REAL(ei123*tyy)*omtp
-                fion(3,ia,is)=fion(3,ia,is)+REAL(ei123*tzz)*omtp
+                fion_temp(1,ia,is)=fion_temp(1,ia,is)+REAL(ei123*txx)*omtp
+                fion_temp(2,ia,is)=fion_temp(2,ia,is)+REAL(ei123*tyy)*omtp
+                fion_temp(3,ia,is)=fion_temp(3,ia,is)+REAL(ei123*tzz)*omtp
              ENDDO
           ENDDO
        ENDDO
     ENDIF
 #endif
+    fion(1:3, 1:maxval(ions0%na(1:ions1%nsp)), 1:ions1%nsp) = fion_temp(:,:,:)
     CALL tihalt(procedureN,isub)
     ! ==--------------------------------------------------------------==
     RETURN

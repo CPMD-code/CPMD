@@ -513,8 +513,15 @@ CONTAINS
                'EVERY ',cnti%imovie,' STEPS IN MOVIE FORMAT'
        ENDIF
        IF (cntl%annei) THEN
-          WRITE(6,'(A,T46,A8,F12.6)')&
-               ' SIMULATED ANNEALING OF IONS WITH ','ANNERI =',cntr%anneri
+          IF (cntl%anneal_dual) THEN
+             WRITE(6,'(A,/,A,T54,F12.6,/,A,T54,F12.6)') &
+                ' SIMULATED ANNEALING OF QM/MM WITH DUAL FACTORS', &
+                '    SCALING FACTOR FOR QM SUBSYSTEM: ', cntr%anneal_factors(1), &
+                '    SCALING FACTOR FOR MM SUBSYSTEM: ', cntr%anneal_factors(2)
+          ELSE
+             WRITE(6,'(A,T46,A8,F12.6)')&
+                ' SIMULATED ANNEALING OF IONS WITH ','ANNERI =',cntr%anneri
+          END IF
        ENDIF
        IF (cntl%annee) THEN
           WRITE(6,'(A,T46,A8,F12.6)')&

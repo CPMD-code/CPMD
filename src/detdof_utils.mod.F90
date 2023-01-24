@@ -91,7 +91,7 @@ CONTAINS
        glib=REAL(cotc0%nodim,kind=real_8)
     ELSE
        glib=REAL(cotc0%nodim,kind=real_8)-3._real_8
-       IF (isos1%tisos.AND..NOT.lqmmm%qmmm) THEN
+       IF (isos1%tisos.AND.(.NOT.lqmmm%qmmm .AND..NOT.cntl%mimic)) THEN
           IF (ions1%nat.EQ.1) THEN
              glib=glib
           ELSEIF (ions1%nat.EQ.2) THEN
@@ -167,7 +167,7 @@ CONTAINS
     ! ==  CONSTRAINTS                                                 ==
     ! ==--------------------------------------------------------------==
     CALL dum2(tau0,tscr)
-    IF (cotc0%mcnstr.GT.0 .OR. cotr007%mrestr.GT.0) THEN
+    IF ((cotc0%mcnstr.GT.0 .OR. cotr007%mrestr.GT.0).AND..NOT.cntl%new_constraints) THEN
        l=MAX(cotc0%mcnstr,cotr007%mrestr)
        ALLOCATE(anorm(cotc0%nodim,l),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
@@ -177,61 +177,61 @@ CONTAINS
             __LINE__,__FILE__)
     ENDIF
     IF (cotc0%mcnstr.GT.0) THEN
-       ALLOCATE(askel(cotc0%nodim,cotc0%mcnstr,12),STAT=ierr)
-       IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
-            __LINE__,__FILE__)
-
-       ALLOCATE(mm_askel(cotc0%mcnstr,12),STAT=ierr)
-       IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
-            __LINE__,__FILE__)
-
-       ALLOCATE(fc(cotc0%nodim),STAT=ierr)
-       IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
-            __LINE__,__FILE__)
-       ALLOCATE(fv(cotc0%nodim),STAT=ierr)
-       IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
-            __LINE__,__FILE__)
-       ALLOCATE(csigm(cotc0%nodim),STAT=ierr)
-       IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
-            __LINE__,__FILE__)
        ALLOCATE(xlagr(cotc0%nodim),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
             __LINE__,__FILE__)
        ALLOCATE(ylagr(cotc0%nodim),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
             __LINE__,__FILE__)
-       CALL zeroing(askel)!,12*cotc0%nodim*cotc0%mcnstr)
-
-       CALL zeroing(mm_askel)!,12*cotc0%mcnstr)
-
        CALL zeroing(xlagr)!,cotc0%mcnstr)
        CALL zeroing(ylagr)!,cotc0%mcnstr)
-       DO i=1,cotc0%mcnstr
-          ityp=ntcnst(1,i)
-          IF (ityp.EQ.1) THEN
-             csigm(i)=dsigma
-          ELSEIF (ityp.EQ.2) THEN
-             csigm(i)=bsigma
-          ELSEIF (ityp.EQ.3) THEN
-             csigm(i)=tsigma
-          ELSEIF (ityp.EQ.4 .OR. ityp.EQ.10 .OR. ityp.EQ.7) THEN
-             csigm(i)=dsigma
-          ELSEIF(ityp.EQ.5 .OR. ityp.EQ.6 .OR. ityp.EQ.8&
-               .OR. ityp.EQ.9) THEN
-             csigm(i)=tsigma
-          ENDIF
-          IF (ityp .NE. 6 .AND. ityp .NE. 8 .AND.&
-               ityp .NE. 9 .AND. ityp .NE. 10) THEN
-             ia=ntcnst(2,i)
-             ib=ntcnst(3,i)
-             ic=ntcnst(4,i)
-             id=ntcnst(5,i)
-             CALL builda(ia,i,1)
-             CALL builda(ib,i,2)
-             CALL builda(ic,i,3)
-             CALL builda(id,i,4)
-          ENDIF
-       ENDDO
+       IF (.NOT.cntl%new_constraints) THEN
+          ALLOCATE(askel(cotc0%nodim,cotc0%mcnstr,12),STAT=ierr)
+          IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
+               __LINE__,__FILE__)
+          ALLOCATE(mm_askel(cotc0%mcnstr,12),STAT=ierr)
+          IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
+               __LINE__,__FILE__)
+          ALLOCATE(fc(cotc0%nodim),STAT=ierr)
+          IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
+               __LINE__,__FILE__)
+          ALLOCATE(fv(cotc0%nodim),STAT=ierr)
+          IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
+               __LINE__,__FILE__)
+          ALLOCATE(csigm(cotc0%nodim),STAT=ierr)
+          IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
+               __LINE__,__FILE__)
+
+          CALL zeroing(askel)!,12*cotc0%nodim*cotc0%mcnstr)
+          CALL zeroing(mm_askel)!,12*cotc0%mcnstr)
+
+          DO i=1,cotc0%mcnstr
+             ityp=ntcnst(1,i)
+             IF (ityp.EQ.1) THEN
+                csigm(i)=dsigma
+             ELSEIF (ityp.EQ.2) THEN
+                csigm(i)=bsigma
+             ELSEIF (ityp.EQ.3) THEN
+                csigm(i)=tsigma
+             ELSEIF (ityp.EQ.4 .OR. ityp.EQ.10 .OR. ityp.EQ.7) THEN
+                csigm(i)=dsigma
+             ELSEIF(ityp.EQ.5 .OR. ityp.EQ.6 .OR. ityp.EQ.8&
+                  .OR. ityp.EQ.9) THEN
+                csigm(i)=tsigma
+             ENDIF
+             IF (ityp .NE. 6 .AND. ityp .NE. 8 .AND.&
+                  ityp .NE. 9 .AND. ityp .NE. 10) THEN
+                ia=ntcnst(2,i)
+                ib=ntcnst(3,i)
+                ic=ntcnst(4,i)
+                id=ntcnst(5,i)
+                CALL builda(ia,i,1)
+                CALL builda(ib,i,2)
+                CALL builda(ic,i,3)
+                CALL builda(id,i,4)
+             ENDIF
+          ENDDO
+       ENDIF
     ENDIF
     IF (cotr007%mrestr.GT.0) THEN
        ALLOCATE(rskel(cotc0%nodim,cotr007%mrestr,12),STAT=ierr)
@@ -329,7 +329,7 @@ CONTAINS
        IF (paral%io_parent)&
             WRITE(6,*)'THERE ARE QUITE A LOT OF FIXED ATOMS'
     ENDIF
-    IF (cotc0%mcnstr.GT.0.OR.cotr007%mrestr.GT.0) THEN
+    IF ((cotc0%mcnstr.GT.0.OR.cotr007%mrestr.GT.0).AND..NOT.cntl%new_constraints) THEN
        ALLOCATE(dxpar(3,maxsys%nax,maxsys%nsx),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
             __LINE__,__FILE__)

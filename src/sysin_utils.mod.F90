@@ -1445,6 +1445,13 @@ CONTAINS
           !
        ENDIF
 
+       IF (cntl%mimic.AND.parm%ibrav/=0) THEN
+          WRITE(output_unit,'(A)') ' ERROR: SYMMETRY IBRAV =',parm%ibrav,' NOT ALLOWED IN MiMiC'
+          WRITE(output_unit,'(A)') '        A VALUE OF 0 (ISOLATED) IS REQUIRED'
+          CALL stopgm(procedureN, 'Cell dimensions incompatible with MiMiC', &
+                      __LINE__, __FILE__)
+       ENDIF
+
        ! 
        ! AK: sanity check. ibrav=-2 is used for implicit triclinic symmetry
        ! with given cell vectors. symmetry should not be used in that case.

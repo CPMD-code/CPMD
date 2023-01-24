@@ -70,6 +70,9 @@ MODULE cotr
   INTEGER, ALLOCATABLE, SAVE :: lskptr(:,:)
   INTEGER, ALLOCATABLE, SAVE :: mm_ASKEL(:,:)
 
+  INTEGER, ALLOCATABLE, SAVE :: const_nconn(:)
+  INTEGER, ALLOCATABLE, SAVE :: const_conn(:,:)
+
   REAL(real_8), ALLOCATABLE, SAVE :: hess(:,:)
   REAL(real_8), ALLOCATABLE, SAVE :: dtm(:)
   REAL(real_8), ALLOCATABLE, SAVE :: pmall(:)

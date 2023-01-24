@@ -657,6 +657,8 @@ Extensive cleanup and bug fixes and strenghtening of the regression test suite.
 \subsubsection{Version 4.5} 
 The Minnesota non-separable exchange functional families (MN12, MN15) as well as the revM06-L functional
 are now available.
+Coupling to the MiMiC multiscale modeling framework (see \url{https://mimic-project.org/}) is added
+which currently enables QM/MM simulations using GROMACS as the MM engine.
 
 % XXX tutorial added.
 \clearpage
@@ -1117,6 +1119,10 @@ sections is ignored.
 \\
 \> \&MTS ...  \> \&END  \>  $\leftrightarrow$ \>
    Parameters for the Multiple Time-Step MD scheme. \\
+\\
+\> \&MIMIC ...  \> \&END  \>  $\leftrightarrow$ \>
+   Parameters for multiscale simulations using MiMiC. \\
+\> This section is only evaluated if the \refkeyword{MIMIC} keyword is given in the \&CPMD section.\\
 \end{tabbing}
 
   A detailed discussion of the different keywords will be given in the
@@ -1133,7 +1139,7 @@ following section.
 \refkeyword{ALEXANDER MIXING}\options{}{}{}
 \refkeyword{ALLTOALL}\options{\{SINGLE,DOUBLE\}}{}{}
 \refkeyword{ANDERSON MIXING}\options{}{}{}
-\refkeyword{ANNEALING}\options{\{IONS,ELECTRONS,CELL\}}{}{}
+\refkeyword{ANNEALING}\options{\{IONS,ELECTRONS,CELL\}}{[DUAL]}{}
 \refkeyword{BENCHMARK}\options{}{}{}
 \refkeyword{BERENDSEN}\options{\{IONS,ELECTRONS,CELL\}}{}{}
 \refkeyword{BFGS}\options{}{}{}
@@ -1165,6 +1171,7 @@ following section.
 \refkeyword{DEBUG NOACC}\options{}{}{}
 \refkeyword{DIIS MIXING}\options{}{}{}
 \refkeyword{DIPOLE DYNAMICS}\options{\{SAMPLE,WANNIER\}}{}{}
+\refkeyword{DISABLE CONSTRAINTS}\options{}{}{}
 \refkeyword{DISTRIBUTED LINALG}\options{\{ON,OFF\}}{}{}
 \refkeyword{DISTRIBUTE FNL}\options{}{}{}
 \refkeyword{ELECTRONIC SPECTRA}\options{}{}{}
@@ -1207,6 +1214,7 @@ following section.
 \refkeyword{MAXITER}\options{}{}{}
 \refkeyword{MAXSTEP}\options{}{}{}
 \refkeyword{MEMORY}\options{}{[SMALL, BIG]}{}
+\refkeyword{MIMIC}\options{}{}{}
 \refkeyword{MIRROR}\options{}{}{}
 \refkeyword{MIXDIIS}\options{}{}{}
 \refkeyword{MIXSD}\options{}{}{}
@@ -1214,6 +1222,7 @@ following section.
 \refkeyword{MOLECULAR DYNAMICS}\options{\{CP, BO, EH, PT, CLASSICAL, FILE [XYZ, NSKIP=N, NSAMPLE=M]\}}{}{}
 \refkeyword{MOVERHO}\options{}{}{}
 \refkeyword{MOVIE}\options{}{[OFF, SAMPLE]}{}
+\refkeyword{NEW CONSTRAINTS}\options{}{[PBICGSTAB]}{}
 \refkeyword{NOGEOCHECK}\options{}{}{}
 \refkeyword{NONORTHOGONAL ORBITALS}\options{}{[OFF]}{}
 \refkeyword{NOSE}\options{\{IONS, ELECTRONS, CELL\}}{[ULTRA,MASSIVE,CAFES]}{}
@@ -1253,6 +1262,8 @@ following section.
 \refkeyword{RHOOUT}\options{}{[BANDS,SAMPLE=nrhoout]}{}
 \refkeyword{ROKS}\options{}{\{SINGLET, TRIPLET\},\{DELOCALIZED, LOCALIZED, GOEDECKER\}}{}
 \refkeyword{SCALED MASSES}\options{}{[OFF]}{}
+\refkeyword{SHAKE\_CG\_ITER}\options{}{}{}
+\refkeyword{SHAKE\_MAXSTEP}\options{}{}{}
 \refkeyword{SHIFT POTENTIAL}\options{}{}{}
 \refkeyword{SOC}\options{}{}{}
 \refkeyword{SPLINE}\options{}{[POINTS, QFUNCTION, INIT, RANGE]}{}
@@ -1660,6 +1671,22 @@ the input-file if this section shall be evaluated.
 \refspekeyword{LOW\_LEVEL\_FORCES}{LOW LEVEL FORCES}\options{\{DFT, EXTERNAL\}}{}{}
 \refspekeyword{HIGH\_LEVEL\_FORCES}{HIGH LEVEL FORCES}\options{\{DFT, EXTERNAL\}}{}{}
 %
+\subsubsection[\&MIMIC ... \&END]{\&MIMIC $\ldots$ \&END}
+%
+\options{}{}{}
+\refkeyword{BOX}\options{}{}{}
+\refkeyword{CUTOFF DISTANCE}\options{}{}{}
+\refkeyword{DISABLE CONSTRAINTS}\options{}{}{}
+\refkeyword{FRAGMENT SORTING}\options{\{CENTROID, CENTER-OF-MASS, \\
+    \phantom{FRAGMENT SORTING \{} CENTER-OF-CHARGE, MINIMUM DISTANCE, \\
+    \phantom{FRAGMENT SORTING \{} ATOM-WISE\}}{[UPDATE]}{}
+\refkeyword{LONG-RANGE COUPLING}\options{}{}{}
+\refkeyword{MULTIPOLE ORDER}\options{}{}{}
+\refkeyword{OVERLAPS}\options{}{}{}
+\refkeyword{PATHS}\options{}{}{}
+\refkeyword{SUBSYSTEM FACTORS}\options{}{}{}
+\refkeyword{TOTAL SCF}\options{}{}{}
+%
 \clearpage
 %
 %---------------------------------------------------------------------
@@ -1757,9 +1784,14 @@ section \ref{sec:qmmm-input}.
     Not supported for \refkeyword{QMMM} calculations.
 }
 
-\keyword{ANNEALING}{\{IONS,ELECTRONS,CELL\}}{}{}{\&CPMD}
+\keyword{ANNEALING}{\{IONS,ELECTRONS,CELL\}}{DUAL}{}{\&CPMD}
   \desc{Scale the ionic, electronic, or cell velocities every
-    time step. The scaling factor is read from the next line.}
+    time step. The scaling factor is read from the next line.\\
+    The additional DUAL keyword can be used in combination with the IONS keyword
+    in \refkeyword{MIMIC}-based QM/MM simulations. It enables defining two scaling
+    factors, the first that will be applied to the QM atoms only and the second
+    that will be applied to the MM atoms only. The two scaling factors are read
+    from the next line.}
 
 \keyword{ATOMIC CHARGES}{}{}{}{\&ATOMS}
   \desc{Changes the default charge (0) of the atoms for the initial guess to
@@ -1927,6 +1959,11 @@ Parameter Rcut is read in from next line.}
     {\bf Default} is {\bf no Bogoliubov correction}.\\
 %
     The keyword has to appear after \refkeyword{FREE ENERGY FUNCTIONAL}.}
+
+\keyword{BOX}{}{}{}{\&MIMIC}
+  \desc{Define the dimensions of the outer simulation box in MiMiC-based
+        multiscale simulations. Values are read from the next line.\\
+        {\bf Note:} currently only orthorombic simulation boxes are supported.}
 
 \keyword{BOX WALLS}{}{}{}{\&CPMD}
   \desc{The thickness parameter for soft, reflecting QM-box walls
@@ -2423,6 +2460,13 @@ Parameter Rcut is read in from next line.}
       $|g + k|^2 < E_{cut}$ instead of $|g|^2 < E_{cut}$.
       This is the default.}
 
+\keyword{CUTOFF DISTANCE}{}{}{}{\&MIMIC}
+  \desc{Set the cutoff distance for the partitioning of the MM subsystem into
+        short- and long-range domains. The distance (in bohr) is read from the
+        next line. It is used for the \refkeyword{LONG-RANGE COUPLING} in
+        MiMiC-based QM/MM simulations.\\
+        {\bf Default} is to use a large cutoff distance placing all atoms in the short-range domain.}
+
 \keyword{CZONES}{}{[SET]}{}{\&CPMD}
   \desc{Activates convergence zones for the wavefunction during the 
       \refkeyword{CDFT} constraint minimisation. If SET is set the 
@@ -2605,6 +2649,11 @@ Parameter Rcut is read in from next line.}
     The keyword {\bf BERRY} requests the use of the Berry phase algorithm.\\
 %    
     {\bf Default} is to use the real-space algorithm.}
+
+\keyword{DISABLE CONSTRAINTS}{}{}{}{\&MIMIC}
+  \desc{This keyword instructs CPMD to ignore constraints defined by client programs
+        in MIMIC-based multiscale simulations. Only the constraints defined in the
+        CPMD input file will be enforced.}
 
 \keyword{DISCARD}{}{[OFF, PARTIAL, TOTAL, LINEAR]}{}{\&RESP}
   \desc{Request to discard trivial modes in vibrational analysis from linear response (both
@@ -2977,6 +3026,18 @@ with {\bf{PERT\_AMPLI}} (in \&PTDDFT).}
 \keyword{FORCE STATE}{}{}{}{\&TDDFT}
   \desc{The state for which the forces are calculated is read from the
        next line. Default is for state 1.}
+
+\keyword{FRAGMENT SORTING}{\{CENTROID, CENTER-OF-MASS, CENTER-OF-CHARGE, MINIMUM DISTANCE, ATOM-WISE\}}{}{[UPDATE]}{\&MIMIC}
+  \desc{Define the method used to sort atoms into short- and long-range domains.
+        It is used only when \refkeyword{LONG-RANGE COUPLING} is active.\\
+        The CENTROID, CENTER-OF-MASS, CENTER-OF-CHARGE, and MINIMUM DISTANCE methods
+        use the distance between centroids, centers of mass, centers of charge, and minimum
+        interatomic distances, respectively, between the QM subsystem and fragments in the
+        MM subsystem. The ATOM-WISE method uses the distance between the centroid of the QM
+        subsystem and the individual atoms in the environment. The frequency of the sorting
+        updates can be set using the {\bf UPDATE} keyword. When present the frequency (in steps)
+        is read from the next line.\\
+        {\bf Default} is to use CENTROID and to update the sorting in each step.}
 
 \keyword{FREE ENERGY FUNCTIONAL}{}{}{}{\&CPMD}
   \desc{Calculates the electronic free energy using
@@ -3740,6 +3801,16 @@ specify the \refkeyword{POINT GROUP}.
       These wavefunction can be printed with the keyword {\bf RHOOUT}
       specified in the section \&CPMD section.}
 
+\keyword{LONG-RANGE COUPLING}{}{}{}{\&MIMIC}
+  \desc{Activate the long-range coupling that partitions the electrostatic QM/MM interactions
+        into short- and long-range parts. The short-range interactions are computed using
+        a damped Coulomb potential whereas a multipole expansion of the QM electrostatic
+        potential is used to treat the long-range interactions.\\
+        The cutoff distance for the partitioning is controlled by the \refkeyword{CUTOFF DISTANCE}
+        keyword, the order of the multipole expansion is controlled by the \refkeyword{MULTIPOLE ORDER}
+        keyword, and the method and frequency of sorting atoms into short- and long-range parts is
+        controlled by the \refkeyword{FRAGMENT SORTING} keyword.}
+
 \keyword{LR KERNEL}{}{}{functional}{\&DFT}
   \desc{Use another functional for the linear response kernel. To be used like
         \refkeyword{FUNCTIONAL}.}
@@ -3838,6 +3909,11 @@ For ROKS calculations, see also the \refkeyword{ROKS} keyword in the \&CPMD-sect
 \keyword{METADYNAMICS ... END METADYNAMICS}{}{}{}{\&ATOMS}
   \desc{Initiate Metadynamics (see section~\ref{sec:meta} for more
     information on the available options and the input format).}
+
+\keyword{MIMIC}{}{}{}{\&CPMD}
+  \desc{Activate multiscale simulations using MiMiC. See \url{https://mimic-project.org/}
+        for more information on how to setup and run MiMiC-based simulations
+        and Refs.~\cite{Olsen19} and \cite{Bolnykh19} for more information about MiMiC.}
 
 \keyword{MIRROR}{}{}{}{\&CPMD}
   \desc{Write the input file to the output.}
@@ -3940,6 +4016,11 @@ For ROKS calculations, see also the \refkeyword{ROKS} keyword in the \&CPMD-sect
       {\bf Default} is {\bf not} to
       write a movie file.}
 
+\keyword{MULTIPOLE ORDER}{}{}{}{\&MIMIC}
+  \desc{Define the order of the multipole expansion used in the \refkeyword{LONG-RANGE COUPLING}
+        where electrostatic QM/MM interactions are split into short- and long-range parts.\\
+        {\bf Default} is to use a second-order multipole expansion.}
+
 \keyword{MULTIPLICITY}{}{}{}{\&SYSTEM}
   \desc{This keyword only applies to LSD calculations.\\
       The multiplicity (2$S$+1) is read from the next line.\\
@@ -3963,6 +4044,19 @@ For ROKS calculations, see also the \refkeyword{ROKS} keyword in the \&CPMD-sect
 
 \keyword{NEQUI}{}{}{}{\&PATH}
   \desc{Number of equilibration steps discarded to calculate the mean force.}
+
+\keyword{NEW CONSTRAINTS}{}{[PBICGSTAB]}{}{\&CPMD}
+  \desc{This keyword activates the alternative implementation of the shake algorithm described
+        in~\cite{Weinback05}. This implementation does not involve matrix inversion operations
+        and is therefore (much) faster than the default one. It can be used in pure QM simulations
+        and in \refkeyword{MiMiC}-based QM/MM simulations. At each iteration of the shake algorithm,
+        a minimization is performed using a preconditioned conjugate gradient (PCG) method, unless
+        the PBICGSTAB optional keyword is specified, in which case, a stabilized precondictioned
+        bi-conjugate gradient (PBiCGStab) method is adopted. In general, we recommend using the
+        default PCG minimizer, which is slightly faster. The \refkeyword{SHAKE\_MAXSTEP} and
+        \refkeyword{SHAKE\_CG\_ITER} keywords can be used to set the maximum number of shake
+        iterations and the maximum number of steps of the PCG (or PBiCGStab) minimizer, respectively.\\
+        {\bf Note:} Currently only a serial version of the algorithm is implemented.}
 
 \keyword{NEWCODE}{}{}{}{\&DFT}%
   \desc{This keyword will be deprecated in a future release. Both \textbf{NEWCODE}
@@ -4114,7 +4208,8 @@ For ROKS calculations, see also the \refkeyword{ROKS} keyword in the \&CPMD-sect
       \end{tabular}
 
       The parser for the atom ranges uses either the CPMD ordering or
-      the GROMOS ordering in case of classical or QM/MM runs. Multiple
+      the GROMOS ordering in case of classical or QM/MM runs. In the case
+      of MiMiC-based QM/MM, only CPMD ordering can be used. Multiple
       ranges may be specified for the same thermostat. Atoms belonging
       to the same CPMD constraint or the same solvent molecule in
       QM/MM runs must belong to the same local thermostat.
@@ -4243,6 +4338,36 @@ For ROKS calculations, see also the \refkeyword{ROKS} keyword in the \&CPMD-sect
  \spekeyword{OUTPUT}{}{[ALL, GROUPS, PARENT]}{}{\&PATH}{OUTPUT PATH}
    \desc{Idem as above, here for Mean Free Energy Path runs.}
 
+\keyword{OVERLAPS}{}{}{}{\&MIMIC}
+  \desc{Define the mapping of the atoms that are present in more than one subsystem.
+        For QM/MM this will typically be the atoms in the QM subsystem which are used
+        by both the QM and MM client codes.\\
+        The format is the following:
+        \begin{center}
+          \begin{tabular}{llll}
+            \multicolumn{4}{l}{num\_overlap\_pairs} \\
+            client\_id & client\_atom\_id & host\_id & host\_atom\_id \\
+          \end{tabular}
+        \end{center}
+        where num\_overlap\_pairs is the number of pairs of atom overlaps (and the number
+        of succeeding lines). Each of the following lines define the mapping of atom pairs.
+        Here client\_id is the id of the client code, which corresponds to the number of
+        the line in which this client appears in the \refkeyword{PATHS} section plus one
+        (e.g., the first line in \refkeyword{PATHS} has client\_id = 2, the second line has
+        client\_id = 3, etc.), client\_atom\_id is the id of the atom in the given client,
+        host\_id is the id of the MD driver (currently CPMD and its value is always 1), and
+        host\_atom\_id is the id of the atom in the MD driver (which follows the ordering
+        of the atoms as provided in the \&ATOMS \ldots\ \&END section).\\
+        An example input could be:\\
+        OVERLAPS\\
+        3\\
+        2 1 1 2\\
+        2 2 1 3\\
+        2 3 1 1\\
+        which means that the atom with id 1 in the client code with id 2 overlaps with atom 2
+        in the host code (CPMD), the atom with id 2 in the client code with id 2 overlaps
+        with atom 3 in the host code, and the atom with id 3 in the client code with id 2
+        overlaps with atom 1 in the host code.}
 
 \spekeyword{PARA\_BUFF\_SIZE}{}{}{}{\&CPMD}{PARA BUFF SIZE}
 \desc{ Set the buffer size for parallel operation (sum, ...).
@@ -4273,6 +4398,10 @@ For ROKS calculations, see also the \refkeyword{ROKS} keyword in the \&CPMD-sect
       cells can be performed.\\
       With the additional keywork { \bf SHOCK} } a MD simulation using the multiscale
       shock method \cite{shock} is performed.
+
+\keyword{PATHS}{}{}{}{\&MIMIC}
+  \desc{Define the paths to the working directories from which the client programs are launched.
+        The number of clients (paths) is read from the next line followed by the paths.}
 
 \keyword{PATH INTEGRAL}{}{}{}{\&CPMD}
   \desc{Perform a {\bf path integral molecular dynamics}
@@ -5052,6 +5181,14 @@ for the propagation of the KS orbitals.}
 
         }
 
+\keyword{SHAKE_\CG\_ITER}{}{\&CPMD}
+  \desc{The maximum number of iterations of the minimizer is read from the next line
+        (see \refkeyword{NEW CONSTRAINTS}).}
+
+\keyword{SHAKE\_MAXSTEP}{}{\&CPMD}
+  \desc{The maximum number of shake iterations is read from the next line
+        (see \refkeyword{NEW CONSTRAINTS}).}
+
 \keyword{SHIFT POTENTIAL}{}{}{}{\&CPMD}
   \desc{After this keyword, useful in Hamiltonian diagonalization, the 
       shift value $V_{\rm shift}$ must be provided in the next line.
@@ -5219,6 +5356,14 @@ for the propagation of the KS orbitals.}
       If the option {\bf SELECT} is used the output is restricted
       to a set of atoms. The number of atoms and a list of the selected
       atoms has to be given on the next lines.}
+
+\keyword{SUBSYSTEM FACTORS}{}{}{}{\&MIMIC}
+  \desc{Define the factors multiplying the energy, forces, etc. of each subsystem.
+        Useful only for certain types of simulations, e.g., subtractive QM/MM.\\
+        The number of factors, which must be equal to the number of clients,
+        is read from the next line. Then the factors are read from the subsequent lines.\\
+        {\bf Default} is to use 1.0 for all subsystems.}
+
 
 \keyword{SUBTRACT}{}{[COMVEL, ROTVEL]}{}{\&CPMD}
   \desc{If COMVEL is selected, the total momentum of the system is
@@ -5394,7 +5539,7 @@ for the propagation of the KS orbitals.}
 \keyword{TEMPERATURE}{}{[RAMP]}{}{\&CPMD}
   \desc{The {\bf initial temperature} in Kelvin of the {\bf system} is read from the next line. 
         With the additional keyword {\bf RAMP} the temperature can be linearly ramped to a target 
-	value and two more numbers are read, the ramping target temperature in Kelvin and the
+        value and two more numbers are read, the ramping target temperature in Kelvin and the
         ramping speed in Kelvin per atomic time unit (to get the change per timestep you have to multiply it
         with the value of \refkeyword{TIMESTEP}). Note that this ramping affects the target temperatures for
         \refkeyword{TEMPCONTROL}, \refkeyword{BERENDSEN} and the global \refkeyword{NOSE} thermostats.}
@@ -5452,6 +5597,14 @@ for the propagation of the KS orbitals.}
   to the forces in the MTS scheme will be calculated every 4 steps, i.e. every {\bf 60 a.u.}
   {\bf Default} is a factor of 1, i.e. the MD will be identical to a Velocity-Verlet MD with the high level forces.
   }
+
+\keyword{TOTAL SCF}{}{}{}{\&MIMIC}
+  \desc{Force MiMiC to request MM energies from client programs in the beginning
+        of an SCF loop (it is always retrieved after each completed SCF). Without
+        this keyword, the energy during an SCF loop will be missing the MM energy.\\
+        {\bf Note} that using this keyword will trigger additional communication
+        with the clients and will also prevent simultaneous calculation of QM and
+        MM contributions.}
 
 \keyword{TRACE}{}{[ALL,MASTER]}{}{\&CPMD}
 \desc{ Activate the tracing of the procedures. {\sl ALL} specifies that all the mpi tasks are traced.
@@ -11984,6 +12137,18 @@ M.P.~Bircher, P.~Lopez-Tarifa and U.~Rothlisberger,
 %\bibitem{LeSar}
 %   R. Le Sar, J.~Phys.~Chem. {\bf 88}, 4272 (1984);
 %   R. Le Sar, J.~Chem.~Phys. {\bf 86}, 1485 (1987).
+
+\bibitem{Olsen19}
+J.~M.~H.~Olsen, V.~Bolnykh, S.~Meloni, E.~Ippoliti, M.~P.~Bircher, P.~Carloni, U.~Rothlisberger,
+ J. Chem. Theory Comput. {\bf 15}, 3810--3823 (2019). DOI: \href{https://doi.org/10.1021/acs.jctc.9b00093}{10.1021/acs.jctc.9b00093}
+
+\bibitem{Bolnykh19}
+V.~Bolnykh, J.~M.~H.~Olsen, S.~Meloni, E.~Ippoliti, M.~P.~Bircher, P.~Carloni, U.~Rothlisberger,
+ J. Chem. Theory Comput. {\bf 15}, 5601--5613 (2019). DOI: \href{https://doi.org/10.1021/acs.jctc.9b00424}{10.1021/acs.jctc.9b00424}
+
+\bibitem{Weinback05}
+Y.~Weinback, R.~Elber,
+ J. Comput. Phys. {\bf 209}, 193--206 (2005). DOI: \href{https://www.sciencedirect.com/science/article/pii/S0021999105001828}{10.1016/j.jcp.2005.03.015}
 
 \end{thebibliography}
 %

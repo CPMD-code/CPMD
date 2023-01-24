@@ -5,6 +5,7 @@ MODULE anneal_utils
                                              s_ekinpp
   USE ions,                            ONLY: ions1
   USE kinds,                           ONLY: real_8
+  USE mimic_wrapper,                   ONLY: mimic_control
   USE nose,                            ONLY: glib
   USE parac,                           ONLY: paral
   USE pimd,                            ONLY: ipcurr,&
@@ -51,19 +52,48 @@ CONTAINS
     ! ==  ANNEALING (IONS)  Fixed rescaling factor (anner)            ==
     ! ==--------------------------------------------------------------==
     IF (cntl%annei.AND.(.NOT.skipanic)) THEN
-       alfap=cntr%anneri**(0.25_real_8)
+       IF (cntl%anneal_dual) THEN
+          alfap = cntr%anneal_factors(1)**(0.25_real_8)
 #if defined(__VECTOR)
-       !$omp parallel do private(I,IS,IA)
+          !$omp parallel do private(I,IS,IA)
 #else
-       !$omp parallel do private(I,IS,IA) schedule(static)
+          !$omp parallel do private(I,IS,IA) schedule(static)
 #endif
-       DO i=1,ions1%nat
-          ia=iatpt(1,i)
-          is=iatpt(2,i)
-          velp(1,ia,is)=alfap*velp(1,ia,is)
-          velp(2,ia,is)=alfap*velp(2,ia,is)
-          velp(3,ia,is)=alfap*velp(3,ia,is)
-       ENDDO
+          DO i = 1, mimic_control%num_quantum_atoms
+           ia = iatpt(1,i)
+           is = iatpt(2,i)
+           velp(1,ia,is) = alfap * velp(1,ia,is)
+           velp(2,ia,is) = alfap * velp(2,ia,is)
+           velp(3,ia,is) = alfap * velp(3,ia,is)
+          ENDDO
+          alfap = cntr%anneal_factors(2)**(0.25_real_8)
+#if defined(__VECTOR)
+          !$omp parallel do private(I,IS,IA)
+#else
+          !$omp parallel do private(I,IS,IA) schedule(static)
+#endif
+          DO i = mimic_control%num_quantum_atoms + 1, mimic_control%num_atoms
+             ia = iatpt(1,i)
+             is = iatpt(2,i)
+             velp(1,ia,is) = alfap * velp(1,ia,is)
+             velp(2,ia,is) = alfap * velp(2,ia,is)
+             velp(3,ia,is) = alfap * velp(3,ia,is)
+          ENDDO
+       ELSE
+          alfap=cntr%anneri**(0.25_real_8)
+#if defined(__VECTOR)
+          !$omp parallel do private(I,IS,IA)
+#else
+          !$omp parallel do private(I,IS,IA) schedule(static)
+#endif
+          DO i=1,ions1%nat
+             ia=iatpt(1,i)
+             is=iatpt(2,i)
+             velp(1,ia,is)=alfap*velp(1,ia,is)
+             velp(2,ia,is)=alfap*velp(2,ia,is)
+             velp(3,ia,is)=alfap*velp(3,ia,is)
+          ENDDO
+       END IF
     ENDIF
     ! ==--------------------------------------------------------------==
     ! ==  ANNEALING (ELECTRONS)  Fixed rescaling factor (anner)       ==

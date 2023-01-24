@@ -23,6 +23,7 @@ MODULE proppt_utils
                                              rsdipo
   USE dipomod,                         ONLY: moment
   USE dist_prowfn_utils,               ONLY: dist_prowfn
+  USE efld,                            ONLY: extf
   USE eicalc_utils,                    ONLY: eicalc
   USE elct,                            ONLY: crge
   USE elstpo_utils,                    ONLY: elstpo
@@ -67,6 +68,16 @@ MODULE proppt_utils
   USE lodp,                            ONLY: &
        dmomlo, exd, extd, focc, nsdip, numbld, rcc, trmom, xmaxld, xminld, &
        ymaxld, yminld, zmaxld, zminld
+  USE mimic_wrapper,                   ONLY: mimic_ifc_collect_energies,&
+                                             mimic_ifc_collect_forces,&
+                                             mimic_ifc_sort_fragments,&
+                                             mimic_ifc_init,&
+                                             mimic_revert_dim,&
+                                             mimic_save_dim,&
+                                             mimic_ifc_send_coordinates,&
+                                             mimic_sum_forces,&
+                                             mimic_switch_dim,&
+                                             mimic_control
   USE mm_dim_utils,                    ONLY: mm_dim
   USE mm_dimmod,                       ONLY: mm_go_mm,&
                                              mm_go_qm,&
@@ -177,6 +188,10 @@ CONTAINS
 
     IF ((cntl%tqmmm.AND.paral%parent).AND.paral%io_parent)&
          WRITE(6,*) 'PROPPT| WARNING QM/MM UNTESTED'
+    IF (cntl%mimic) THEN
+       CALL mimic_save_dim()
+       CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     ! ==--------------------------------------------------------------==
     IF (.NOT.soft_com%exsoft) CALL testex(soft_com%exsoft)
     IF (soft_com%exsoft) RETURN
@@ -219,10 +234,15 @@ CONTAINS
     IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
          __LINE__,__FILE__)
     CALL mm_dim(mm_go_mm,oldstatus)
-    ALLOCATE(taup(3,maxsys%nax,maxsys%nsx),STAT=ierr)
-    IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
-         __LINE__,__FILE__)
+    IF (.NOT.cntl%mimic) THEN
+       ALLOCATE(taup(3,maxsys%nax,maxsys%nsx),STAT=ierr)
+       IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
+            __LINE__,__FILE__)
+    ENDIF
     CALL mm_dim(mm_go_qm,statusdummy)
+    IF (cntl%mimic) THEN
+       CALL mimic_switch_dim(go_qm=.TRUE.)
+    ENDIF
     IF (cntl%tdiag.OR.coresl%tcores.OR.condpa%tconduct.OR.cldos%tldos) THEN
        ALLOCATE(rhoo(fpar%nnr1,clsd%nlsd),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
@@ -245,10 +265,16 @@ CONTAINS
     ! ==--------------------------------------------------------------==
     IF (prop1%ceig) restart1%reigv=.TRUE.
     CALL read_irec(irec)
+    IF (cntl%mimic) THEN
+       CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     CALL mm_dim(mm_go_mm,statusdummy)
     CALL zhrwf(1,irec,c0,cs,prop2%numorb,eigv,tau0,taup,taup,iteropt%nfi)
     CALL mp_bcast(tau0,SIZE(tau0),parai%io_source,parai%cp_grp)
     CALL mm_dim(mm_go_qm,statusdummy)
+    IF (cntl%mimic) THEN
+       CALL mimic_switch_dim(go_qm=.TRUE.)
+    ENDIF
     ALLOCATE(fback(prop2%numorb),STAT=ierr)
     IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
          __LINE__,__FILE__)
@@ -344,6 +370,9 @@ CONTAINS
        ALLOCATE(eivps(ncpw%nhg),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
             __LINE__,__FILE__)
+       IF (cntl%mimic) THEN
+          CALL mimic_ifc_init(rhoe, extf, tau0)
+       END IF
        ! ==------------------------------------------------------------==
        CALL phfac(tau0)
        CALL rnlsm(c0(:,:,1),prop2%numorb,1,1,.FALSE.)
@@ -434,6 +463,9 @@ CONTAINS
     ! == Calculates conductivity                                      ==
     ! ==--------------------------------------------------------------==
     IF (condpa%tconduct) THEN
+       IF (cntl%mimic) THEN
+          CALL mimic_ifc_init(rhoe, extf, tau0)
+       END IF
        CALL conductivity(c0,eigv,crge%f,crge%n,nkpt%nkpnt)
        IF (paral%io_parent) THEN    ! cmb
           WRITE(6,'(A)')&
@@ -459,6 +491,13 @@ CONTAINS
        ALLOCATE(psi(il_psi_1d,il_psi_2d),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
             __LINE__,__FILE__)
+       IF (cntl%mimic) THEN
+          ALLOCATE(extf(fpar%kr1*fpar%kr2s*fpar%kr3s),STAT=ierr)
+          IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
+               __LINE__,__FILE__)
+          CALL mimic_ifc_init(rhoe, extf, tau0)
+          mimic_control%update_potential = .TRUE.
+       END IF
        CALL phfac(tau0)
        ! Compute electronic density in real space
        IF (tkpts%tkpnt) THEN
@@ -482,6 +521,9 @@ CONTAINS
     ! == Calculates core optical spectra                              ==
     ! ==--------------------------------------------------------------==
     IF (coresl%tcores) THEN
+       IF (cntl%mimic) THEN
+          CALL mimic_ifc_init(rhoe, extf, tau0)
+       END IF
        CALL phfac(tau0)
        CALL core_spectra(tau0,c0,eigv,crge%f,crge%n,nkpt%nkpnt)
     ENDIF
@@ -495,6 +537,9 @@ CONTAINS
        ALLOCATE(sc0(nkpt%ngwk,nc/nkpt%ngwk),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
             __LINE__,__FILE__)
+       IF (cntl%mimic) THEN
+          CALL mimic_ifc_init(rhoe, extf, tau0)
+       END IF
        CALL phfac(tau0)
        CALL localize(tau0,c0,cs,sc0,crge%n)
        CALL write_irec(irec)
@@ -508,6 +553,9 @@ CONTAINS
     ! ==--------------------------------------------------------------==
     IF (prop1%pwfn) THEN
        ! Orthogonalize
+       IF (cntl%mimic) THEN
+          CALL mimic_ifc_init(rhoe, extf, tau0)
+       END IF
        CALL phfac(tau0)
        IF (pslo_com%tivan) THEN
           CALL rnlsm(c0(:,:,1),prop2%numorb,1,1,.FALSE.)
@@ -527,6 +575,9 @@ CONTAINS
     ! ==--------------------------------------------------------------==
     IF (prop1%pylm) THEN
        lr=1
+       IF (cntl%mimic) THEN
+          CALL mimic_ifc_init(rhoe, extf, tau0)
+       END IF
        CALL give_scr_ortho(lo,tag,prop2%numorb)
        lscr=MAX(lo,lr)
        CALL ortho(prop2%numorb,c0(:,:,1),cs)
@@ -544,6 +595,9 @@ CONTAINS
        ALLOCATE(psi(il_psi_1d,il_psi_2d),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
             __LINE__,__FILE__)
+       IF (cntl%mimic) THEN
+          CALL mimic_ifc_init(rhoe, extf, tau0)
+       END IF
        CALL phfac(tau0)
        CALL ldos(c0,psi,eigv,crge%n)
     ENDIF
@@ -572,6 +626,9 @@ CONTAINS
        ALLOCATE(eivps(ncpw%nhg),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
             __LINE__,__FILE__)
+       IF (cntl%mimic) THEN
+          CALL mimic_ifc_init(rhoe, extf, tau0)
+       END IF
        ! Compute electronic density in real space
        CALL phfac(tau0)
        IF (pslo_com%tivan) THEN
@@ -679,6 +736,9 @@ CONTAINS
        ALLOCATE(eivps(ncpw%nhg),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
             __LINE__,__FILE__)
+       IF (cntl%mimic) THEN
+          CALL mimic_ifc_init(rhoe, extf, tau0)
+       END IF
        ! Compute electronic density in real space
        CALL phfac(tau0)
        IF (pslo_com%tivan) THEN
@@ -801,6 +861,9 @@ CONTAINS
     ! ==--------------------------------------------------------------==
     IF (prop1%glocl) THEN
        glocal%tgloc=.TRUE.
+       IF (cntl%mimic) THEN
+          CALL mimic_ifc_init(rhoe, extf, tau0)
+       END IF
        CALL phfac(tau0)
 
        IF (glocal%tg_real) THEN
@@ -865,6 +928,9 @@ CONTAINS
        ALLOCATE(eivps(nkpt%nhgk),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
             __LINE__,__FILE__)
+       IF (cntl%mimic) THEN
+          CALL mimic_ifc_init(rhoe, extf, tau0)
+       END IF
        ! malloc complete.
        CALL phfac(tau0)
        CALL eicalc(eivps,eirop)
@@ -1011,6 +1077,11 @@ CONTAINS
        IF(ierr/=0) CALL stopgm(procedureN,'deallocation problem',&
             __LINE__,__FILE__)
     ENDIF
+    IF (paral%io_parent.AND.cntl%mimic) THEN
+       CALL mimic_ifc_send_coordinates()
+       CALL mimic_ifc_collect_energies()
+       CALL mimic_ifc_collect_forces()
+    END IF
     ! ==--------------------------------------------------------------==
     DEALLOCATE(c0,STAT=ierr)
     IF(ierr/=0) CALL stopgm(procedureN,'deallocation problem',&
@@ -1024,6 +1095,9 @@ CONTAINS
     CALL fnldealloc(.FALSE.,.FALSE.)
     ! ==--------------------------------------------------------------==
     CALL mm_dim(mm_revert,oldstatus)
+    IF (cntl%mimic) THEN
+       CALL mimic_revert_dim()
+    ENDIF
     RETURN
   END SUBROUTINE proppt
   ! ==================================================================

@@ -177,7 +177,7 @@ CONTAINS
             CALL fileopen(4,f2,fo_app+if2,ferror)
     ENDIF
     IF (ropt_mod%rprint.OR.(ropt_mod%txyz.AND.rout1%xtout).OR.(ropt_mod%tdcd.AND.rout1%dcout)) THEN
-       IF (cotc0%mcnstr.GT.0.OR.cotr007%mrestr.GT.0) THEN
+       IF ((cotc0%mcnstr.GT.0.OR.cotr007%mrestr.GT.0).AND..NOT.cntl%new_constraints) THEN
           IF (paral%io_parent)&
                CALL fileopen(31,f3,if3,ferror)
           IF ((cotr007%mrestr.GT.0).AND.paral%io_parent)&
@@ -280,7 +280,7 @@ CONTAINS
           IF (paral%io_parent)&
                CALL fileclose(32)
        ENDIF
-       IF (cotc0%mcnstr.GT.0.OR.cotr007%mrestr.GT.0) THEN
+       IF ((cotc0%mcnstr.GT.0.OR.cotr007%mrestr.GT.0).AND..NOT.cntl%new_constraints) THEN
           DO j=1,cotc0%mcnstr
              fval=fv(j)
              ityp=ntcnst(1,j)

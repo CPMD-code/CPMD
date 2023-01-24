@@ -13,6 +13,9 @@ MODULE mp_interface
                                              real_8
   USE machine,                         ONLY: m_flush,&
                                              m_walltime
+#ifdef __MIMIC
+  USE mimic_main,                      ONLY: mimic_init
+#endif
   USE para_global,                     ONLY: para_buff_size,&
                                              para_stack_buff_size,&
                                              para_use_mpi_in_place
@@ -303,6 +306,9 @@ CONTAINS
             __LINE__,__FILE__)
        ! an external interface has to set mp_comm_world
        mp_comm_world = MPI_COMM_WORLD
+#ifdef __MIMIC
+       call mimic_init(mp_comm_world)
+#endif
     ENDIF
     CALL mpi_errhandler_set ( mp_comm_world, MPI_ERRORS_RETURN, ierr )
     IF (ierr/=0) CALL stopgm('MPI_INIT','mpi_errhandler_set',&

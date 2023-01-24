@@ -5,6 +5,7 @@ MODULE pbc_utils
   USE isos,                            ONLY: isos1
   USE kinds,                           ONLY: real_8
   USE metr,                            ONLY: metr_com
+  USE mimic_wrapper,                   ONLY: mimic_control
   USE mm_dimmod,                       ONLY: clsaabox,&
                                              mm_stat
   USE system,                          ONLY: cntl, parm
@@ -105,8 +106,14 @@ CONTAINS
                __LINE__,__FILE__)
        ENDIF
     ENDIF
+    IF (cntl%mimic) THEN
+        a(:) = 0.0_real_8
+        a(1) = mimic_control%box(1,1) * 0.5_real_8
+        a(2) = mimic_control%box(2,2) * 0.5_real_8
+        a(3) = mimic_control%box(3,3) * 0.5_real_8
+    END IF
     ! ==--------------------------------------------------------------==
-    IF (isos1%tclust.AND.mm_stat) THEN
+    IF (isos1%tclust.AND.mm_stat.AND..NOT.cntl%mimic) THEN
        IF (isos1%toned) THEN
           CALL pbc1(x1,y1,z1,x2,y2,z2,m,a,ibrv)
        ELSEIF (isos1%ttwod) THEN

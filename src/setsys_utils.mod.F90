@@ -54,6 +54,9 @@ MODULE setsys_utils
   USE kpts,                            ONLY: kpts_com,&
                                              tkpts
   USE metr,                            ONLY: metr_com
+  USE mimic_wrapper,                   ONLY: mimic_save_dim,&
+                                             mimic_switch_dim,&
+                                             mimic_revert_dim
   USE mm_dim_utils,                    ONLY: mm_dim
   USE mm_dimmod,                       ONLY: clsaabox,&
                                              mm_go_mm,&
@@ -159,6 +162,10 @@ CONTAINS
        mmdim%nspm =maxsys%nsx
     ENDIF
     IF (lqmmm%qmmm)CALL mm_dim(mm_go_mm,status)
+    IF (cntl%mimic) THEN
+       CALL mimic_save_dim()
+       CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     IF (.NOT.paral%io_parent) GOTO 9999
     IF (cntl%tscale) THEN
        ! ==--------------------------------------------------------------==
@@ -355,7 +362,8 @@ CONTAINS
     clsaabox%mm_c_trans(3)=0.0_real_8
     ! EHR[
     IF (isos1%tclust.AND.isos1%tcent.AND..NOT.tclas&
-         .AND..NOT.cntl%tmdeh.AND..NOT.cntl%tpspec) THEN
+         .AND..NOT.cntl%tmdeh.AND..NOT.cntl%tpspec&
+         .AND..NOT.cntl%mimic) THEN
        ! EHR]
        IF (lqmmm%qmmm)THEN
 #if defined (__GROMOS)
@@ -424,6 +432,9 @@ CONTAINS
     ! ==--------------------------------------------------------------==
     IF (lqmmm%qmmm)THEN
        IF ( mmdim%natm.GT.500) GOTO 111
+    ENDIF
+    IF (cntl%mimic) THEN
+       CALL mimic_switch_dim(go_qm=.TRUE.)
     ENDIF
     WRITE(6,'(/,1X,29("*"),A,28("*"))') ' ATOMS '
     WRITE(6,'(A,A)') '   NR   TYPE        X(BOHR)        Y(BOHR)',&
@@ -1620,6 +1631,9 @@ CONTAINS
     CALL mp_bcast_byte(clsaabox, size_in_bytes_of(clsaabox), parai%io_source, parai%cp_grp)
     ! ==--------------------------------------------------------------==
     IF (lqmmm%qmmm)CALL mm_dim(mm_go_qm,status) ! because it is needed
+    IF (cntl%mimic) THEN
+       CALL mimic_revert_dim()
+    ENDIF
     CALL cpl_para
     RETURN
   END SUBROUTINE setsys

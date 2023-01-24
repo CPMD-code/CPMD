@@ -16,10 +16,12 @@ MODULE rwfopt_utils
                                              give_scr_cplngs,&
                                              prcplngs
   USE cplngsmod
+  USE cppt,                            ONLY: inyh
   USE ddipo_utils,                     ONLY: give_scr_ddipo
   USE detdof_utils,                    ONLY: detdof
   USE dynit_utils,                     ONLY: dynit
-  USE efld
+  USE efld,                            ONLY: extf,&
+                                             textfld
   USE ehrenfest_utils,                 ONLY: ehrenfest
   USE elct
   USE enbandpri_utils,                 ONLY: enbandpri
@@ -51,11 +53,23 @@ MODULE rwfopt_utils
   USE locpot
   USE lscal
   USE machine,                         ONLY: m_walltime
+  USE mimic_wrapper,                   ONLY: mimic_ifc_collect_energies,&
+                                             mimic_ifc_collect_forces,&
+                                             mimic_ifc_sort_fragments,&
+                                             mimic_ifc_init,&
+                                             mimic_revert_dim,&
+                                             mimic_save_dim,&
+                                             mimic_ifc_send_coordinates,&
+                                             mimic_sum_forces,&
+                                             mimic_switch_dim,&
+                                             mimic_update_coords,&
+                                             mimic_control
   USE mm_dim_utils,                    ONLY: mm_dim
   USE mm_dimmod
   USE mm_input
   USE mm_qmmm_forcedr_utils,           ONLY: mm_qmmm_forcedr
-  USE mp_interface,                    ONLY: mp_sum
+  USE mp_interface,                    ONLY: mp_sum,&
+                                             mp_bcast
   USE norm
   USE parac,                           ONLY: parai,&
                                              paral
@@ -78,7 +92,7 @@ MODULE rwfopt_utils
   USE syscomb_utils,                   ONLY: syscomb,&
                                              write_ksham
   USE system,                          ONLY: &
-       cnti, cntl, cntr, fpar, locpot2, maxsys, nacc, ncpw, nkpt, parm, spar
+       cnti, cntl, cntr, fpar, locpot2, maxsys, nacc, ncpw, nkpt, parm, spar, parap
   USE td_input
   USE td_utils,                        ONLY: getnorm_k,&
                                              load_ex_states,&
@@ -148,9 +162,13 @@ CONTAINS
          tscr(:,:,:), vpotx3s(:,:,:), &
          wdsave(:)
     REAL(real_8), POINTER                    :: vpotx3(:,:,:)
+    COMPLEX(real_8), DIMENSION(:,:,:), ALLOCATABLE :: dummy
 
     CALL tiset(procedureN,isub)
     time1 =m_walltime()
+    IF (cntl%mimic) THEN
+       CALL mimic_save_dim()
+    ENDIF
     ! ==--------------------------------------------------------------==
     ! SCR creation
     CALL rhoe_psi_size(il_psi_1d=il_psi_1d,il_psi_2d=il_psi_2d,&
@@ -190,9 +208,24 @@ CONTAINS
        ENDIF
     ENDIF
 
+    IF (cntl%mimic) THEN
+       ALLOCATE(dummy, mold=c0)
+       ALLOCATE(extf(fpar%kr1*fpar%kr2s*fpar%kr3s),STAT=ierr)
+       IF (ierr/=0) CALL stopgm(procedureN,'allocation problem',&
+                                __LINE__,__FILE__)
+       CALL zeroing(extf) !,kr1*kr2s*kr3s)
+       CALL mimic_ifc_init(rhoe, extf, tau0)
+       CALL zeroing(taup) !,3*maxsys%nax*maxsys%nsx)
+       CALL zeroing(fion) !,3*maxsys%nax*maxsys%nsx)
+       mimic_control%update_potential = .TRUE.
+    END IF
+
     CALL mm_dim(mm_go_mm,oldstatus)
+    IF (cntl%mimic) THEN
+       CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     ! CB: TAUP,FION,VELP handled by BS_WFO
-    IF (.NOT.cntl%bsymm) THEN
+    IF (.NOT.cntl%bsymm.AND..NOT.cntl%mimic) THEN
        ALLOCATE(taup(3,maxsys%nax,maxsys%nsx),STAT=ierr)
        IF(ierr/=0) CALL stopgm(procedureN,'allocation problem',&
             __LINE__,__FILE__)
@@ -248,6 +281,9 @@ CONTAINS
     ENDIF
     !
     CALL mm_dim(mm_go_qm,statusdummy)
+    IF (cntl%mimic) THEN
+       CALL mimic_switch_dim(go_qm=.TRUE.)
+    ENDIF
     nacc = 7
     IF (cntl%tdiag.OR.cntl%tdiagopt) THEN
        nnx=fpar%nnr1*clsd%nlsd
@@ -310,6 +346,15 @@ CONTAINS
        CALL write_ksham(c0,c2,sc0,rhoe,psi,eigv)
        GOTO 150
     ENDIF
+    IF (cntl%mimic) THEN
+       CALL mimic_update_coords(tau0, c0, dummy, crge%n, ncpw%ngw, inyh)
+       IF (paral%io_parent) THEN
+          CALL mimic_ifc_send_coordinates()
+          IF (mimic_control%tot_scf_energy) THEN
+             CALL mimic_ifc_collect_energies()
+          END IF
+       END IF
+    END IF
     ! McB  this is not necessary in standard runs
     ! McB  (maybe for cntl%cdft, but it is WRONG! for QM/MM (cf. setsys.F)!)
     ! IF(TCLUST.AND.TCENT.AND..NOT.TCLAS)CALL QM_CENTRE
@@ -317,7 +362,13 @@ CONTAINS
     IF (paral%parent) THEN
        ! McB    DETDOF needs to be called in full system dimensions
        CALL mm_dim(mm_go_mm,statusdummy)
+       IF (cntl%mimic) THEN
+          CALL mimic_switch_dim(go_qm=.FALSE.)
+       ENDIF
        CALL detdof(tau0,tscr)
+       IF (cntl%mimic) THEN
+          CALL mimic_switch_dim(go_qm=.TRUE.)
+       ENDIF
        CALL mm_dim(mm_go_qm,statusdummy)
     ENDIF
     IF (cntl%cdft)THEN
@@ -499,6 +550,9 @@ CONTAINS
                    update_pot=.FALSE.
                 ENDIF
                 CALL mm_dim(mm_go_qm,statusdummy)
+                IF (cntl%mimic) THEN
+                   CALL mimic_switch_dim(go_qm=.TRUE.)
+                ENDIF
                 IF (cntl%tdiag) THEN
                    CALL updrho(c0,c2,gde,sc0,pme,vpp,tau0,fion,eigv,&
                         rhoe,psi,&
@@ -521,6 +575,9 @@ CONTAINS
                    ENDIF
                 ENDIF
                 CALL mm_dim(mm_go_mm,statusdummy)
+                IF (cntl%mimic) THEN
+                   CALL mimic_switch_dim(go_qm=.FALSE.)
+                ENDIF
                 IF (paral%io_parent) THEN
                    ropt_mod%engpri=MOD(infi-1,cprint%iprint_step).EQ.0
                 ELSE
@@ -660,8 +717,14 @@ CONTAINS
           ENDIF
        ENDIF
        CALL mm_dim(mm_go_qm,statusdummy)
+       IF (cntl%mimic) THEN
+          CALL mimic_switch_dim(go_qm=.TRUE.)
+       ENDIF
        IF (rout1%rhoout.AND.(.NOT.cntl%bsymm.OR.ropt_mod%convwf)) THEN
           CALL rhopri(c0,tau0,rhoe,psi(:,1),crge%n,nkpt%nkpnt)
+       ENDIF
+       IF (cntl%mimic) THEN
+          CALL mimic_switch_dim(go_qm=.FALSE.)
        ENDIF
        ! EHR[
        ! ==--------------------------------------------------------------==
@@ -828,6 +891,9 @@ CONTAINS
     ENDIF
     ! Calculate ionic forces
     IF (ropt_mod%convwf.AND.(tfor.OR.cntl%tpres.OR.vdwl%vdwd)) THEN
+       IF (cntl%mimic) THEN
+          CALL mimic_switch_dim(go_qm=.TRUE.)
+       ENDIF
        IF (vdwl%vdwd) CALL localize(tau0,c0,c2,sc0,crge%n)
        IF (cntl%tdiag) THEN
           CALL updrho(c0,c2,gde,sc0,pme,vpp,tau0,fion,eigv,&
@@ -845,12 +911,23 @@ CONTAINS
                   rhoe,psi,crge%n,.TRUE.,update_pot)
           ENDIF
        ENDIF
+       IF (cntl%mimic) THEN
+          CALL mimic_sum_forces(fion)
+       ENDIF
        ! Calculate norm of nuclear gradient
        CALL gsize(fion,gnmax,gnorm)
        IF (cntl%tpres) THEN
           CALL totstr
        ENDIF
+       IF (cntl%mimic) THEN
+          CALL mimic_switch_dim(go_qm=.FALSE.)
+       ENDIF
     ELSE
+       IF (cntl%mimic .AND. .NOT. mimic_control%tot_scf_energy) THEN
+          IF (paral%io_parent) THEN
+             CALL mimic_ifc_collect_energies()
+          END IF
+       END IF
        gnmax=0.0_real_8
        gnorm=0.0_real_8
     ENDIF
@@ -858,6 +935,9 @@ CONTAINS
     !
     IF (lspin2%teprof.AND.lspin2%tlse) THEN
        CALL lseprof(c0,rhoe,psi,tau0,fion,crge%n)
+    ENDIF
+    IF (cntl%mimic) THEN
+       CALL mimic_switch_dim(go_qm=.FALSE.)
     ENDIF
     ! EHR[
     IF (cntl%tpspec) THEN
@@ -971,6 +1051,9 @@ CONTAINS
     IF(cntl%thubb)DEALLOCATE(c2u)
     ! ==--------------------------------------------------------------==
     CALL mm_dim(mm_revert,oldstatus)
+    IF (cntl%mimic) THEN
+       CALL mimic_revert_dim()
+    ENDIF
     CALL tihalt(procedureN,isub)
     RETURN
   END SUBROUTINE rwfopt

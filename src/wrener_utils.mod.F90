@@ -25,6 +25,8 @@ MODULE wrener_utils
   USE kpts,                            ONLY: tkpts
   USE machine,                         ONLY: m_flush
   USE metr,                            ONLY: metr_com
+  USE mimic_wrapper,                   ONLY: mimic_control,&
+                                             mimic_energy
   USE mm_dim_utils,                    ONLY: mm_dim
   USE mm_dimmod,                       ONLY: mm_go_qm,&
                                              mm_revert
@@ -329,7 +331,9 @@ CONTAINS
           CALL wrgeo(tau0)
        ENDIF
        IF (ok_print(cprint%iprint(iprint_info),engpri,tend)) THEN
-          CALL cnstpr
+          IF (.NOT.cntl%new_constraints) THEN
+             CALL cnstpr
+          END IF
           IF (.NOT.cntl%bsymm) CALL wrener
           IF (.NOT.(infi.EQ.cnti%nomore.OR.convergence)) THEN
              IF (cntl%tmdbo) THEN
@@ -539,6 +543,7 @@ CONTAINS
     CHARACTER(len=14)                        :: defenergy, defenergy1, &
                                                 defenergy2
     CHARACTER(len=16)                        :: defenergy3
+    CHARACTER(len=25)                        :: defenergy_mimic
     INTEGER                                  :: is
     LOGICAL                                  :: statusdummy
     REAL(real_8)                             :: cdft_ener, elec1, elec2, &
@@ -683,6 +688,18 @@ CONTAINS
                WRITE(6,'(1X,A,T22,A,T41,F20.8,A)')&
                '   ','DIFFERENCE      =',&
                ener_com%etot-(eqm_r%eqm+eqm_r%eqmmm+eqm_r%EMM),' A.U.'
+       ELSE IF (cntl%mimic) THEN
+          IF (paral%io_parent) THEN
+             defenergy_mimic = defenergy(1:len(trim(adjustl(defenergy)))-1)//'+MM+QM/MM)'
+             WRITE(6,'(/,1X,A,T25,A,T41,F20.8,A)')&
+             defenergy_mimic,'TOTAL ENERGY =',ener_com%etot,' A.U.'
+             WRITE(6,'(1X,A,T22,A,T41,F20.8,A)')&
+             defenergy, 'TOTAL QM ENERGY =', mimic_energy%qm_energy, ' A.U.'
+             WRITE(6,'(1X,A,T22,A,T41,F20.8,A)')&
+             '(MM)', 'TOTAL MM ENERGY =', mimic_energy%mm_energy, ' A.U.'
+             WRITE(6,'(1X,A,T19,A,T41,F20.8,A)')&
+             '(QM/MM)', 'TOTAL QM/MM ENERGY =', mimic_energy%qmmm_energy + ener_com%eext, ' A.U.'
+          ENDIF
        ELSE
           IF (paral%io_parent)&
                WRITE(6,'(/,1X,A,T25,A,T41,F20.8,A)')&

@@ -140,7 +140,7 @@ CONTAINS
           CALL restfc(tau0,fion)
        ENDIF
        !CALL mp_bcast(fion,3*maxsys%nax*maxsys%nsx,parai%source,parai%allgrp)
-       CALL mp_bcast(fion,3*maxsys%nax*maxsys%nsx,parai%io_source,parai%cp_grp)
+       CALL mp_bcast(fion,size(fion),parai%io_source,parai%cp_grp)
     ENDIF
     CALL mm_dim(mm_revert,oldstatus)
     CALL tihalt(procedureN,isub)

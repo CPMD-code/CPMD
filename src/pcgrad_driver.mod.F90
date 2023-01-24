@@ -12,6 +12,10 @@ MODULE pcgrad_driver
   USE func,                            ONLY: func1
   USE hubbardu,                        ONLY: hubbu
   USE kinds,                           ONLY: real_8
+  USE mimic_wrapper,                   ONLY: mimic_save_dim,&
+                                             mimic_switch_dim,&
+                                             mimic_revert_dim,&
+                                             mimic_energy
   USE mm_dim_utils,                    ONLY: mm_dim
   USE mm_dimmod,                       ONLY: mm_go_mm,&
                                              mm_go_qm,&
@@ -111,10 +115,17 @@ CONTAINS
     ! we need to 'go mm' here so that the TSCR offset is correct.
     IF (lqmmm%qmmm) CALL mm_dim(mm_go_mm,oldstatus)
     ! ==--------------------------------------------------------------==
+    IF (cntl%mimic) THEN
+       CALL mimic_save_dim()
+       CALL mimic_switch_dim(go_qm=.FALSE.)
+    ENDIF
     ! TODO align for BG
     ALLOCATE(tscr(3,maxsys%nax,maxsys%nsx),STAT=ierr)
     IF(ierr/=0) CALL stopgm(procedureN,'allocation problem', &
          __LINE__,__FILE__)
+    IF (cntl%mimic) THEN
+       CALL mimic_switch_dim(go_qm=.TRUE.)
+    ENDIF
     ! ==--------------------------------------------------------------==
     IF (lqmmm%qmmm) CALL mm_dim(mm_go_qm,statusdummy)
     ! ==--------------------------------------------------------------==
@@ -226,6 +237,9 @@ CONTAINS
        ENDIF
     ENDIF
     IF (lqmmm%qmmm) CALL mm_dim(mm_revert,oldstatus)
+    IF (cntl%mimic) THEN
+       CALL mimic_revert_dim()
+    ENDIF
     DEALLOCATE(tscr,STAT=ierr)
     IF(ierr/=0) CALL stopgm(procedureN,'deallocation problem', &
          __LINE__,__FILE__)
@@ -541,6 +555,13 @@ CONTAINS
        CALL ortho(nstate,x,sc0)
        CALL rnlsm(x,nstate,1,1,.FALSE.)
        CALL rscpot(x,tau0,tscr,rhoe,psi,.FALSE.,.FALSE.,nstate,1)
+       IF (cntl%mimic) THEN
+          mimic_energy%qm_energy = ener_com%etot
+          ener_com%etot = ener_com%etot &
+                          + ener_com%eext &
+                          + mimic_energy%qmmm_energy &
+                          + mimic_energy%mm_energy
+       END IF
     ENDIF
     ! ==--------------------------------------------------------------==
     RETURN

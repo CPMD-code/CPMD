@@ -11,6 +11,13 @@ MODULE eextern_utils
   USE kinds,                           ONLY: real_8
   USE metr,                            ONLY: metr_com
   USE mm_input,                        ONLY: lqmmm
+  USE mimic_wrapper,                   ONLY: mimic_control,&
+                                             mimic_energy,&
+                                             mimic_ifc_collect_energies,&
+                                             mimic_ifc_collect_forces,&
+                                             mimic_ifc_compute_energy,&
+                                             mimic_ifc_compute_forces,&
+                                             mimic_ifc_compute_potential
   USE parac,                           ONLY: parai,&
                                              paral
   USE pbc_utils,                       ONLY: pbc
@@ -55,13 +62,36 @@ CONTAINS
     CALL tiset('      EEXT',isub)
     ! ..ENERGY VEXT*RHOE
     eext=0._real_8
-    IF (tfor.OR.cntl%texadd) THEN
+    IF (tfor.OR.cntl%texadd.OR.cntl%mimic) THEN
+       IF (cntl%mimic) THEN
+          IF (mimic_control%update_potential) THEN
+             CALL mimic_ifc_compute_potential()
+             IF (.NOT.mimic_control%tot_scf_energy) THEN
+                mimic_energy%mm_energy = 0.0_real_8
+             END IF
+          END IF
+       END IF
        gfac=parm%omega/(spar%nr1s*spar%nr2s*spar%nr3s)
        eext=ddot(fpar%nnr1,rhoe,1,extf,1)*gfac
+       IF (cntl%mimic.AND.mimic_control%update_potential) THEN
+          mimic_control%update_potential = .FALSE.
+          CALL mimic_ifc_compute_energy()
+       END IF
+       IF (cntl%mimic) THEN
+          IF (tfor) THEN
+             IF (paral%io_parent) THEN
+                CALL mimic_ifc_collect_forces()
+                IF (.NOT.mimic_control%tot_scf_energy) THEN
+                   CALL mimic_ifc_collect_energies()
+                END IF
+             END IF
+             CALL mimic_ifc_compute_forces()
+          END IF
+       END IF
        ! ..ENERGY VEXT*RHOI AND GRADIENT
        eext2=0._real_8
        eexti=0._real_8
-       IF (.NOT.lqmmm%qmmm)THEN
+       IF (.NOT.lqmmm%qmmm.AND..NOT.cntl%mimic)THEN
           ! EGO-CPMD interface
           IF (cnti%iftype.EQ.1) THEN
              DO is=1,ions1%nsp
