@@ -61,12 +61,12 @@ C     nothing to do without solvent molecules
 
       if(first)then
         first=.false.
-        NCONST=0
-        do ia=1,NRAM
-          do ja=ia+1,min(ia+4,NRAM)
-            NCONST=NCONST+1
-          enddo
-        enddo
+C       pairs (ia,ja) with ia < ja <= min(ia+4,NRAM)
+        if(NRAM.ge.4)then
+          NCONST=4*NRAM-10
+        else
+          NCONST=NRAM*(NRAM-1)/2
+        endif
         allocate(ABl(NCONST),STAT=ierr)
         if(ierr/=0) call stopgm(procedureN,'allocation problem',
      & __LINE__,'__file__')
